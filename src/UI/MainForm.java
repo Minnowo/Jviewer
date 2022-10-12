@@ -43,17 +43,19 @@ public class MainForm extends JFrame
 		
 		JButton btnNewButton = new JButton("New button");
 		btnNewButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e) 
+			{
 				File f = new File(textField.getText());
 				
 				if (f.exists())
 				{
+					System.out.println("loading: " + f.getPath());
 					ImageIcon i = new ImageIcon(textField.getText());
-					
 					graphicsFrame.loadImage(i.getImage());
 				}
 				else 
 				{
+					System.out.println("loading: 02.jpg");
 					ImageIcon i = new ImageIcon("D:\\02.jpg");
 					graphicsFrame.loadImage(i.getImage());
 				}
