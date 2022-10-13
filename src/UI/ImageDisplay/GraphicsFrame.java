@@ -13,13 +13,19 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.JPanel;
 
 import Graphics.ImageUtil;
+import UI.Events.ImageZoomChangedEvent;
+import UI.Events.Listeners.ImageDisplayListener;
 
 public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener
 {
+	private Set<ImageDisplayListener> listeners = new HashSet<ImageDisplayListener>();
+
 	public static final double MAX_ZOOM = 200d;
     
     public static final double MIN_ZOOM = 0.01d;
@@ -187,6 +193,8 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     		return;
     	
     	this._zoom = value / 100d;
+    	this.repaint();
+    	this.onImageZoomChanged();
     }
     
     
@@ -203,6 +211,8 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
             return;
 
         this._zoom = value;
+        this.repaint();
+        this.onImageZoomChanged();
 	}
     
     
@@ -363,6 +373,21 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
         this.tileBrush = new TexturePaint(result, bounds);
     }
     
+    
+    public void addImageDisplayListener(ImageDisplayListener lis) 
+    {
+    	this.listeners.add(lis);
+	}
+    
+    protected void onImageZoomChanged() 
+    {
+    	ImageZoomChangedEvent event = new ImageZoomChangedEvent(this.getZoomPercent(), this._zoom);
+    	
+    	for(ImageDisplayListener ls : this.listeners)
+    	{
+    		ls.ImageZoomChanged(event);
+    	}
+	}
     
     @Override
     protected void paintComponent(Graphics g) 

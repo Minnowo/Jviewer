@@ -3,6 +3,7 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 
 import UI.MainForm;
+import UI.Test;
 
 
 public class Program extends JFrame 
@@ -19,7 +20,7 @@ public class Program extends JFrame
 				 
 				    frame.setVisible(true);
 				    
-				    
+//				    Test.gui();
 		
 				} 
 				catch (Exception e) 
