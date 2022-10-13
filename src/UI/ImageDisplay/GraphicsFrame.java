@@ -16,6 +16,8 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
+import Graphics.ImageUtil;
+
 public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener
 {
 	public static final double MAX_ZOOM = 200d;
@@ -26,14 +28,14 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
 
     public static final int MIN_ZOOM_PERCENT = (int)(MIN_ZOOM * 100d);
     
-    public static final int[] ZOOM_PERCENT = { 7, 10, 15, 20, 25, 30, 50, 70, 100, 
+    public static final int[] ZOOM_PERCENT = { 4, 7, 10, 15, 20, 25, 30, 50, 70, 100, 
     		150, 200, 300, 400, 500, 600, 700, 800, 1200, 1600, 2000, 2400, 2800, 
     		3200, 3600, 4000, 4400, 4800, 5200, 5600, 6000, 6400, 6800, 7200, 
-    		7600, 8000,8400,8800,9200,9600,10000,10400,10800,11200,11600,12000,
-    		12400,12800,13200,13600,14000,14400,14800,15200,15600,16000,16400,
-    		16800,17200,17600,18000,18400,18800,19200,19600,20000 };
+    		7600, 8000, 8400, 8800, 9200, 9600, 10000, 10400, 10800, 11200, 11600, 12000,
+    		12400, 12800, 13200, 13600, 14000, 14400, 14800, 15200, 15600, 16000, 16400,
+    		16800, 17200, 17600, 18000, 18400, 18800, 19200, 19600, 20000 };
     
-    private int zoomIndex = 8;
+    private int zoomIndex = 9;
     
     public static Color DefaultCellColor1 = new Color(32, 32, 32);
     public static Color DefaultCellColor2 = new Color(64, 64, 64);
@@ -117,19 +119,33 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     }
     
 
-  
-    
-    public void loadImage(Image i)
+    public void tryLoadImage(String path, boolean flushLastImage)
     {
-    	if(this.image != null) 
+    	Image i = ImageUtil.loadImage(path);
+    	
+    	if(i == null)
+    	{
+    		return;
+    	}
+    	
+    	this.setImage(i, flushLastImage);
+    }
+  
+    public void setImage(Image image, boolean flushLastImage)
+    {
+    	if(this.image != null && flushLastImage)
     	{
     		this.image.flush();
     		this.image = null;
+    		System.gc();
     	}
     	
-    	this.image = i;
-    	this.imageWidth = image.getWidth(null);
-    	this.imageHeight = image.getHeight(null);
+    	if(image != null)
+    	{
+    		this.image = image;
+        	this.imageWidth = image.getWidth(null);
+        	this.imageHeight = image.getHeight(null);
+    	}
     	
     	this.repaint();
     }
