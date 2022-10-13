@@ -1,4 +1,4 @@
-package UI.ImageDisplay;
+package UI.ImageDisplay.Enums;
 
 
 

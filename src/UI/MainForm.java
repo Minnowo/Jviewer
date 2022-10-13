@@ -5,10 +5,14 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -24,9 +28,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import Configuration.GUISettings;
+import UI.ComboBox.Items.ComboBoxItemInt;
 import UI.Events.ImageZoomChangedEvent;
 import UI.Events.Listeners.ImageDisplayListener;
 import UI.ImageDisplay.GraphicsFrame;
+import UI.ImageDisplay.Enums.AntiAliasing;
+import UI.ImageDisplay.Enums.InterpolationMode;
+import UI.ImageDisplay.Enums.RenderQuality;
 
 public class MainForm extends JFrame implements ImageDisplayListener
 {
@@ -42,26 +50,32 @@ public class MainForm extends JFrame implements ImageDisplayListener
     GraphicsFrame mainDisplay;
     JSpinner zoomPercentSpinner;
     
-    ActionListener alToggleLeftPane = new ActionListener() 
-    {
-        private int loc = 0;
+    ItemListener ilToggleAlwaysOnTop = new ItemListener() {
+		public void itemStateChanged(ItemEvent e) 
+		{
+			setAlwaysOnTop(e.getStateChange() == ItemEvent.SELECTED);
+		}
+	};
+	ItemListener ilToggleLeftPane = new ItemListener() {
+		private int loc = 0;
         
-        public void actionPerformed(ActionEvent ae) 
-        {
-           if(mainSplitPane.getLeftComponent().isVisible()) 
-           {
-              loc = mainSplitPane.getDividerLocation();
-              mainSplitPane.setDividerSize(0);
-              mainSplitPane.getLeftComponent().setVisible(false);
-           } 
-           else 
-           {
-        	   mainSplitPane.getLeftComponent().setVisible(true);
-        	   mainSplitPane.setDividerLocation(loc);
-        	   mainSplitPane.setDividerSize(GUISettings.MAIN_SPLIT_PANE_DIVISOR_SIZE);
-           }
-        }
-     };
+		public void itemStateChanged(ItemEvent e) 
+		{
+			if(e.getStateChange() != ItemEvent.SELECTED) 
+	           {
+	              loc = mainSplitPane.getDividerLocation();
+	              mainSplitPane.setDividerSize(0);
+	              mainSplitPane.getLeftComponent().setVisible(false);
+	           } 
+	           else 
+	           {
+	        	   mainSplitPane.getLeftComponent().setVisible(true);
+	        	   mainSplitPane.setDividerLocation(loc);
+	        	   mainSplitPane.setDividerSize(GUISettings.MAIN_SPLIT_PANE_DIVISOR_SIZE);
+	           }
+		}
+	};
+
      
      ActionListener alAskOpenFile = new ActionListener() 
      {
@@ -92,14 +106,76 @@ public class MainForm extends JFrame implements ImageDisplayListener
       		_preventOverflow = false;
     	}
       };
+      private JComboBox<ComboBoxItemInt> comboboxInterpolationMode;
       
     
+      ItemListener interpolationModeChangedListener = new ItemListener() 
+      {
+      	public void itemStateChanged(ItemEvent e) 
+      	{
+      		if(mainDisplay == null)
+      			return;
+      		
+      		ComboBoxItemInt i = (ComboBoxItemInt) e.getItem();
+      		mainDisplay.setInterpolationMode(i.getValue());
+      	}
+      };
+      
+      ItemListener renderQualityChangedListener = new ItemListener() 
+      {
+      	public void itemStateChanged(ItemEvent e) 
+      	{
+      		if(mainDisplay == null)
+      			return;
+      		ComboBoxItemInt i = (ComboBoxItemInt) e.getItem();
+      		mainDisplay.setRenderQuality(i.getValue());
+      	}
+      };
+      ItemListener antiAliasingChangedListener = new ItemListener() 
+      {
+      	public void itemStateChanged(ItemEvent e) 
+      	{
+      		if(mainDisplay == null)
+      			return;
+      		ComboBoxItemInt i = (ComboBoxItemInt) e.getItem();
+      		mainDisplay.setRenderQuality(i.getValue());
+      	}
+      };
+      private JMenu mnNewMenu_3;
+      private JComboBox<ComboBoxItemInt> comboBoxRenderQuality;
+      private JComboBox<ComboBoxItemInt> comboBoxAntiAliasingMode;
+      private JCheckBoxMenuItem chckbxmntmNewCheckItem;
+      private JCheckBoxMenuItem chckbxmntmNewCheckItem_1;
+      
+      
+    protected void initComboBox()
+    {
+    	comboboxInterpolationMode = new JComboBox<ComboBoxItemInt>();
+        comboboxInterpolationMode.addItemListener(this.interpolationModeChangedListener);
+        comboboxInterpolationMode.addItem(new ComboBoxItemInt("Interpolation Nearest Neighbor", InterpolationMode.NEAREST_NEIGHBOR));
+        comboboxInterpolationMode.addItem(new ComboBoxItemInt("Interpolation Bicubic", InterpolationMode.BICUBIC));
+        comboboxInterpolationMode.addItem(new ComboBoxItemInt("Interpolation Bilinear", InterpolationMode.BILINEAR));
+        
+        comboBoxRenderQuality = new JComboBox<ComboBoxItemInt>();
+        comboBoxRenderQuality.addItemListener(renderQualityChangedListener);
+		comboBoxRenderQuality.addItem(new ComboBoxItemInt("Render Default", RenderQuality.DEFAULT));
+		comboBoxRenderQuality.addItem(new ComboBoxItemInt("Render Quality", RenderQuality.QUALITY));
+		comboBoxRenderQuality.addItem(new ComboBoxItemInt("Render Fast", RenderQuality.FAST));
+		
+		comboBoxAntiAliasingMode = new JComboBox<ComboBoxItemInt>();
+		comboBoxAntiAliasingMode.addItemListener(antiAliasingChangedListener);
+		comboBoxAntiAliasingMode.addItem(new ComboBoxItemInt("AntiAliasing Default", AntiAliasing.DEFAULT));
+		comboBoxAntiAliasingMode.addItem(new ComboBoxItemInt("AntiAliasing Enabled", AntiAliasing.ENABLED));
+		comboBoxAntiAliasingMode.addItem(new ComboBoxItemInt("AntiAliasing Disabled", AntiAliasing.DISABLED));
+    }
+      
 	protected void initToolbar() 
 	{
         toolBar = new JToolBar(JToolBar.HORIZONTAL);
         getContentPane().add(toolBar);
 
-        barSave = new JButton("Save");
+        barSave = new JButton("Open");
+        barSave.addActionListener(alAskOpenFile);
         toolBar.add(barSave);
 
         barEdit = new JButton("Edit");
@@ -114,6 +190,9 @@ public class MainForm extends JFrame implements ImageDisplayListener
         SpinnerModel model = new SpinnerNumberModel(100d, GraphicsFrame.MIN_ZOOM_PERCENT, GraphicsFrame.MAX_ZOOM_PERCENT, GUISettings.MAIN_ZOOM_SPINNER_CHANGE_VALUE);     
         zoomPercentSpinner = new JSpinner(model);
         zoomPercentSpinner.addChangeListener(chzoomPercentSpinnerChanged);
+        
+        
+        toolBar.add(comboboxInterpolationMode);
         toolBar.add(zoomPercentSpinner);
     }
 	
@@ -135,12 +214,26 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		JMenu mnNewMenu_1 = new JMenu("Edit");
 		menuBar.add(mnNewMenu_1);
 		
+		mnNewMenu_3 = new JMenu("View");
+		menuBar.add(mnNewMenu_3);
+		
+		
+//		mnNewMenu_3.add(comboBoxRenderQuality);
+//		mnNewMenu_3.add(comboBoxAntiAliasingMode);
+		
 		JMenu mnNewMenu_2 = new JMenu("Window");
 		menuBar.add(mnNewMenu_2);
 		
-		JMenuItem mntmNewMenuItem_2 = new JMenuItem("Toggle Left Pane");
-		mntmNewMenuItem_2.addActionListener(alToggleLeftPane);
-		mnNewMenu_2.add(mntmNewMenuItem_2);
+	
+		chckbxmntmNewCheckItem_1 = new JCheckBoxMenuItem("Toggle Left Pane");
+		chckbxmntmNewCheckItem_1.setSelected(true);
+		chckbxmntmNewCheckItem_1.addItemListener(ilToggleLeftPane);
+		mnNewMenu_2.add(chckbxmntmNewCheckItem_1);
+
+		
+		chckbxmntmNewCheckItem = new JCheckBoxMenuItem("Always On Top");
+		chckbxmntmNewCheckItem.addItemListener(ilToggleAlwaysOnTop);
+		mnNewMenu_2.add(chckbxmntmNewCheckItem);
 	}
 	
 	/**
@@ -152,6 +245,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		this.setBounds(100, 100, 847, 659);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		initComboBox();
 		initToolbar();
 		initMenuBar();
 		

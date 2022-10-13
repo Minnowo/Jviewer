@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.RenderingHints;
 import java.awt.TexturePaint;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -21,6 +22,10 @@ import javax.swing.JPanel;
 import Graphics.ImageUtil;
 import UI.Events.ImageZoomChangedEvent;
 import UI.Events.Listeners.ImageDisplayListener;
+import UI.ImageDisplay.Enums.AntiAliasing;
+import UI.ImageDisplay.Enums.InterpolationMode;
+import UI.ImageDisplay.Enums.RenderQuality;
+import UI.ImageDisplay.Enums.ZoomType;
 
 public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener
 {
@@ -49,6 +54,16 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     public int mouseDragButton = MouseEvent.BUTTON1;
     
     public int zoomType = ZoomType.INTO_MOUSE;
+    
+    
+    private int interpolationMode = InterpolationMode.NEAREST_NEIGHBOR;
+    private Object interpolationModeObject = RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR;
+    
+    private int antiAliasing = AntiAliasing.DISABLED;
+    private Object antiAliasingObject = RenderingHints.VALUE_ANTIALIAS_OFF;
+    
+    private int renderQuality = RenderQuality.QUALITY;
+    private Object renderQualityObject = RenderingHints.VALUE_RENDER_QUALITY;
     
     private Color cellColor1 = DefaultCellColor1;
     
@@ -230,8 +245,42 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     }
 
     
+    public void setAntiAliasing(int antialiasing)
+    {
+    	this.antiAliasing = antialiasing;
+    	this.antiAliasingObject = AntiAliasing.getMode(antialiasing); 
+    	this.repaint();
+    }
     
+    public int getAntiAliasing()
+    {
+    	return this.antiAliasing;
+    }
     
+	public void setRenderQuality(int renderQuality) 
+	{
+		this.renderQuality = renderQuality;
+		this.renderQualityObject = RenderQuality.getMode(renderQuality);
+		this.repaint();
+	}
+	
+	public int getRenderQuality()
+	{
+		return this.renderQuality;
+	}
+
+    
+    public void setInterpolationMode(int interpolationMode)
+    {
+    	this.interpolationMode = interpolationMode;
+    	this.interpolationModeObject = InterpolationMode.getMode(interpolationMode);
+    	this.repaint();
+    }
+    
+    public int getInterpolationMode()
+    {
+    	return this.interpolationMode;
+    }
     
     
     private void ZoomIntoMouse(double beforeZoom, double nowZoom, Point mousePosition) 
@@ -330,18 +379,21 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     }
     
     
-    protected void drawBackground(Graphics g)
+    protected void drawBackground(Graphics g, Graphics2D g2)
     {
-    	Graphics2D g2d = (Graphics2D) g;
-        g2d.setPaint(this.tileBrush);
-        g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
+        g2.setPaint(this.tileBrush);
+        g2.fillRect(0, 0, this.getWidth(), this.getHeight());
     }
     
     
-    protected void drawImage(Graphics g)
+    protected void drawImage(Graphics g, Graphics2D g2)
     {
     	Rect r = this.GetImageViewPort();
     
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING    , this.renderQualityObject);
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING , this.antiAliasingObject);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, this.interpolationModeObject);
+ 
     	g.drawImage(image, 
     			this.drX, this.drY, r.width, r.height, 
     			0, 0, this.imageWidth, this.imageHeight, null);
@@ -399,11 +451,11 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     		return;
     	}
     	
-    	this.drawBackground(g);
+    	this.drawBackground(g, (Graphics2D) g);
     	
     	if(this.image != null)
     	{	
-    		this.drawImage(g);
+    		this.drawImage(g, (Graphics2D) g);
     	}
     }
     

@@ -2,8 +2,8 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 
+import Graphics.ImageUtil;
 import UI.MainForm;
-import UI.Test;
 
 
 public class Program extends JFrame 
@@ -16,11 +16,13 @@ public class Program extends JFrame
 			{
 				try 
 				{
+					ImageUtil.setupMagick();
 					MainForm frame = new MainForm();
 				 
 				    frame.setVisible(true);
 				    
 //				    Test.gui();
+//				    System.out.println(Arrays.toString( ImageIO.getWriterMIMETypes()));
 		
 				} 
 				catch (Exception e) 

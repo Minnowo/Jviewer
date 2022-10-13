@@ -3,6 +3,7 @@
 
 /bin/
 /.metadata/
+/Lib/
 
 # Log file
 *.log
