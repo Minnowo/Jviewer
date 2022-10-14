@@ -8,6 +8,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.Icon;
 import javax.swing.JButton;
@@ -28,17 +31,23 @@ import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.im4java.core.IM4JavaException;
+
 import Configuration.GUISettings;
+import Graphics.Imaging.IMAGE;
+import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import UI.ComboBox.Items.ComboBoxItemInt;
 import UI.Events.ImageZoomChangedEvent;
 import UI.Events.Listeners.ImageDisplayListener;
-import UI.ImageDisplay.GraphicsFrame;
+import UI.ImageDisplay.ImageDisplay;
 import UI.ImageDisplay.Enums.AntiAliasing;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 
 public class MainForm extends JFrame implements ImageDisplayListener
 {
+	protected static final Logger logger = Logger.getLogger(MainForm.class.getName());
+	
 	private boolean _preventOverflow = false;
 	
 	Icon iconMenu = UIManager.getIcon("html.pendingImage");
@@ -48,7 +57,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
     JToolBar toolBar;
     JButton barSave, barEdit, barClear, barDelete;
     JSplitPane mainSplitPane ;
-    GraphicsFrame mainDisplay;
+    ImageDisplay mainDisplay;
     JSpinner zoomPercentSpinner;
     
     ItemListener ilToggleAlwaysOnTop = new ItemListener() {
@@ -76,7 +85,26 @@ public class MainForm extends JFrame implements ImageDisplayListener
 	           }
 		}
 	};
-
+	
+	ActionListener askSaveImage = new ActionListener() 
+	{
+    	public void actionPerformed(ActionEvent e) 
+    	{
+    		File f = DialogHelper.askSaveFile();
+    		
+    		if(f.getPath() == "")
+    			return;
+    		
+    		try 
+    		{
+				IMAGE.saveImage(mainDisplay.getImage(), f);
+    		}
+    		catch (ImageUnsupportedException e1) 
+    		{
+    			logger.log(Level.WARNING, "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s".formatted(f.getAbsolutePath(), e1.getMessage()), e1);
+			}
+    	}
+    };
      
      ActionListener alAskOpenFile = new ActionListener() 
      {
@@ -180,16 +208,22 @@ public class MainForm extends JFrame implements ImageDisplayListener
         barSave.addActionListener(alAskOpenFile);
         toolBar.add(barSave);
 
-        barEdit = new JButton("Edit");
+        barEdit = new JButton("Save");
+        barEdit.addActionListener(askSaveImage);
         toolBar.add(barEdit);
 
-        barClear = new JButton("Clear");
+        barClear = new JButton("Close");
+        barClear.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		mainDisplay.setImage(null, true);
+        	}
+        });
         toolBar.add(barClear);
 
         barDelete = new JButton("Delete");
         toolBar.add(barDelete);
         
-        SpinnerModel model = new SpinnerNumberModel(100d, GraphicsFrame.MIN_ZOOM_PERCENT, GraphicsFrame.MAX_ZOOM_PERCENT, GUISettings.MAIN_ZOOM_SPINNER_CHANGE_VALUE);     
+        SpinnerModel model = new SpinnerNumberModel(100d, ImageDisplay.MIN_ZOOM_PERCENT, ImageDisplay.MAX_ZOOM_PERCENT, GUISettings.MAIN_ZOOM_SPINNER_CHANGE_VALUE);     
         zoomPercentSpinner = new JSpinner(model);
         zoomPercentSpinner.addChangeListener(chzoomPercentSpinnerChanged);
         
@@ -274,7 +308,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		
 		splitPaneLeftPanel.add(btnNewButton);
 		
-		mainDisplay= new GraphicsFrame();
+		mainDisplay= new ImageDisplay();
 		mainDisplay.addImageDisplayListener(this);
 		
 		
@@ -286,6 +320,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		mainContentPanel.add(mainSplitPane);
 		getContentPane().add(mainContentPanel, BorderLayout.CENTER);
         getContentPane().add(toolBar, BorderLayout.NORTH);
+        chckbxmntmNewCheckItem_1.setSelected(false);
         this.setLocationRelativeTo(null);
 	}
 

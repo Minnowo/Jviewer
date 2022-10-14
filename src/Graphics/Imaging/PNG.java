@@ -22,4 +22,16 @@ public class PNG extends IMAGE
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public void save(String path) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void save(File path) {
+		// TODO Auto-generated method stub
+		
+	}
 }

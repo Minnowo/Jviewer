@@ -13,13 +13,25 @@ public class BMP extends IMAGE
 	}
 
 	@Override
-	public void load(File path) {
+	public void load(File path) 
+	{
+		super.image = super.loadImage(path);
+	}
+
+	@Override
+	public void load(String path) 
+	{
+		super.image = super.loadImage(path);
+	}
+
+	@Override
+	public void save(String path) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void load(String path) {
+	public void save(File path) {
 		// TODO Auto-generated method stub
 		
 	}

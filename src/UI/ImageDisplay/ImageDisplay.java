@@ -27,7 +27,7 @@ import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 import UI.ImageDisplay.Enums.ZoomType;
 
-public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener
+public class ImageDisplay extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener
 {
 	private Set<ImageDisplayListener> listeners = new HashSet<ImageDisplayListener>();
 
@@ -83,7 +83,7 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
 
 	private boolean display = true;
 	
-    private Image image;
+    private BufferedImage image;
 
     private int imageWidth;
     private int imageHeight;
@@ -105,7 +105,7 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     private TexturePaint tileBrush;
     
   //introduce constructor
-    public GraphicsFrame() 
+    public ImageDisplay() 
     {
     	super.addMouseListener(this);
     	super.addMouseMotionListener(this);
@@ -142,7 +142,7 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
 
     public void tryLoadImage(String path, boolean flushLastImage)
     {
-    	Image i = IMAGE.loadImage(path);
+    	BufferedImage i = IMAGE.loadImage(path);
     	
     	if(i == null)
     	{
@@ -152,7 +152,7 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     	this.setImage(i, flushLastImage);
     }
   
-    public void setImage(Image image, boolean flushLastImage)
+    public void setImage(BufferedImage image, boolean flushLastImage)
     {
     	if(this.image != null && flushLastImage)
     	{
@@ -164,13 +164,18 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     	if(image != null)
     	{
     		this.image = image;
-        	this.imageWidth = image.getWidth(null);
-        	this.imageHeight = image.getHeight(null);
+        	this.imageWidth = image.getWidth();
+        	this.imageHeight = image.getHeight();
     	}
     	
     	this.repaint();
     }
     
+    
+    public BufferedImage getImage()
+    {
+    	return this.image;
+    }
     
     
     public Color getCellColor1()
@@ -203,8 +208,8 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     
     public void setZoomPercent(int value)
     {
-    	if(value > GraphicsFrame.MAX_ZOOM_PERCENT || 
-    	   value < GraphicsFrame.MIN_ZOOM_PERCENT)
+    	if(value > ImageDisplay.MAX_ZOOM_PERCENT || 
+    	   value < ImageDisplay.MIN_ZOOM_PERCENT)
     		return;
     	
     	this._zoom = value / 100d;
@@ -221,8 +226,8 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
     
     public void setZoom(double value) 
     {
-    	if (value > GraphicsFrame.MAX_ZOOM ||
-    		value < GraphicsFrame.MIN_ZOOM)
+    	if (value > ImageDisplay.MAX_ZOOM ||
+    		value < ImageDisplay.MIN_ZOOM)
             return;
 
         this._zoom = value;

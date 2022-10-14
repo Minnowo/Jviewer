@@ -19,6 +19,8 @@ import javax.swing.JTextField;
 import org.im4java.process.ProcessStarter;
 
 import Configuration.ImageMagick;
+import javax.swing.JButton;
+import java.awt.BorderLayout;
 
 public class SettingsDialog  extends JDialog 
 {
@@ -30,11 +32,14 @@ public class SettingsDialog  extends JDialog
 	private JTextArea textArea;
 	private JPanel panel_1;
 	private JCheckBox chckbxNewCheckBox;
+	private JTextField textField_1;
+	private JCheckBox chckbxNewCheckBox_1;
+	private JButton btnNewButton;
 	
 	public SettingsDialog()
 	{
 		this.setTitle("Hello World");
-		this.setSize(572, 568);
+		this.setSize(590, 546);
 		this.setModal(true);
 		this.setLocationRelativeTo(null);
 		setupComponents();
@@ -60,6 +65,20 @@ public class SettingsDialog  extends JDialog
 		tabPage2 = new JPanel();
 		
 		tabbedPane.addTab("Page 1", tabPage1);
+		tabPage1.setLayout(null);
+		
+		btnNewButton = new JButton("New button");
+		btnNewButton.setBounds(35, 228, 89, 23);
+		tabPage1.add(btnNewButton);
+		
+		chckbxNewCheckBox_1 = new JCheckBox("New check box");
+		chckbxNewCheckBox_1.setBounds(22, 32, 130, 42);
+		tabPage1.add(chckbxNewCheckBox_1);
+		
+		textField_1 = new JTextField();
+		textField_1.setBounds(219, 45, 273, 217);
+		tabPage1.add(textField_1);
+		textField_1.setColumns(10);
 		tabbedPane.addTab("Magick Settings", tabPage2);
 		tabPage2.setLayout(new BoxLayout(tabPage2, BoxLayout.Y_AXIS));
 		

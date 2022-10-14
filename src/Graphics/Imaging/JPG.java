@@ -24,4 +24,16 @@ public class JPG extends IMAGE
 		
 	}
 
+	@Override
+	public void save(String path) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void save(File path) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

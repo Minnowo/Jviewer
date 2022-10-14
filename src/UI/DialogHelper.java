@@ -19,4 +19,19 @@ public class DialogHelper
 
 	    return  new File(fd.getDirectory() + fd.getFile());
 	}
+	
+	
+	public static File askSaveFile()
+	{
+		FileDialog fd = new FileDialog((Frame)null, "Save File");
+	    fd.setMode(FileDialog.SAVE);
+	    fd.setVisible(true);
+	    
+	    if(fd.getFile() == null)
+	    {
+	    	return new File("");
+	    }
+
+	    return  new File(fd.getDirectory() + fd.getFile());
+	}
 }

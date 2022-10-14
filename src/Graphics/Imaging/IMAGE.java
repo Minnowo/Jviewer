@@ -8,7 +8,8 @@ import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.lang.module.Configuration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 
@@ -18,11 +19,17 @@ import org.im4java.core.IMOperation;
 import org.im4java.core.Stream2BufferedImage;
 
 import Configuration.ImageMagick;
+import Graphics.Imaging.Enums.ImageFormat;
+import Graphics.Imaging.Exceptions.ImageUnsupportedException;
+import Graphics.Imaging.Exceptions.RequiresMagickException;
 
 public abstract class IMAGE 
 {
-	private byte imageFormat;
-	private String mimeType;
+    protected final static Logger logger = Logger.getLogger(IMAGE.class.getName());
+    
+	protected BufferedImage image;
+	protected byte imageFormat;
+	protected String mimeType;
 	
 	public IMAGE(byte imageFormat, String mime)
 	{
@@ -35,18 +42,93 @@ public abstract class IMAGE
     	return this.imageFormat;
     }
 
-    
     public String GetMimeType()
     {
     	return this.mimeType;
     }
 
+    public BufferedImage getImage()
+    {
+    	return this.image;
+    }
+    
     public abstract void load(File path);
     
     public abstract void load(String path);
     
+    public abstract void save(String path);
+    
+    public abstract void save(File path);
     
     
+    public static void saveImage(BufferedImage buf, String path) throws ImageUnsupportedException
+    {
+    	saveImage(buf, new File(path));
+    }
+    
+    public static void saveImage(BufferedImage buf, File path) throws ImageUnsupportedException
+    {
+    	if(buf == null)
+    		return; 
+    	
+    	if(ImageMagick.useImageMagick)
+    	{
+    		try 
+    		{
+				saveImageWithMagick(buf, path);
+			} 
+    		catch (IOException | InterruptedException | IM4JavaException e) 
+    		{
+    			logger.log(Level.WARNING, "Failed to save image %s using ImageMagick:\nMessage: %s".formatted(path.getAbsolutePath(), e.getMessage()), e);
+			}
+    	}
+    	
+    	final String ext = Util.StringUtil.getFileExtension(path, false);
+    	final byte imgFormat = ImageFormat.getFromFileExtension(ext);
+    	
+    	if(imgFormat == -1)
+    		throw new ImageUnsupportedException("The image format '%s' is was not recognized".formatted(ext));
+    	
+    	if(imgFormat == ImageFormat.WEBP)
+    		throw new RequiresMagickException("Saving with the WebP image format requires the use of ImageMagick");
+    	
+    	try 
+    	{
+    		ImageIO.write(buf, ImageFormat.getFileExtension(imgFormat), path);
+    	}
+    	catch (IOException e) 
+    	{
+            logger.log(Level.WARNING, "Failed to save image %s with ImageIO.write:\nMessage: %s".formatted(path.getAbsolutePath(), e.getMessage()), e);
+    	}
+	}
+    
+    
+    
+    public static void saveImageWithMagick(BufferedImage buf, File path) throws IOException, InterruptedException, IM4JavaException
+    {
+    	saveImageWithMagick(buf, path.getAbsolutePath());
+    }
+    
+    
+    public static void saveImageWithMagick(BufferedImage buf, String path) throws IOException, InterruptedException, IM4JavaException
+    {
+    	if(buf == null)
+    		return;
+    	
+    	IMOperation op = new IMOperation();
+    	op.addImage();                        // input
+    	op.addImage(path);                    // output
+
+    	ConvertCmd convert = new ConvertCmd();
+   
+		convert.run(op , buf);
+    }
+    
+    
+    public static BufferedImage loadImage(File path)
+    {
+    	return loadImage(path.getAbsolutePath());
+    }
     
     public static BufferedImage loadImage(String path)
 	{
@@ -61,9 +143,9 @@ public abstract class IMAGE
 			{
 				return loadImageWithMagick(path);
 			} 
-			catch (IOException | InterruptedException | IM4JavaException e1) 
+			catch (IOException | InterruptedException | IM4JavaException e) 
 			{
-				e1.printStackTrace();
+				logger.log(Level.WARNING, "Failed to read image %s using ImageMagick:\nMessage: %s".formatted(path, e.getMessage()), e);
 			}
 		}
 	
@@ -74,6 +156,7 @@ public abstract class IMAGE
 		} 
 		catch (IOException e) 
 		{
+			logger.log(Level.WARNING, "Failed to read image %s using ImageIO.read:\nMessage: %s".formatted(path, e.getMessage()), e);
 			return null;
 		}
 	}
@@ -88,11 +171,23 @@ public abstract class IMAGE
 		final String[] stdoutDecodeFormat = { "bmp", "png", "jpg" };
 		final String stdoutDFormat = stdoutDecodeFormat[chosenFormatIndex];
 		
+		// TODO: read the header of the file instead of the extension
+		final String ext = Util.StringUtil.getFileExtension(new File(path));
+		final byte imageFormat = ImageFormat.getFromFileExtension(ext);
+		
 		IMOperation op = new IMOperation();
 
-		// input image path
-		op.addImage(path);
-		
+		if(ImageMagick.readRequiresMergeLayers(imageFormat))
+		{
+			// input image path
+			op.addImage(path + "[0]");			
+		}
+		else 
+		{
+			// input image path
+			op.addImage(path);
+		}
+
 		// set image output type into stdout, (bmp seems fastest but slow to render)
 		op.addImage(stdoutDFormat + ":-"); 
 
