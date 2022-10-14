@@ -16,7 +16,7 @@ public class Program extends JFrame
 			{
 				try 
 				{
-					ImageUtil.setupMagick();
+					
 					MainForm frame = new MainForm();
 				 
 				    frame.setVisible(true);

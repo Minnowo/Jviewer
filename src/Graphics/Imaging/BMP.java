@@ -4,7 +4,7 @@ import java.io.File;
 
 import Graphics.Imaging.Enums.ImageFormat;
 
-public class BMP extends ImageBase 
+public class BMP extends IMAGE 
 {
 
 	public BMP() {

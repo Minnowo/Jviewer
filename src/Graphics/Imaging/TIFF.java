@@ -4,7 +4,7 @@ import java.io.File;
 
 import Graphics.Imaging.Enums.ImageFormat;
 
-public class TIFF extends ImageBase 
+public class TIFF extends IMAGE 
 {
 
 	public TIFF() {

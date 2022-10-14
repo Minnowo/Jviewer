@@ -19,7 +19,7 @@ import java.util.Set;
 
 import javax.swing.JPanel;
 
-import Graphics.ImageUtil;
+import Graphics.Imaging.IMAGE;
 import UI.Events.ImageZoomChangedEvent;
 import UI.Events.Listeners.ImageDisplayListener;
 import UI.ImageDisplay.Enums.AntiAliasing;
@@ -142,7 +142,7 @@ public class GraphicsFrame extends JPanel implements MouseListener, MouseMotionL
 
     public void tryLoadImage(String path, boolean flushLastImage)
     {
-    	Image i = ImageUtil.loadImage(path);
+    	Image i = IMAGE.loadImage(path);
     	
     	if(i == null)
     	{

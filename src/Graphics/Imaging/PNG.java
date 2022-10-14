@@ -4,7 +4,7 @@ import java.io.File;
 
 import Graphics.Imaging.Enums.ImageFormat;
 
-public class PNG extends ImageBase 
+public class PNG extends IMAGE 
 {
 	public PNG()
 	{

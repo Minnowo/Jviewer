@@ -17,6 +17,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
@@ -146,6 +147,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
       private JComboBox<ComboBoxItemInt> comboBoxAntiAliasingMode;
       private JCheckBoxMenuItem chckbxmntmNewCheckItem;
       private JCheckBoxMenuItem chckbxmntmNewCheckItem_1;
+      private JMenuItem mntmNewMenuItem_2;
       
       
     protected void initComboBox()
@@ -234,6 +236,14 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		chckbxmntmNewCheckItem = new JCheckBoxMenuItem("Always On Top");
 		chckbxmntmNewCheckItem.addItemListener(ilToggleAlwaysOnTop);
 		mnNewMenu_2.add(chckbxmntmNewCheckItem);
+		
+		mntmNewMenuItem_2 = new JMenuItem("New menu item");
+		mntmNewMenuItem_2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				new SettingsDialog().showDialog();
+			}
+		});
+		mnNewMenu_2.add(mntmNewMenuItem_2);
 	}
 	
 	/**
@@ -242,7 +252,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
 	public MainForm() 
 	{
 		this.setTitle("Hello World");
-		this.setBounds(100, 100, 847, 659);
+		this.setSize(847, 659);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		initComboBox();
@@ -276,7 +286,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		mainContentPanel.add(mainSplitPane);
 		getContentPane().add(mainContentPanel, BorderLayout.CENTER);
         getContentPane().add(toolBar, BorderLayout.NORTH);
-     
+        this.setLocationRelativeTo(null);
 	}
 
 	@Override
