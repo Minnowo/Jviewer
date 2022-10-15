@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.TexturePaint;
 import java.awt.event.MouseEvent;
@@ -12,19 +11,20 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.JPanel;
-import javax.swing.border.Border;
 
+import Graphics.ImageUtil;
 import Graphics.Imaging.IMAGE;
+import UI.Events.ImageSizeChangedEvent;
 import UI.Events.ImageZoomChangedEvent;
 import UI.Events.Listeners.ImageDisplayListener;
 import UI.ImageDisplay.Enums.AntiAliasing;
-import UI.ImageDisplay.Enums.DrawMode;
 import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
@@ -116,13 +116,13 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     /**
      * how the control should handle mouse zooming
      */
-    public int zoomType = ZoomType.INTO_MOUSE;
+    public byte zoomType = ZoomType.INTO_MOUSE;
     
     /**
      * the interpolation mode to use.
      * determines the RenderHints.VALUE_INTERPOLATION_xyz value 
      */
-    private int interpolationMode = InterpolationMode.NEAREST_NEIGHBOR;
+    private byte interpolationMode = InterpolationMode.NEAREST_NEIGHBOR;
     
     /**
      * RenderingHints.VALUE_INTERPOLATION_xyz Object reference, this is changed with interpolationMode
@@ -133,7 +133,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      * the antialiasing mode to use.
      * determines the RenderHints.VALUE_ANTIALIAS_xyz value 
      */
-    private int antiAliasing = AntiAliasing.DISABLED;
+    private byte antiAliasing = AntiAliasing.DISABLED;
     
     /**
      * RenderingHints.VALUE_ANTIALIAS_xyz Object reference, this is changed with antiAliasing
@@ -144,7 +144,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      * the render quality to use.
      * determines the RenderHints.VALUE_RENDER_xyz value 
      */
-    private int renderQuality = RenderQuality.QUALITY;
+    private byte renderQuality = RenderQuality.QUALITY;
     
     /**
      * RenderingHints.VALUE_RENDER_xyz Object reference, this is changed with renderQuality
@@ -160,6 +160,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      * the cell color 2 for the checkerboard pattern
      */
     private Color cellColor2 = DefaultCellColor2;
+    
+    /**
+     * the image border color
+     */
+    private Color imageBorderColor = Color.red;
     
     /**
      * the cell size for the checkerboard pattern BEFORE the cellScale is applied 
@@ -197,6 +202,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	private boolean display = true;
 	
 	/**
+	 * draws a rectangle around the image bounds
+	 */
+	private boolean drawImageBorder = false;
+	
+	/**
 	 * the current image
 	 */
     private BufferedImage image;
@@ -214,7 +224,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     /**
      * how the image should be drawn and interacted with by the user 
      */
-    private byte drawMode = DrawMode.RESIZEABLE;
+    private byte drawMode = ImageDrawMode.RESIZEABLE;
     
     /**
      * last click point when dragging the image
@@ -367,6 +377,71 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
         return new Rect(left, top, width, height);
     }
     
+    
+    public void rotate90Left()
+    {
+    	if(this.image == null)
+    		return; 
+    	
+    	rotateImage(270d);
+    }
+    
+    
+    public void rotate90Right()
+    {
+    	if(this.image == null)
+    		return; 
+    	
+    	rotateImage(90d);
+    }
+    
+    public void flipVertical()
+    {
+    	ImageUtil.flipVertical(this.image);
+    	this.repaint();
+    }
+    
+    public void flipHorizontal()
+    {
+    	ImageUtil.flipHorizontal(this.image);
+    	this.repaint();
+    }
+    
+    public void rotateImage(double degree)
+    {
+    	if(this.image == null)
+    		return; 
+    	
+    	final int w = imageWidth;
+    	final int h = imageHeight;
+    	
+    	this.setImage(ImageUtil.rotateImageByDegrees(this.image, degree), true);
+    	this.onImageSizeChanged(w, h, imageWidth, imageHeight);
+    }
+    
+    
+    public void showActualImageSize()
+    {
+    	if(this.drawMode != ImageDrawMode.RESIZEABLE)
+    		return;
+    		
+    	this.setZoom(1d);
+    	this.CenterCurrentImageWithoutResize();
+    }
+    
+    public void CenterCurrentImageWithoutResize()
+    {
+    	if (this.image == null )
+            return;
+    	
+	   final int iWidth = (int)(this.imageWidth  * this._zoom);
+       final int iHeight =(int)(this.imageHeight * this._zoom);
+
+       this.drX = (this.getWidth() >> 1) - (iWidth >> 1);
+       this.drY = (this.getHeight() >> 1) - (iHeight >> 1);
+       this.repaint();
+    }
+    
     public void CenterCurrentImage()
     {
         if (this.image == null)
@@ -380,6 +455,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
         
         switch (drawMode)
         {
+	        case ImageDrawMode.STRETCH:
+	        	this.drX = 0;
+	        	this.drY = 0;
+	        	break;
+	        	
             case ImageDrawMode.FIT_IMAGE:
             case ImageDrawMode.RESIZEABLE:
 
@@ -497,6 +577,16 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.cellColor2 = c;
     }
     
+    public Color getImageBorderColor()
+    {
+    	return this.imageBorderColor;
+    }
+    
+    public void setImageBorderColor(Color c)
+    {
+    	this.imageBorderColor = c;
+    	this.repaint();
+    }
     
     public int getZoomPercent()
     {
@@ -532,7 +622,16 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
         this.onImageZoomChanged();
 	}
     
+    public void setDrawBorder(boolean border)
+    {
+    	this.drawImageBorder = border;
+    	this.repaint();
+    }
     
+    public boolean getImageBorder()
+    {
+    	return this.drawImageBorder;
+    }
     
     public void setDisplay(boolean drawImage) 
     {
@@ -549,24 +648,24 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     
     public void setAntiAliasing(int antialiasing)
     {
-    	this.antiAliasing = antialiasing;
+    	this.antiAliasing = (byte) antialiasing;
     	this.antiAliasingObject = AntiAliasing.getMode(antialiasing); 
     	this.repaint();
     }
     
-    public int getAntiAliasing()
+    public byte getAntiAliasing()
     {
     	return this.antiAliasing;
     }
     
 	public void setRenderQuality(int renderQuality) 
 	{
-		this.renderQuality = renderQuality;
+		this.renderQuality = (byte) renderQuality;
 		this.renderQualityObject = RenderQuality.getMode(renderQuality);
 		this.repaint();
 	}
 	
-	public int getRenderQuality()
+	public byte getRenderQuality()
 	{
 		return this.renderQuality;
 	}
@@ -574,16 +673,27 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     
     public void setInterpolationMode(int interpolationMode)
     {
-    	this.interpolationMode = interpolationMode;
+    	this.interpolationMode = (byte) interpolationMode;
     	this.interpolationModeObject = InterpolationMode.getMode(interpolationMode);
     	this.repaint();
     }
     
-    public int getInterpolationMode()
+    public byte getInterpolationMode()
     {
     	return this.interpolationMode;
     }
     
+    
+    public byte getDrawMode()
+    {
+    	return this.drawMode;
+    }
+    
+    public void setDrawMode(int mode)
+    {
+    	this.drawMode = (byte)mode;
+    	CenterCurrentImage();
+    }
     
     private void ZoomIntoMouse(double beforeZoom, double nowZoom, Point mousePosition) 
     {
@@ -673,6 +783,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 
         switch (this.drawMode)
         {
+	        case ImageDrawMode.STRETCH:
+	        	return new Rect(0, 0, cWidth, cHeight);
+	        	
             case ImageDrawMode.RESIZEABLE:
 
                 width  = (int)(width  * this._zoom);
@@ -691,7 +804,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
                     drY = yPos;
                 }
 
-                return new Rect(xPos, yPos, xPos + width, yPos + height);
+                return new Rect(xPos, yPos, width, height);
 
             case ImageDrawMode.ACTUAL_SIZE:
 
@@ -737,7 +850,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
                     }
                 }
 
-                return new Rect(xPos, yPos, xPos + width, yPos + height);
+                return new Rect(xPos, yPos, width, height);
 
             case ImageDrawMode.FIT_IMAGE:
                 ZoomToFit();
@@ -756,7 +869,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
                     yPos = 0;
                 }
 
-                return new Rect(xPos, yPos, xPos + width, yPos + height);
+                return new Rect(xPos, yPos, width, height);
 
             case ImageDrawMode.DOWNSCALE_IMAGE:
 
@@ -779,7 +892,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
                     yPos = 0;
                 }
 
-                return new Rect(xPos, yPos, xPos + width, yPos + height);
+                return new Rect(xPos, yPos, width, height);
         }
         
         return null;
@@ -803,11 +916,17 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
         g2.setRenderingHint(RenderingHints.KEY_RENDERING    , this.renderQualityObject);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING , this.antiAliasingObject);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, this.interpolationModeObject);
- 
-    	g.drawImage(image, 
-    			r.x, r.y, r.width, r.height, 
-    			0, 0, this.imageWidth, this.imageHeight, null);
 
+        
+    	g.drawImage(image, 
+    			r.x, r.y, r.x + r.width, r.y + r.height, 
+    			0, 0, this.imageWidth, this.imageHeight, null);
+    	
+    	if(this.drawImageBorder)
+    	{
+    		g.setColor(Color.RED);
+        	g.drawRect(r.x, r.y, r.width, r.height);
+    	}
     }
     
     
@@ -867,6 +986,16 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	for(ImageDisplayListener ls : this.listeners)
     	{
     		ls.ImageZoomChanged(event);
+    	}
+	}
+    
+    protected void onImageSizeChanged(int newWidth, int newheight, int oldWidth, int oldHeight) 
+    {
+    	ImageSizeChangedEvent event = new ImageSizeChangedEvent(newWidth, newheight, oldWidth, oldHeight);
+    	
+    	for(ImageDisplayListener ls : this.listeners)
+    	{
+    		ls.ImageSizeChanged(event);
     	}
 	}
     
@@ -937,12 +1066,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	@Override 
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
-        if (this.image == null)
+        if (this.image == null || this.drawMode != ImageDrawMode.RESIZEABLE)
             return;
 
-//        if (this.DrawMode != ImageDrawMode.Resizeable)
-//            return;
-        
+
         // TODO: figure out how to get the mouse wheel delta thing
         // // C# code that does ^
         // // int spins = Math.Abs(e.Delta / SystemInformation.MouseWheelScrollDelta);

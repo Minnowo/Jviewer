@@ -24,4 +24,7 @@ public class ImageDrawMode
      * Allows for free dragging and zooming of the image.
      */
     public static final byte RESIZEABLE = 3;
+    
+    
+    public static final byte STRETCH = 4;
 }

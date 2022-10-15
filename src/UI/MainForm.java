@@ -1,7 +1,6 @@
 package UI;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -22,15 +21,17 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.border.BevelBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -38,10 +39,12 @@ import Configuration.GUISettings;
 import Graphics.Imaging.IMAGE;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import UI.ComboBox.Items.ComboBoxItemInt;
+import UI.Events.ImageSizeChangedEvent;
 import UI.Events.ImageZoomChangedEvent;
 import UI.Events.Listeners.ImageDisplayListener;
 import UI.ImageDisplay.ImageDisplay;
 import UI.ImageDisplay.Enums.AntiAliasing;
+import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 
@@ -56,7 +59,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
 	JPanel mainContentPanel, splitPaneLeftPanel, statusPanel;
 	JMenuBar menuBar;
     JToolBar toolBar;
-    JButton barSave, barEdit, barClear, barDelete;
+    JButton barSave, barEdit, barClear;
     JSplitPane mainSplitPane ;
     ImageDisplay mainDisplay;
     JSpinner zoomPercentSpinner;
@@ -94,6 +97,20 @@ public class MainForm extends JFrame implements ImageDisplayListener
 	        	   mainSplitPane.getLeftComponent().setVisible(true);
 	        	   mainSplitPane.setDividerLocation(loc);
 	        	   mainSplitPane.setDividerSize(GUISettings.MAIN_SPLIT_PANE_DIVISOR_SIZE);
+	           }
+		}
+	};
+	ItemListener ilToggleImageBorder = new ItemListener() {
+		
+		public void itemStateChanged(ItemEvent e) 
+		{
+			if(e.getStateChange() != ItemEvent.SELECTED) 
+	           {
+				mainDisplay.setDrawBorder(false);
+	           } 
+	           else 
+	           {
+	        	   mainDisplay.setDrawBorder(true);
 	           }
 		}
 	};
@@ -151,6 +168,25 @@ public class MainForm extends JFrame implements ImageDisplayListener
       		mainDisplay.setRenderQuality(i.getValue());
       	}
       };
+      ItemListener drawModeChangedListener = new ItemListener() 
+      {
+      	public void itemStateChanged(ItemEvent e) 
+      	{
+      		if(mainDisplay == null)
+      			return;
+      		ComboBoxItemInt i = (ComboBoxItemInt) e.getItem();
+      		mainDisplay.setDrawMode(i.getValue());
+      	}
+      };
+      private JButton btnNewButton_2;
+      private JComboBox<ComboBoxItemInt> comboBoxDrawMode;
+      private JMenuItem mntmNewMenuItem_5;
+      private JMenuItem mntmNewMenuItem_6;
+      private JMenuItem mntmNewMenuItem_7;
+      private JMenuItem mntmNewMenuItem_8;
+      private JMenuItem mntmNewMenuItem_9;
+      private JMenuItem mntmNewMenuItem_10;
+      private JProgressBar progressBar;
 
       
       
@@ -173,6 +209,15 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		comboBoxAntiAliasingMode.addItem(new ComboBoxItemInt("AntiAliasing Default", AntiAliasing.DEFAULT));
 		comboBoxAntiAliasingMode.addItem(new ComboBoxItemInt("AntiAliasing Enabled", AntiAliasing.ENABLED));
 		comboBoxAntiAliasingMode.addItem(new ComboBoxItemInt("AntiAliasing Disabled", AntiAliasing.DISABLED));
+		
+		comboBoxDrawMode = new JComboBox<ComboBoxItemInt>();
+		comboBoxDrawMode.addItemListener(drawModeChangedListener);
+		comboBoxDrawMode.addItem(new ComboBoxItemInt("Free Move", ImageDrawMode.RESIZEABLE));
+		comboBoxDrawMode.addItem(new ComboBoxItemInt("Awlays Fit Image", ImageDrawMode.FIT_IMAGE));
+		comboBoxDrawMode.addItem(new ComboBoxItemInt("Actual Size", ImageDrawMode.ACTUAL_SIZE));
+		comboBoxDrawMode.addItem(new ComboBoxItemInt("Downscale Only", ImageDrawMode.DOWNSCALE_IMAGE));
+		comboBoxDrawMode.addItem(new ComboBoxItemInt("Stretch", ImageDrawMode.STRETCH));
+		
     }
       
 	protected void initToolbar() 
@@ -196,9 +241,6 @@ public class MainForm extends JFrame implements ImageDisplayListener
         	}
         });
         toolBar.add(barClear);
-
-        barDelete = new JButton("Delete");
-        toolBar.add(barDelete);
         
         SpinnerModel model = new SpinnerNumberModel(100d, mainDisplay.MIN_ZOOM_PERCENT, mainDisplay.MAX_ZOOM_PERCENT, GUISettings.MAIN_ZOOM_SPINNER_CHANGE_VALUE);     
         zoomPercentSpinner = new JSpinner(model);
@@ -206,6 +248,9 @@ public class MainForm extends JFrame implements ImageDisplayListener
         
         
         toolBar.add(comboboxInterpolationMode);
+        
+        
+        toolBar.add(comboBoxDrawMode);
         toolBar.add(zoomPercentSpinner);
     }
 	
@@ -227,6 +272,46 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		JMenu mnNewMenu_1 = new JMenu("Edit");
 		menuBar.add(mnNewMenu_1);
 		
+		mntmNewMenuItem_6 = new JMenuItem("Rotate 90 Left");
+		mntmNewMenuItem_6.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				rotateImage(270);
+			}
+		});
+		mnNewMenu_1.add(mntmNewMenuItem_6);
+		
+		mntmNewMenuItem_7 = new JMenuItem("Rotate 90 Right");
+		mntmNewMenuItem_7.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				rotateImage(90);
+			}
+		});
+		mnNewMenu_1.add(mntmNewMenuItem_7);
+		
+		mntmNewMenuItem_8 = new JMenuItem("Flip Horizontal");
+		mntmNewMenuItem_8.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				flipHorizontal();
+			}
+		});
+		
+		mntmNewMenuItem_10 = new JMenuItem("Rotate By...");
+		mntmNewMenuItem_10.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				askRotateImage();
+			}
+		});
+		mnNewMenu_1.add(mntmNewMenuItem_10);
+		mnNewMenu_1.add(mntmNewMenuItem_8);
+		
+		mntmNewMenuItem_9 = new JMenuItem("Flip Vertical");
+		mntmNewMenuItem_9.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				flipVertical();
+			}
+		});
+		mnNewMenu_1.add(mntmNewMenuItem_9);
+		
 		mnNewMenu_3 = new JMenu("View");
 		menuBar.add(mnNewMenu_3);
 		
@@ -246,6 +331,18 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		});
 		mnNewMenu_3.add(mntmNewMenuItem_4);
 		
+		mntmNewMenuItem_5 = new JMenuItem("Center Image");
+		mntmNewMenuItem_5.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				centerImage();
+			}
+		});
+		mnNewMenu_3.add(mntmNewMenuItem_5);
+		
+		chckbxmntmNewCheckItem_2 = new JCheckBoxMenuItem("Image Outline");
+		chckbxmntmNewCheckItem_2.addItemListener(ilToggleImageBorder);
+		mnNewMenu_3.add(chckbxmntmNewCheckItem_2);
+		
 		
 //		mnNewMenu_3.add(comboBoxRenderQuality);
 //		mnNewMenu_3.add(comboBoxAntiAliasingMode);
@@ -264,7 +361,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		chckbxmntmNewCheckItem.addItemListener(ilToggleAlwaysOnTop);
 		mnNewMenu_2.add(chckbxmntmNewCheckItem);
 		
-		mntmNewMenuItem_2 = new JMenuItem("New menu item");
+		mntmNewMenuItem_2 = new JMenuItem("Settings");
 		mntmNewMenuItem_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				new SettingsDialog().showDialog();
@@ -302,9 +399,8 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		btnNewButton_1 = new JButton("New button");
 		splitPaneLeftPanel.add(btnNewButton_1);
 		
-		JButton btnNewButton = new JButton("New button");
-		
-		splitPaneLeftPanel.add(btnNewButton);
+		btnNewButton_2 = new JButton("New button");
+		splitPaneLeftPanel.add(btnNewButton_2);
 		
 		
 		mainDisplay.addImageDisplayListener(this);
@@ -332,6 +428,10 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		getContentPane().add(mainContentPanel, BorderLayout.CENTER);
         getContentPane().add(toolBar, BorderLayout.NORTH);
         getContentPane().add(statusPanel, BorderLayout.SOUTH);
+        
+        progressBar = new JProgressBar();
+        progressBar.setVisible(false);
+        statusPanel.add(progressBar);
         chckbxmntmNewCheckItem_1.setSelected(false);
         this.setLocationRelativeTo(null);
 	}
@@ -358,7 +458,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
          }
          
          mainDisplay.tryLoadImage(f.getPath(), true);
-         
+
          setStatusLabelText();
 	}
 	
@@ -382,17 +482,71 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		}
 	}
 	
+	public void askRotateImage()
+	{
+		if(mainDisplay.getImage() == null)
+			return;
+		
+		String s = JOptionPane.showInputDialog("Enter the angle to rotate the image");
+			
+		if(s == null)
+			return;
+		
+		try 
+		{
+			rotateImage(Double.parseDouble(s));
+		}
+		catch (NumberFormatException ex) {}
+	}
 	
 	public void viewActualImageSize()
 	{
-		mainDisplay.setZoom(1d);
-//		mainDisplay.CenterCurrentImage();
+		mainDisplay.showActualImageSize();
+	}
+	
+	public void centerImage()
+	{
+		mainDisplay.CenterCurrentImageWithoutResize();
 	}
 	
 	public void fitImageToView()
 	{
-//		mainDisplay.ZoomToFit();
 		mainDisplay.CenterCurrentImage();
+	}
+	
+	public void rotateImage(double degree)
+	{
+		mainDisplay.rotateImage(degree);
+	}
+	
+	public void flipVertical()
+	{
+		mainDisplay.flipVertical();
+	}
+	
+	public void flipHorizontal()
+	{
+		mainDisplay.flipHorizontal();
+	}
+	
+	
+	Runnable runProgressBar = new Runnable() {
+	       public void run() {
+	    	   progressBar.setVisible(true);
+	    	   progressBar.setIndeterminate(true);
+	       }
+	     };
+	private JCheckBoxMenuItem chckbxmntmNewCheckItem_2;
+	     
+	public void setProgress(boolean rue)
+	{
+		SwingUtilities.invokeLater(runProgressBar);   
+	}
+	
+	public void resetProgressbar()
+	{
+		progressBar.setVisible(false);
+		progressBar.setIndeterminate(false);
 	}
 	
 	@Override
@@ -406,5 +560,11 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		 this.zoomPercentSpinner.setValue(e.getZoomLevelPercent());
 		 
 		 _preventOverflow = false;
+	}
+
+	@Override
+	public void ImageSizeChanged(ImageSizeChangedEvent e) 
+	{
+		setStatusLabelText();
 	}
 }

@@ -1,5 +1,5 @@
 import java.awt.EventQueue;
-import java.util.Map;
+import java.util.ArrayList;
 
 import javax.swing.JFrame;
 
@@ -23,8 +23,7 @@ public class Program extends JFrame
 						ProcessStarter.setGlobalSearchPath(System.getenv("PATH"));
 					}
 					
-//					this is a commit
-					
+
 					if(Configuration.GUISettings.DEBUG_MODE)
 					{
 						ProcessStarter.setGlobalSearchPath("D:\\tmp\\JViewer\\magick");
