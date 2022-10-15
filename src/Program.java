@@ -23,6 +23,7 @@ public class Program extends JFrame
 						ProcessStarter.setGlobalSearchPath(System.getenv("PATH"));
 					}
 					
+//					this is a commit
 					
 					if(Configuration.GUISettings.DEBUG_MODE)
 					{
