@@ -76,6 +76,7 @@ public abstract class IMAGE
     		try 
     		{
 				saveImageWithMagick(buf, path);
+				return;
 			} 
     		catch (IOException | InterruptedException | IM4JavaException e) 
     		{

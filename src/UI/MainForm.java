@@ -1,6 +1,7 @@
 package UI;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -8,30 +9,30 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.border.BevelBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import org.im4java.core.IM4JavaException;
 
 import Configuration.GUISettings;
 import Graphics.Imaging.IMAGE;
@@ -52,13 +53,24 @@ public class MainForm extends JFrame implements ImageDisplayListener
 	
 	Icon iconMenu = UIManager.getIcon("html.pendingImage");
 	
-	JPanel mainContentPanel, splitPaneLeftPanel;
+	JPanel mainContentPanel, splitPaneLeftPanel, statusPanel;
 	JMenuBar menuBar;
     JToolBar toolBar;
     JButton barSave, barEdit, barClear, barDelete;
     JSplitPane mainSplitPane ;
     ImageDisplay mainDisplay;
     JSpinner zoomPercentSpinner;
+    JLabel statusLabel;
+    JComboBox<ComboBoxItemInt> comboboxInterpolationMode;
+    private JMenu mnNewMenu_3;
+    private JComboBox<ComboBoxItemInt> comboBoxRenderQuality;
+    private JComboBox<ComboBoxItemInt> comboBoxAntiAliasingMode;
+    private JCheckBoxMenuItem chckbxmntmNewCheckItem;
+    private JCheckBoxMenuItem chckbxmntmNewCheckItem_1;
+    private JMenuItem mntmNewMenuItem_2;
+    private JButton btnNewButton_1;
+    private JMenuItem mntmNewMenuItem_3;
+    private JMenuItem mntmNewMenuItem_4;
     
     ItemListener ilToggleAlwaysOnTop = new ItemListener() {
 		public void itemStateChanged(ItemEvent e) 
@@ -86,42 +98,11 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		}
 	};
 	
-	ActionListener askSaveImage = new ActionListener() 
-	{
-    	public void actionPerformed(ActionEvent e) 
-    	{
-    		File f = DialogHelper.askSaveFile();
-    		
-    		if(f.getPath() == "")
-    			return;
-    		
-    		try 
-    		{
-				IMAGE.saveImage(mainDisplay.getImage(), f);
-    		}
-    		catch (ImageUnsupportedException e1) 
-    		{
-    			logger.log(Level.WARNING, "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s".formatted(f.getAbsolutePath(), e1.getMessage()), e1);
-			}
-    	}
-    };
+	ActionListener askSaveImage = new ActionListener() { public void actionPerformed(ActionEvent e) { askSaveImage(); } };
      
-     ActionListener alAskOpenFile = new ActionListener() 
-     {
-         public void actionPerformed(ActionEvent ae) 
-         {
-            File f = DialogHelper.askChooseFile();
-            
-            if(!f.exists())
-            {
-            	return;
-            }
-            
-            mainDisplay.tryLoadImage(f.getPath(), true);
-         }
-      };
+    ActionListener alAskOpenFile = new ActionListener() { public void actionPerformed(ActionEvent e) { askOpenFile(); } };
       
-      ChangeListener chzoomPercentSpinnerChanged = new ChangeListener() 
+    ChangeListener chzoomPercentSpinnerChanged = new ChangeListener() 
       {
       	public void stateChanged(ChangeEvent e) 
       	{
@@ -135,7 +116,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
       		_preventOverflow = false;
     	}
       };
-      private JComboBox<ComboBoxItemInt> comboboxInterpolationMode;
+      
       
     
       ItemListener interpolationModeChangedListener = new ItemListener() 
@@ -170,12 +151,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
       		mainDisplay.setRenderQuality(i.getValue());
       	}
       };
-      private JMenu mnNewMenu_3;
-      private JComboBox<ComboBoxItemInt> comboBoxRenderQuality;
-      private JComboBox<ComboBoxItemInt> comboBoxAntiAliasingMode;
-      private JCheckBoxMenuItem chckbxmntmNewCheckItem;
-      private JCheckBoxMenuItem chckbxmntmNewCheckItem_1;
-      private JMenuItem mntmNewMenuItem_2;
+
       
       
     protected void initComboBox()
@@ -216,6 +192,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
         barClear.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent e) {
         		mainDisplay.setImage(null, true);
+        		setStatusLabelText();
         	}
         });
         toolBar.add(barClear);
@@ -223,7 +200,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
         barDelete = new JButton("Delete");
         toolBar.add(barDelete);
         
-        SpinnerModel model = new SpinnerNumberModel(100d, ImageDisplay.MIN_ZOOM_PERCENT, ImageDisplay.MAX_ZOOM_PERCENT, GUISettings.MAIN_ZOOM_SPINNER_CHANGE_VALUE);     
+        SpinnerModel model = new SpinnerNumberModel(100d, mainDisplay.MIN_ZOOM_PERCENT, mainDisplay.MAX_ZOOM_PERCENT, GUISettings.MAIN_ZOOM_SPINNER_CHANGE_VALUE);     
         zoomPercentSpinner = new JSpinner(model);
         zoomPercentSpinner.addChangeListener(chzoomPercentSpinnerChanged);
         
@@ -252,6 +229,22 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		
 		mnNewMenu_3 = new JMenu("View");
 		menuBar.add(mnNewMenu_3);
+		
+		mntmNewMenuItem_3 = new JMenuItem("Actual Size");
+		mntmNewMenuItem_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				viewActualImageSize();
+			}
+		});
+		mnNewMenu_3.add(mntmNewMenuItem_3);
+		
+		mntmNewMenuItem_4 = new JMenuItem("Fit To Screen");
+		mntmNewMenuItem_4.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				fitImageToView();
+			}
+		});
+		mnNewMenu_3.add(mntmNewMenuItem_4);
 		
 		
 //		mnNewMenu_3.add(comboBoxRenderQuality);
@@ -289,6 +282,8 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		this.setSize(847, 659);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		mainDisplay= new ImageDisplay();
+		
 		initComboBox();
 		initToolbar();
 		initMenuBar();
@@ -304,11 +299,14 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		splitPaneLeftPanel = new JPanel();
 		splitPaneLeftPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
+		btnNewButton_1 = new JButton("New button");
+		splitPaneLeftPanel.add(btnNewButton_1);
+		
 		JButton btnNewButton = new JButton("New button");
 		
 		splitPaneLeftPanel.add(btnNewButton);
 		
-		mainDisplay= new ImageDisplay();
+		
 		mainDisplay.addImageDisplayListener(this);
 		
 		
@@ -317,13 +315,86 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		mainSplitPane.setDividerLocation(250);
 		
 		
+		// create the status bar panel and shove it down the bottom of the frame
+		statusPanel = new JPanel();
+//		statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
+		
+//		statusPanel.setPreferredSize(new Dimension(getWidth(), 16));
+		statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
+		statusLabel = new JLabel("");
+		statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		statusPanel.add(statusLabel);
+
+		
+		
+		
 		mainContentPanel.add(mainSplitPane);
 		getContentPane().add(mainContentPanel, BorderLayout.CENTER);
         getContentPane().add(toolBar, BorderLayout.NORTH);
+        getContentPane().add(statusPanel, BorderLayout.SOUTH);
         chckbxmntmNewCheckItem_1.setSelected(false);
         this.setLocationRelativeTo(null);
 	}
 
+	public void setStatusLabelText()
+	{
+		if(mainDisplay.getImage() == null)
+		{
+			statusLabel.setText("");
+			return;
+		}
+		
+		statusLabel.setText("  " + mainDisplay.getImageWidth() + " x " + mainDisplay.getImageHeight());
+	}
+	
+	
+	public void askOpenFile()
+	{
+		 File f = DialogHelper.askChooseFile();
+         
+         if(!f.exists())
+         {
+         	return;
+         }
+         
+         mainDisplay.tryLoadImage(f.getPath(), true);
+         
+         setStatusLabelText();
+	}
+	
+	public void askSaveImage()
+	{
+		if(mainDisplay.getImage() == null)
+			return;
+		
+		File f = DialogHelper.askSaveFile();
+		
+		if(f.getPath() == "")
+			return;
+		
+		try 
+		{
+			IMAGE.saveImage(mainDisplay.getImage(), f);
+		}
+		catch (ImageUnsupportedException e1) 
+		{
+			logger.log(Level.WARNING, "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s".formatted(f.getAbsolutePath(), e1.getMessage()), e1);
+		}
+	}
+	
+	
+	public void viewActualImageSize()
+	{
+		mainDisplay.setZoom(1d);
+//		mainDisplay.CenterCurrentImage();
+	}
+	
+	public void fitImageToView()
+	{
+//		mainDisplay.ZoomToFit();
+		mainDisplay.CenterCurrentImage();
+	}
+	
 	@Override
 	public void ImageZoomChanged(ImageZoomChangedEvent e) 
 	{

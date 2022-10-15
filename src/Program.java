@@ -1,11 +1,11 @@
 import java.awt.EventQueue;
+import java.util.Map;
 
 import javax.swing.JFrame;
 
 import org.im4java.process.ProcessStarter;
 
 import UI.MainForm;
-import UI.Test;
 
 
 public class Program extends JFrame 
@@ -18,6 +18,11 @@ public class Program extends JFrame
 			{
 				try 
 				{
+					if(ProcessStarter.getGlobalSearchPath() == null)
+					{
+						ProcessStarter.setGlobalSearchPath(System.getenv("PATH"));
+					}
+					
 					
 					if(Configuration.GUISettings.DEBUG_MODE)
 					{

@@ -6,6 +6,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -21,6 +22,7 @@ import org.im4java.process.ProcessStarter;
 import Configuration.ImageMagick;
 import javax.swing.JButton;
 import java.awt.BorderLayout;
+import java.awt.Font;
 
 public class SettingsDialog  extends JDialog 
 {
@@ -28,13 +30,13 @@ public class SettingsDialog  extends JDialog
 	private JPanel tabPage1, tabPage2 ;
 	private JTextField textField;
 	private JPanel panel;
-	private JLabel lblNewLabel;
 	private JTextArea textArea;
 	private JPanel panel_1;
 	private JCheckBox chckbxNewCheckBox;
 	private JTextField textField_1;
 	private JCheckBox chckbxNewCheckBox_1;
 	private JButton btnNewButton;
+	private JTextArea textArea_1;
 	
 	public SettingsDialog()
 	{
@@ -51,7 +53,7 @@ public class SettingsDialog  extends JDialog
 		this.setVisible(true);
 		
 		ImageMagick.useImageMagick = chckbxNewCheckBox.isSelected();
-		ProcessStarter.setGlobalSearchPath(textArea.getText().replaceAll("\\r?\\n", ";"));
+		ProcessStarter.setGlobalSearchPath(textArea.getText().replaceAll("\\r?\\n", File.pathSeparator));
 	}
 	
 	
@@ -84,34 +86,35 @@ public class SettingsDialog  extends JDialog
 		
 		panel_1 = new JPanel();
 		tabPage2.add(panel_1);
-		
-		chckbxNewCheckBox = new JCheckBox("Use Image Magick");
-		chckbxNewCheckBox.setSelected(ImageMagick.useImageMagick);
-		panel_1.add(chckbxNewCheckBox);
+		panel_1.setLayout(new BorderLayout(0, 0));
 		
 		panel = new JPanel();
-		tabPage2.add(panel);
+		panel_1.add(panel, BorderLayout.CENTER);
 		GridBagLayout gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[]{157, 0};
-		gbl_panel.rowHeights = new int[]{22, 96, 0, 0, 0, 0, 0, 0, 0};
+		gbl_panel.rowHeights = new int[]{0, 0, 22, 96, 0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_panel.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_panel.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		panel.setLayout(gbl_panel);
 		
-		lblNewLabel = new JLabel("<html>Image Magick Search Path<br/>If Image Magick Is Not Added To Path, Put It's Directory Here<br/>Use 1 Line Per Directory</html>");
-		GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
-		gbc_lblNewLabel.anchor = GridBagConstraints.WEST;
-		gbc_lblNewLabel.insets = new Insets(0, 0, 5, 0);
-		gbc_lblNewLabel.gridx = 0;
-		gbc_lblNewLabel.gridy = 0;
-		panel.add(lblNewLabel, gbc_lblNewLabel);
+		
+		textArea_1 = new JTextArea();
+		textArea_1.setFont(new Font("Consolas", Font.PLAIN, 13));
+		textArea_1.setWrapStyleWord(true);
+		textArea_1.setLineWrap(true);
+		textArea_1.setText("Set the environment-variable IM4JAVA_TOOLPATH.\nThis variable should contain a list of directories to search for your tools.\nThey should be separated by your platform-pathdelemiter (on *NIX typically \":\", on Windows \";\")\nYou can also add paths to the box below (1 line per directory).\nDetected path delimeter \"%s\"".formatted(File.pathSeparator));
+		textArea_1.setEditable(false);
+		GridBagConstraints gbc_textArea_1 = new GridBagConstraints();
+		gbc_textArea_1.insets = new Insets(0, 0, 5, 0);
+		gbc_textArea_1.fill = GridBagConstraints.BOTH;
+		gbc_textArea_1.gridx = 0;
+		gbc_textArea_1.gridy = 0;
+		panel.add(textArea_1, gbc_textArea_1);
 		
 		textArea = new JTextArea();
-		
-		if(ProcessStarter.getGlobalSearchPath() != null)
-		{
-			textArea.setText(ProcessStarter.getGlobalSearchPath().replace(';', '\n'));
-		}
+		textArea.setFont(new Font("Consolas", Font.PLAIN, 13));
+		textArea.setLineWrap(true);
+		textArea.setWrapStyleWord(true);
 		
 		GridBagConstraints gbc_textArea = new GridBagConstraints();
 		gbc_textArea.insets = new Insets(0, 0, 5, 0);
@@ -119,6 +122,18 @@ public class SettingsDialog  extends JDialog
 		gbc_textArea.gridx = 0;
 		gbc_textArea.gridy = 1;
 		panel.add(textArea, gbc_textArea);
+		
+		chckbxNewCheckBox = new JCheckBox("Use Image Magick");
+		GridBagConstraints gbc_chckbxNewCheckBox = new GridBagConstraints();
+		gbc_chckbxNewCheckBox.gridx = 0;
+		gbc_chckbxNewCheckBox.gridy = 10;
+		panel.add(chckbxNewCheckBox, gbc_chckbxNewCheckBox);
+		chckbxNewCheckBox.setSelected(ImageMagick.useImageMagick);
+		
+		if(ProcessStarter.getGlobalSearchPath() != null)
+		{
+			textArea.setText(ProcessStarter.getGlobalSearchPath().replace(';', '\n'));
+		}
 		
 	}
 }
