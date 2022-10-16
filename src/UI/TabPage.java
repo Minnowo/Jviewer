@@ -1,17 +1,26 @@
 package UI;
 
 import java.awt.Component;
-import java.io.File;
 
 import javax.swing.JTabbedPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-import UI.Events.ImageTabPathChangedEvent;
 import UI.Events.ImageTabNameChangedEvent;
+import UI.Events.ImageTabPathChangedEvent;
 import UI.Events.Listeners.ImageTabPageListener;
 import UI.ImageDisplay.ImageTabPage;
 
-public class TabPage extends JTabbedPane implements ImageTabPageListener
+public class TabPage extends JTabbedPane implements ImageTabPageListener, ChangeListener
 {
+	public TabPage()
+	{
+		super();
+		
+		super.addChangeListener(this);
+	}
+	
+	
 	@Override
 	public void addTab(String title, Component component)
 	{
@@ -32,7 +41,7 @@ public class TabPage extends JTabbedPane implements ImageTabPageListener
 	{
 		super.remove(index);
 		
-		int totalTabs = super.getComponentCount();
+		int totalTabs = super.getTabCount();
 		
 		for(int i = 0; i < totalTabs; i++)
 		{
@@ -59,4 +68,16 @@ public class TabPage extends JTabbedPane implements ImageTabPageListener
 		super.setTitleAt(e.getCurrentTabIndex(), e.getNewname());	
 	}
 
+	
+	public void stateChanged(ChangeEvent e)
+	{
+        int selectedIndex = super.getSelectedIndex();
+        
+        Component c = super.getComponentAt(selectedIndex);
+		   
+		if(!(c instanceof ImageTabPage) || c == null)
+			return;
+		
+		((ImageTabPage)c).setLoadOnce();
+	}
 }

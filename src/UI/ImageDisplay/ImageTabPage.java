@@ -24,10 +24,13 @@ public class ImageTabPage extends ImageDisplay
 	
 	private int currentTabIndex = -1;
 	
+	
 	public ImageTabPage(JTabbedPane parent)
 	{
 		this.parent = parent;
 	}
+	
+	
 	
 	public int getCurrentTabIndex()
 	{

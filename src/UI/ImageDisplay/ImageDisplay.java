@@ -255,6 +255,12 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      */
     private TexturePaint tileBrush;
     
+    /**
+     * used to check if the component has loaded with an image at least once
+     * this is used to properly center the image on initial loads where the control might be hidden
+     */
+    private boolean hasLoadedOnce = false;
+	
 
     /**
      * default constructor which sets default ZOOM_PERCENT values 
@@ -321,6 +327,22 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		return x + " " + y + " " + width + " " + height;
     	}
     }
+    
+
+    /**
+     *  because the setImage function tries to center new images 
+     *  if this control hasn't been shown yet it doesn't center correctly
+     *  so this method can be used by parent components to tell the control 
+     *  to recenter the image for initial display
+     */
+    public void setLoadOnce()
+	{
+		if(this.image == null || this.hasLoadedOnce)
+			return;
+		
+		this.hasLoadedOnce = true;
+		this.CenterCurrentImage();
+	}
     
 
     /**
@@ -494,7 +516,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
             case ImageDrawMode.FIT_IMAGE:
             case ImageDrawMode.RESIZEABLE:
 
-                this.ZoomToFit();
+                this._ZoomToFit();
                 iWidth  = (int)(iWidth  * this._zoom);
                 iHeight = (int)(iHeight * this._zoom);
 
@@ -518,7 +540,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
             case ImageDrawMode.DOWNSCALE_IMAGE:
                 if (iWidth > cWidth || iHeight > cheight)
                 {
-                	this.ZoomToFit();
+                	this._ZoomToFit();
                 	
                     iWidth  = (int)(iWidth  * this._zoom);
                     iHeight = (int)(iHeight * this._zoom);
@@ -529,11 +551,17 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
                 break;
         }
 
+        this.onImageZoomChanged();
         this.repaint();
     }
     
-    
     public void ZoomToFit()
+    {
+    	_ZoomToFit();
+    	repaint();
+    }
+    
+    private void _ZoomToFit()
     {
         if (this.imageWidth <= 0 || this.imageHeight <= 0)
             return;
@@ -565,7 +593,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
             }
         }
 
-        this.setZoomPercent((int)zoom);
+        this._zoom = zoom / 100d;
     }
     
     
@@ -870,7 +898,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
             case ImageDrawMode.FIT_IMAGE:
             	
             	// always forces the image to fit 
-                ZoomToFit();
+            	_ZoomToFit();
 
                 // calculate visible image size
                 width  = (int)(width * this._zoom);
@@ -909,7 +937,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
             	// zoom the image so it fits
                 if (width > cWidth || height > cHeight)
                 {
-                    ZoomToFit();
+                	_ZoomToFit();
 
                     width  = (int)(width  * this._zoom);
                     height = (int)(height * this._zoom);

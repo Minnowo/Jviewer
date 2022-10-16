@@ -55,7 +55,7 @@ import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 import javax.swing.JTabbedPane;
 
-public class MainForm extends JFrame implements ImageDisplayListener
+public class MainForm extends JFrame implements ImageDisplayListener, ChangeListener
 {
 	protected static final Logger logger = Logger.getLogger(MainForm.class.getName());
 	
@@ -154,9 +154,13 @@ public class MainForm extends JFrame implements ImageDisplayListener
       {
       	public void itemStateChanged(ItemEvent e) 
       	{
+      		if(_preventOverflow)
+      			return;
       		
+      		_preventOverflow = true;
       		ComboBoxItemInt i = (ComboBoxItemInt) e.getItem();
       		getCurrentDisplay().setInterpolationMode(i.getValue());
+      		_preventOverflow = false;
       	}
       };
       
@@ -164,27 +168,40 @@ public class MainForm extends JFrame implements ImageDisplayListener
       {
       	public void itemStateChanged(ItemEvent e) 
       	{
-
+      		if(_preventOverflow)
+      			return;
+      		
+      		_preventOverflow = true;
       		ComboBoxItemInt i = (ComboBoxItemInt) e.getItem();
       		getCurrentDisplay().setRenderQuality(i.getValue());
+      		_preventOverflow = false;
       	}
       };
       ItemListener antiAliasingChangedListener = new ItemListener() 
       {
       	public void itemStateChanged(ItemEvent e) 
       	{
-
+      		if(_preventOverflow)
+      			return;
+      		
+      		_preventOverflow = true;
       		ComboBoxItemInt i = (ComboBoxItemInt) e.getItem();
       		getCurrentDisplay().setRenderQuality(i.getValue());
+      		_preventOverflow = false;
       	}
       };
       ItemListener drawModeChangedListener = new ItemListener() 
       {
       	public void itemStateChanged(ItemEvent e) 
       	{
+      		if(_preventOverflow)
+      			return;
       		
+      		_preventOverflow = true;
       		ComboBoxItemInt i = (ComboBoxItemInt) e.getItem();
       		getCurrentDisplay().setDrawMode(i.getValue());
+      		
+      		_preventOverflow = false;
       	}
       };
       private JComboBox<ComboBoxItemInt> comboBoxDrawMode;
@@ -202,31 +219,54 @@ public class MainForm extends JFrame implements ImageDisplayListener
     {
     	comboboxInterpolationMode = new JComboBox<ComboBoxItemInt>();
         comboboxInterpolationMode.addItemListener(this.interpolationModeChangedListener);
+        
+        // NOTE: the order in which these are added are the order of increment
+     	// 0th index in the combobox is the InterpolationMode.DEFAULT because it has a value of 0
+        // this is used when switching tabs to easily set the combobox to the correct value via the index
+        // see this.stateChanged
+        comboboxInterpolationMode.addItem(new ComboBoxItemInt("Interpolation Default", InterpolationMode.DEFAULT));
         comboboxInterpolationMode.addItem(new ComboBoxItemInt("Interpolation Nearest Neighbor", InterpolationMode.NEAREST_NEIGHBOR));
-        comboboxInterpolationMode.addItem(new ComboBoxItemInt("Interpolation Bicubic", InterpolationMode.BICUBIC));
         comboboxInterpolationMode.addItem(new ComboBoxItemInt("Interpolation Bilinear", InterpolationMode.BILINEAR));
+        comboboxInterpolationMode.addItem(new ComboBoxItemInt("Interpolation Bicubic", InterpolationMode.BICUBIC));
+        
         
         comboBoxRenderQuality = new JComboBox<ComboBoxItemInt>();
         comboBoxRenderQuality.addItemListener(renderQualityChangedListener);
+        
+        
+        // NOTE: the order in which these are added are the order of increment
+     	// 0th index in the combobox is the RenderQuality.DEFAULT because it has a value of 0
+     // this is used when switching tabs to easily set the combobox to the correct value via the index
+        // see this.stateChanged
 		comboBoxRenderQuality.addItem(new ComboBoxItemInt("Render Default", RenderQuality.DEFAULT));
-		comboBoxRenderQuality.addItem(new ComboBoxItemInt("Render Quality", RenderQuality.QUALITY));
 		comboBoxRenderQuality.addItem(new ComboBoxItemInt("Render Fast", RenderQuality.FAST));
+		comboBoxRenderQuality.addItem(new ComboBoxItemInt("Render Quality", RenderQuality.QUALITY));
+		
 		
 		comboBoxAntiAliasingMode = new JComboBox<ComboBoxItemInt>();
 		comboBoxAntiAliasingMode.addItemListener(antiAliasingChangedListener);
+		
+		// NOTE: the order in which these are added are the order of increment
+		// 0th index in the combobox is the AntiAliasing.DEFAULT because it has a value of 0
+		// this is used when switching tabs to easily set the combobox to the correct value via the index
+        // see this.stateChanged
 		comboBoxAntiAliasingMode.addItem(new ComboBoxItemInt("AntiAliasing Default", AntiAliasing.DEFAULT));
-		comboBoxAntiAliasingMode.addItem(new ComboBoxItemInt("AntiAliasing Enabled", AntiAliasing.ENABLED));
 		comboBoxAntiAliasingMode.addItem(new ComboBoxItemInt("AntiAliasing Disabled", AntiAliasing.DISABLED));
+		comboBoxAntiAliasingMode.addItem(new ComboBoxItemInt("AntiAliasing Enabled", AntiAliasing.ENABLED));
+		
 		
 		comboBoxDrawMode = new JComboBox<ComboBoxItemInt>();
 		comboBoxDrawMode.addItemListener(drawModeChangedListener);
+		
+		// NOTE: the order in which these are added are the order of increment
+		// 0th index in the combobox is ImageDrawMode.RESIZEABLE because it has a value of 0
+		// this is used when switching tabs to easily set the combobox to the correct value via the index
+        // see this.stateChanged
 		comboBoxDrawMode.addItem(new ComboBoxItemInt("Free Move", ImageDrawMode.RESIZEABLE));
 		comboBoxDrawMode.addItem(new ComboBoxItemInt("Awlays Fit Image", ImageDrawMode.FIT_IMAGE));
-		comboBoxDrawMode.addItem(new ComboBoxItemInt("Actual Size", ImageDrawMode.ACTUAL_SIZE));
 		comboBoxDrawMode.addItem(new ComboBoxItemInt("Downscale Only", ImageDrawMode.DOWNSCALE_IMAGE));
+		comboBoxDrawMode.addItem(new ComboBoxItemInt("Actual Size", ImageDrawMode.ACTUAL_SIZE));
 		comboBoxDrawMode.addItem(new ComboBoxItemInt("Stretch", ImageDrawMode.STRETCH));
-//		comboBoxDrawMode.addItem(new ComboBoxItemInt("DEGUG", 32));
-		
     }
       
 	protected void initToolbar() 
@@ -408,7 +448,9 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		tabbedPane = new TabPage();
+		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		tabbedPane.addTab(ImageTabPage.EMPTY_TAB_PAGE_NAME, new ImageTabPage(tabbedPane));
+		tabbedPane.addChangeListener(this);
 		
 		initComboBox();
 		initToolbar();
@@ -502,7 +544,10 @@ public class MainForm extends JFrame implements ImageDisplayListener
 
         ImageTabPage img = new ImageTabPage(tabbedPane);
         tabbedPane.addTab("", img);
-			
+        tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
+        
+        img.addImageDisplayListener(this);
+        	
         img.tryLoadImage(f.getPath(), true);
 
         setStatusLabelText();
@@ -677,5 +722,25 @@ public class MainForm extends JFrame implements ImageDisplayListener
 	public void ImageSizeChanged(ImageSizeChangedEvent e) 
 	{
 		setStatusLabelText();
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e) 
+	{
+		if(_preventOverflow)
+   			return;
+   		
+   		 _preventOverflow = true;
+   		 
+   		 ImageTabPage tp = getCurrentDisplay();
+   		 
+   		 zoomPercentSpinner.setValue(tp.getZoomPercent());
+   		 
+   		 comboBoxAntiAliasingMode.setSelectedIndex(tp.getAntiAliasing());
+   		 comboBoxDrawMode.setSelectedIndex(tp.getDrawMode());
+   		 comboboxInterpolationMode.setSelectedIndex(tp.getInterpolationMode());
+   		 comboBoxRenderQuality.setSelectedIndex(tp.getRenderQuality());
+      				 
+   		 _preventOverflow = false;
 	}
 }
