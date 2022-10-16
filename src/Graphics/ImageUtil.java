@@ -5,9 +5,14 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.Transparency;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.FilteredImageSource;
+import java.awt.image.ImageFilter;
+import java.awt.image.ImageProducer;
 import java.awt.image.ImagingOpException;
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
+import javax.swing.GrayFilter;
 
 import org.im4java.core.ConvertCmd;
 import org.im4java.core.IM4JavaException;
@@ -386,6 +392,52 @@ public class ImageUtil
 		BufferedImage b = ImageUtil.createOptimalImageFrom2(s2b.getImage());
 
 		return b;
+	}
+
+	public static BufferedImage convertGreyscaleFast(BufferedImage src)
+	{
+		ImageFilter filter = new GrayFilter(true, 50);  
+		ImageProducer producer = new FilteredImageSource(src.getSource(), filter);  
+		Image mage = Toolkit.getDefaultToolkit().createImage(producer);
+		
+		return (BufferedImage)mage;
+	}
+
+	public static void convertInverse(BufferedImage img)
+	{
+	    for (int x = 0; x < img.getWidth(); ++x)
+	    for (int y = 0; y < img.getHeight(); ++y)
+	    {
+	        int rgb = img.getRGB(x, y);
+	        int r = ((rgb >> 16) & 0xFF);
+	        int g = ((rgb >> 8) & 0xFF);
+	        int b = ((rgb & 0xFF));
+	        
+	        img.setRGB(x, y, ((255 - r) << 16) + ((255 - g) << 8) + (255 - b));
+	    }
+	}
+	
+
+	public static void convertGreyscale(BufferedImage img)
+	{
+		final double gsrm = 0.3; // 0.21
+		
+		final double gsgm = 0.59; // 0.71
+		
+		final double gsbm = 0.11; // 0.071
+		
+	    for (int x = 0; x < img.getWidth(); ++x)
+	    for (int y = 0; y < img.getHeight(); ++y)
+	    {
+	        int rgb = img.getRGB(x, y);
+	        int r = ((rgb >> 16) & 0xFF);
+	        int g = ((rgb >> 8) & 0xFF);
+	        int b = ((rgb & 0xFF));
+
+	        byte grey = (byte)((r * gsrm) + (g * gsgm) + (b * gsbm));
+	        
+	        img.setRGB(x, y, (grey << 16) + (grey << 8) + grey);
+	    }
 	}
 }
 

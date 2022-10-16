@@ -15,6 +15,8 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JPanel;
 
@@ -32,6 +34,8 @@ import UI.ImageDisplay.Enums.ZoomType;
 
 public class ImageDisplay extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener
 {
+	protected final static Logger logger = Logger.getLogger(ImageDisplay.class.getName());
+	
 	/**
 	 * listeners to evens created by this control
 	 */
@@ -195,11 +199,6 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      * should the image be centered when first drawn, or when the drawMode requires it 
      */
     private boolean centerImage = true;
-
-    /**
-     * should the background and image be drawn
-     */
-	private boolean display = true;
 	
 	/**
 	 * draws a rectangle around the image bounds
@@ -257,6 +256,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     private TexturePaint tileBrush;
     
 
+    /**
+     * default constructor which sets default ZOOM_PERCENT values 
+     */
     public ImageDisplay() 
     {
     	super.addMouseListener(this);
@@ -297,12 +299,14 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	initTileBrush();
     }
     
+    
+    /**
+     * simple rectangle class used to return the image viewport 
+     *
+     */
     private class Rect
     {
-    	public int x;
-    	public int y;
-    	public int width;
-    	public int height;
+    	final public int x, y, width, height;
     	
     	public Rect(int x, int y, int width, int height)
     	{
@@ -319,6 +323,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
 
+    /**
+     * tries to load the given file as an image and display it 
+     * @param path the file path
+     * @param flushLastImage should an existing image be flushed on successful load
+     */
     public void tryLoadImage(String path, boolean flushLastImage)
     {
     	BufferedImage i = ImageUtil.loadImage(path);
@@ -408,6 +417,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		return; 
     	
     	this.setImage(ImageUtil.rotate(image, Rotation.MIRROR_HORIZONTAL), true);
+    	this.repaint();
     }
     
     public void rotateImage(double degree)
@@ -422,6 +432,24 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.onImageSizeChanged(w, h, imageWidth, imageHeight);
     }
     
+    public void setGreyscale()
+    {
+    	if(this.image == null)
+    		return; 
+    	
+    	ImageUtil.convertGreyscale(this.image);
+//    	this.setImage(ImageUtil.convertGreyscaleFast(this.image), true);
+    	this.repaint();
+    }
+    
+    public void setInverse()
+    {
+    	if(this.image == null)
+    		return; 
+    	
+    	ImageUtil.convertInverse(this.image);
+    	this.repaint();
+    }
     
     public void showActualImageSize()
     {
@@ -608,6 +636,21 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
+    public void setZoomPercentAndZoomCenter(int value)
+    {
+    	if(value > MAX_ZOOM_PERCENT || 
+    	   value < MIN_ZOOM_PERCENT)
+    		return;
+    	    	
+    	double before = this._zoom;
+    	
+    	this._zoom = value / 100d;
+    	
+    	this.ZoomCenterImage(before, this._zoom);
+    	this.repaint();
+    	this.onImageZoomChanged();
+    }
+    
     
     public double getZoom() 
     {
@@ -620,7 +663,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		value < MIN_ZOOM)
             return;
 
-        this._zoom = value;
+    	this._zoom = value;
         this.repaint();
         this.onImageZoomChanged();
 	}
@@ -636,19 +679,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	return this.drawImageBorder;
     }
     
-    public void setDisplay(boolean drawImage) 
-    {
-		this.display = drawImage;
-		
-		this.repaint();
-	}
-    
-    public boolean getDisplay()
-    {
-    	return this.display;
-    }
 
-    
+    /**
+     * sets the {@link AntiAliasing} and repaints the control
+     * @param antialiasing the {@link AntiAliasing} to use 
+     */
     public void setAntiAliasing(int antialiasing)
     {
     	this.antiAliasing = (byte) antialiasing;
@@ -656,11 +691,21 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.repaint();
     }
     
+    
+    /**
+     * gets the {@link AntiAliasing} currently in use
+     * @return {@link Byte} with the value of the current {@link AntiAliasing} 
+     */
     public byte getAntiAliasing()
     {
     	return this.antiAliasing;
     }
     
+    
+    /**
+     * sets the current {@link RenderQuality} and repaints the control
+     * @param renderQuality the {@link RenderQuality} to use
+     */
 	public void setRenderQuality(int renderQuality) 
 	{
 		this.renderQuality = (byte) renderQuality;
@@ -668,12 +713,21 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 		this.repaint();
 	}
 	
+	
+	/**
+     * gets the {@link RenderQuality} currently in use
+     * @return {@link Byte} with the value of the current {@link RenderQuality} 
+     */
 	public byte getRenderQuality()
 	{
 		return this.renderQuality;
 	}
 
     
+	/**
+	 * sets the current {@link InterpolationMode} and repaints the control
+	 * @param interpolationMode the {@link InterpolationMode} to use
+	 */
     public void setInterpolationMode(int interpolationMode)
     {
     	this.interpolationMode = (byte) interpolationMode;
@@ -681,23 +735,211 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.repaint();
     }
     
+    
+    /**
+     * gets the {@link InterpolationMode} currently in use
+     * @return {@link Byte} with the value of the current {@link InterpolationMode} 
+     */
     public byte getInterpolationMode()
     {
     	return this.interpolationMode;
     }
     
     
+    /**
+     * gets the {@link ImageDrawMode} currently in use
+     * @return {@link Byte} with the value of the current {@link ImageDrawMode} 
+     */
     public byte getDrawMode()
     {
     	return this.drawMode;
     }
     
+    
+    /**
+     * sets the current {@link ImageDrawMode} and centers the image
+     * @param mode the {@link ImageDrawMode} to use
+     */
     public void setDrawMode(int mode)
     {
     	this.drawMode = (byte)mode;
     	CenterCurrentImage();
     }
     
+
+    /**
+     * gets the position the image is going to be drawn and at what size
+     * @return {@link Rect} containing the x, y, width and height of visible image
+     */
+    protected Rect GetImageViewPort()
+    {
+        if (this.image == null)
+            return null;
+
+        int xPos = drX;
+        int yPos = drY;
+
+        int width  = this.imageWidth;
+        int height = this.imageHeight;
+        
+        final int cWidth = this.getWidth();
+        final int cHeight = this.getHeight();
+
+
+        switch (this.drawMode)
+        {
+	        case ImageDrawMode.STRETCH:
+	        	return new Rect(0, 0, cWidth, cHeight);
+	        	
+	        
+            case ImageDrawMode.RESIZEABLE:
+
+            	// calculate scaled image size 
+                width  = (int)(width  * this._zoom);
+                height = (int)(height * this._zoom);
+
+                // prevent the image from getting lost off the left and top side of the control
+                // the right side is handled elsewhere so we don't need to worry about it here 
+                if (xPos < -width)
+                {
+                    xPos = -width;
+                    drX = xPos;
+                }
+
+                if (yPos < -height)
+                {
+                    yPos = -height;
+                    drY = yPos;
+                }
+
+                return new Rect(xPos, yPos, width, height);
+
+                
+            case ImageDrawMode.ACTUAL_SIZE:
+
+            	// since ACTUAL_SIZE mode only lets you drag the image if it's width / height > control width / height
+            	// we can either center it otherwise or draw it from 0, 0
+                if (this.centerImage)
+                {
+                	// if the image width < control width
+                	// we lock the image so that it's x position centers it 
+                    if (width < cWidth)
+                    {
+                        xPos = (cWidth >> 1) - (width >> 1);
+                    }
+                    
+                    // otherwise the user can drag the image free along the x axis
+                    // just need to keep it from getting lost 
+                    else if (xPos < -width)
+                    {
+                        xPos = -width;
+                        drX = xPos;
+                    }
+
+                    // same thing as above but for the image height and y
+                    if (height < cHeight)
+                    {
+                        yPos = (cHeight >> 1) - (height >> 1);
+                    }
+                    else if(yPos < -height)
+                    {
+                        yPos = -height;
+                        drY = yPos;     
+                    }
+                }
+                else
+                {
+                	// if the width < control width lock the image x at 0
+                    if (width < cWidth)
+                    {
+                        xPos = 0;
+                        drX = 0;
+                    }
+
+                    // same as above but for height and y 
+                    if (height < cHeight)
+                    {
+                        yPos = 0;
+                        drY = 0;
+                    }
+                }
+
+                return new Rect(xPos, yPos, width, height);
+
+
+            case ImageDrawMode.FIT_IMAGE:
+            	
+            	// always forces the image to fit 
+                ZoomToFit();
+
+                // calculate visible image size
+                width  = (int)(width * this._zoom);
+                height = (int)(height * this._zoom);
+
+                // lock the image so it's centered
+                if (this.centerImage)
+                {
+                    xPos = (cWidth  >> 1) - (width  >> 1);
+                    yPos = (cHeight >> 1) - (height >> 1);
+                }
+                
+                // or lock the image at 0, 0
+                else
+                {
+                    xPos = 0;
+                    yPos = 0;
+                }
+
+                return new Rect(xPos, yPos, width, height);
+
+                
+            // if someone set the drawMode to something it shouldn't be,
+            // correct them here and reset it 
+            default:
+            	
+            	logger.log(Level.WARNING, "bad drawMode [" + this.drawMode + "], resetting to DOWNSCALE_IMAGE");
+            	
+            	this.drawMode = ImageDrawMode.DOWNSCALE_IMAGE;
+            	
+            	// i love fall through, it's very handy 
+            	
+            case ImageDrawMode.DOWNSCALE_IMAGE:
+
+            	// if the image width or height is bigger than the control width / height
+            	// zoom the image so it fits
+                if (width > cWidth || height > cHeight)
+                {
+                    ZoomToFit();
+
+                    width  = (int)(width  * this._zoom);
+                    height = (int)(height * this._zoom);
+                }
+
+                // lock the image so it's centered
+                if (this.centerImage)
+                {
+                    xPos = (cWidth  >> 1) - (width  >> 1);
+                    yPos = (cHeight >> 1) - (height >> 1);
+                }
+                // lock the image at 0, 0
+                else
+                {
+                    xPos = 0;
+                    yPos = 0;
+                }
+
+                return new Rect(xPos, yPos, width, height);
+        }
+    }
+    
+    
+    
+    /**
+     * adjust the x and y position of the image so the zoom appears to be onto the mouse location
+     * @param beforeZoom the old zoom value
+     * @param nowZoom the new zoom value
+     * @param mousePosition the mouse position 
+     */
     private void ZoomIntoMouse(double beforeZoom, double nowZoom, Point mousePosition) 
     {
 		double scaleRatio = (this.imageWidth * beforeZoom) / (this.imageWidth * nowZoom);
@@ -710,6 +952,12 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	}
     
     
+    
+    /**
+     * adjust the x and y position of the image so the mouse is centered on the image
+     * @param afterZoom the new zoom value
+     * @param mousePosition the mouse position 
+     */
     protected void ZoomCenterMouse(double afterZoom, Point mousePosition)
     {
         double afterZoomWidth = imageWidth * afterZoom;
@@ -720,6 +968,12 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
 
     
+    
+    /**
+     * adjust the x and y position of the image so the zoom appears to be into the bottom right corner
+     * @param beforeZoom the zoom value before it changed
+     * @param afterZoom the new zoom value
+     */
     protected void ZoomBottomRightImage(double beforeZoom, double afterZoom)
     {
         double beforeZoomWidth = imageWidth * beforeZoom;
@@ -733,6 +987,12 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
 
 
+    
+    /**
+     * adjust the x and y position of the image so the zoom appear to be into the center of the image
+     * @param beforeZoom the zoom value before it changed
+     * @param afterZoom the new zoom value
+     */
     protected void ZoomCenterImage(double beforeZoom, double afterZoom)
     {
         double beforeZoomWidth = imageWidth * beforeZoom;
@@ -746,6 +1006,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
 
 
+    
+    /**
+     * handles zooming in and out with the mouse
+     * @param isZoomIn true = in, false = out
+     */
     protected void MouseZoom(boolean isZoomIn)
     {
         if (isZoomIn)
@@ -769,139 +1034,14 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
-    protected Rect GetImageViewPort()
-    {
-        if (this.image == null)
-            return null;
-
-        int xPos = drX;
-        int yPos = drY;
-
-        int width  = this.imageWidth;
-        int height = this.imageHeight;
-        
-        final int cWidth = this.getWidth();
-        final int cHeight = this.getHeight();
-
-
-        switch (this.drawMode)
-        {
-	        case ImageDrawMode.STRETCH:
-	        	return new Rect(0, 0, cWidth, cHeight);
-	        	
-            case ImageDrawMode.RESIZEABLE:
-
-                width  = (int)(width  * this._zoom);
-                height = (int)(height * this._zoom);
-
-                // prevent the image from getting lost off the left and top side of the control
-                if (drX < -width)
-                {
-                    xPos = -width;
-                    drX = xPos;
-                }
-
-                if (drY < -height)
-                {
-                    yPos = -height;
-                    drY = yPos;
-                }
-
-                return new Rect(xPos, yPos, width, height);
-
-            case ImageDrawMode.ACTUAL_SIZE:
-
-                if (this.centerImage)
-                {
-                    if (width < cWidth)
-                    {
-                        //     (this.ClientSize.Width / 2) - (width / 2);
-                        xPos = (cWidth >> 1) - (width >> 1);
-                    }
-                    else if (xPos < -width)
-                    {
-                        xPos = -width;
-                        
-                        // this is important
-                        drX = xPos;
-                    }
-
-                    if (height < cHeight)
-                    {
-                        yPos = (cHeight >> 1) - (height >> 1);
-                    }
-                    else if(yPos < -height)
-                    {
-                        yPos = -height;
-                        
-                        // this is important
-                        drY = yPos;     
-                    }
-                }
-                else
-                {
-                    if (width < cWidth)
-                    {
-                        xPos = 0;
-                        drX = 0;
-                    }
-
-                    if (height < cHeight)
-                    {
-                        yPos = 0;
-                        drY = 0;
-                    }
-                }
-
-                return new Rect(xPos, yPos, width, height);
-
-            case ImageDrawMode.FIT_IMAGE:
-                ZoomToFit();
-
-                width  = (int)(width * this._zoom);
-                height = (int)(height * this._zoom);
-
-                if (this.centerImage)
-                {
-                    xPos = (cWidth  >> 1) - (width  >> 1);
-                    yPos = (cHeight >> 1) - (height >> 1);
-                }
-                else
-                {
-                    xPos = 0;
-                    yPos = 0;
-                }
-
-                return new Rect(xPos, yPos, width, height);
-
-            case ImageDrawMode.DOWNSCALE_IMAGE:
-
-                if (width > cWidth || height > cHeight)
-                {
-                    ZoomToFit();
-
-                    width  = (int)(width  * this._zoom);
-                    height = (int)(height * this._zoom);
-                }
-
-                if (this.centerImage)
-                {
-                    xPos = (cWidth  >> 1) - (width  >> 1);
-                    yPos = (cHeight >> 1) - (height >> 1);
-                }
-                else
-                {
-                    xPos = 0;
-                    yPos = 0;
-                }
-
-                return new Rect(xPos, yPos, width, height);
-        }
-        
-        return null;
-    }
 
     
+    
+    /**
+     * draws the checkerboard background pattern
+     * @param g {@link Graphics} object from paintComponent
+     * @param g2 {@link Graphics2D} object from paintComponent
+     */
     protected void drawBackground(Graphics g, Graphics2D g2)
     {
         g2.setPaint(this.tileBrush);
@@ -909,22 +1049,34 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
+    
+    
+    
+    
+    /**
+     * draws the image and image border to the display 
+     * @param g {@link Graphics} object from paintComponent
+     * @param g2 {@link Graphics2D} object from paintComponent
+     */
     protected void drawImage(Graphics g, Graphics2D g2)
     {
     	Rect r = this.GetImageViewPort();
     
-    	if(r == null)
-    		return;
-    	
+    	// set the current rendering settings
+    	// since current the drawImage function is the last function called in paint
+    	// we don't reset this, but might need to in the future 
         g2.setRenderingHint(RenderingHints.KEY_RENDERING    , this.renderQualityObject);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING , this.antiAliasingObject);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, this.interpolationModeObject);
 
-        
+        // uses x1 x2 etc
+        // so we need to add the x to the width 
     	g.drawImage(image, 
     			r.x, r.y, r.x + r.width, r.y + r.height, 
     			0, 0, this.imageWidth, this.imageHeight, null);
     	
+    	// draw border around image bounds 
+    	// this uses actual width / height for some reason? 
     	if(this.drawImageBorder)
     	{
     		g.setColor(Color.RED);
@@ -933,40 +1085,65 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
+    
+    
+    
+    
+    
+    /**
+     * creates the tile brush used to draw the checkerboard pattern for the background
+     */
     protected void initTileBrush()
     {        
         int width  = (int)(cellSize * 2 * this.cellScale);
         int height = (int)(cellSize * 2 * this.cellScale);
         
+        // optimized BufferedImage of type RGB 
         BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
         Graphics g = result.getGraphics();
         
+        // draw smallest pattern
+        // O X
+        // X O 
+        
+        // draw X
         g.setColor(this.cellColor1);
         g.fillRect(cellSize, 0, cellSize, cellSize);
         g.fillRect(0, cellSize, cellSize, cellSize);
         
+        // draw O
         g.setColor(this.cellColor2);
         g.fillRect(0, 0, cellSize, cellSize);
         g.fillRect(cellSize, cellSize, cellSize, cellSize);
         
         g.dispose();
     
+        // tile brush for optimized drawing of the entire control area with the small graphic generated above 
         Rectangle2D bounds = new Rectangle2D.Float(0, 0, result.getWidth(), result.getHeight());
         
         this.tileBrush = new TexturePaint(result, bounds);
     }
     
     
-    private int FindNearest(int zoomLevel)
+    
+    
+    
+    
+    
+    /**
+     * find the nearest zoom in the {@link this.ZOOM_PERCENT} array and returns it's index
+     * @param zoomLevel, the zoom percentage
+     * @return the index of the closest zoom percent in the ZOOM_PERCENT array
+     */
+    public int FindNearest(int zoomLevel)
     {
         int nearestValue = 0;
         int nearestDifference = Math.abs(ZOOM_PERCENT[0] - zoomLevel);
         
         for (int i = 1; i < ZOOM_PERCENT.length; i++)
         {
-            int value = ZOOM_PERCENT[i];
-            int difference = Math.abs(value - zoomLevel);
+            int difference = Math.abs(ZOOM_PERCENT[i] - zoomLevel);
             
             if (difference < nearestDifference)
             {
@@ -977,11 +1154,27 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
         return nearestValue;
     }
     
+    
+    
+    
+    
+    
+    /**
+     * register the given object to the event listener to receive events from this class 
+     * @param lis a class which implements {@link ImageDisplayListener}
+     */
     public void addImageDisplayListener(ImageDisplayListener lis) 
     {
     	this.listeners.add(lis);
 	}
     
+    
+    
+    
+    
+    /**
+     * called when the image zoom changes to notify listeners
+     */
     protected void onImageZoomChanged() 
     {
     	ImageZoomChangedEvent event = new ImageZoomChangedEvent(this.getZoomPercent(), this._zoom);
@@ -992,6 +1185,18 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	}
 	}
     
+    
+    
+    
+    
+    
+    /**
+     * called when the image size changes to notify listeners
+     * @param newWidth the new width of the image
+     * @param newheight the new height of the image
+     * @param oldWidth the old width of the image
+     * @param oldHeight the old height of the image
+     */
     protected void onImageSizeChanged(int newWidth, int newheight, int oldWidth, int oldHeight) 
     {
     	ImageSizeChangedEvent event = new ImageSizeChangedEvent(newWidth, newheight, oldWidth, oldHeight);
@@ -1002,15 +1207,14 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	}
 	}
     
+    
+    
+    
+    
     @Override
     protected void paintComponent(Graphics g) 
     {
     	super.paintComponent(g);
-    	
-    	if(!this.display) 
-    	{
-    		return;
-    	}
     	
     	this.drawBackground(g, (Graphics2D) g);
     	
@@ -1021,10 +1225,14 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
 
+    
+    
+    
+    
 	@Override
 	public void mousePressed(MouseEvent e) 
 	{
-		if (this.drawMode != ImageDrawMode.ACTUAL_SIZE && !this.allowDrag)
+		if (!this.allowDrag)
             return;
 		
 		if(e.getButton() == this.mouseDragButton)
@@ -1033,6 +1241,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 			this.lastClickPoint.setLocation(e.getPoint());
 		}
 	}
+	
+	
+	
 	
 	
 	@Override
@@ -1045,9 +1256,16 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	}
 	
 	
+	
+	
+	
+	
 	@Override
     public void mouseDragged(MouseEvent e) 
 	{
+		// resizeable mode lets you free drag the image
+		// actual size mode lets you drag the image if it's bigger than the control wdith / height
+		// nothing else lets you drag it so stop here 
 		if(!this.isDragButtonDown || this.drawMode != ImageDrawMode.RESIZEABLE && this.drawMode != ImageDrawMode.ACTUAL_SIZE)
 			return;
 		
@@ -1064,6 +1282,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 		
 		this.repaint();
     }
+	
+	
+	
+	
 	
 	
 	@Override 
@@ -1088,6 +1310,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
         	this.MouseZoom(false);
         }
         
+        // adjusts the image x and y position after the zoom has changed 
         switch (this.zoomType) 
         {
 	        case ZoomType.BOTTOM_RIGHT_IMAGE: 
@@ -1109,6 +1332,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
         
         this.repaint();
 	}
+	
+	
+	
+	
 	
 	@Override
 	public void mouseClicked(MouseEvent e) 	{	}
