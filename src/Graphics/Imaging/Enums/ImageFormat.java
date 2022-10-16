@@ -1,6 +1,6 @@
 package Graphics.Imaging.Enums;
 
-public class ImageFormat 
+public interface ImageFormat 
 {
 	public static final byte UNKNOWN = -1;
 	

@@ -2,7 +2,7 @@ package UI.ImageDisplay.Enums;
 
 import java.awt.RenderingHints;
 
-public class InterpolationMode 
+public interface InterpolationMode 
 {
 	
     public static final byte DEFAULT = 0;

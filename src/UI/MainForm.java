@@ -36,6 +36,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import Configuration.GUISettings;
+import Graphics.ImageUtil;
 import Graphics.Imaging.IMAGE;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import UI.ComboBox.Items.ComboBoxItemInt;
@@ -474,7 +475,7 @@ public class MainForm extends JFrame implements ImageDisplayListener
 		
 		try 
 		{
-			IMAGE.saveImage(mainDisplay.getImage(), f);
+			ImageUtil.saveImage(mainDisplay.getImage(), f);
 		}
 		catch (ImageUnsupportedException e1) 
 		{
@@ -516,6 +517,17 @@ public class MainForm extends JFrame implements ImageDisplayListener
 	
 	public void rotateImage(double degree)
 	{
+		switch ((int)degree) 
+		{
+		
+		case 270:
+			mainDisplay.rotate90Left();
+			return;
+			
+		case 90: 
+			mainDisplay.rotate90Right();
+			return;
+		}
 		mainDisplay.rotateImage(degree);
 	}
 	

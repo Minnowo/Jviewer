@@ -2,7 +2,7 @@ package UI.ImageDisplay.Enums;
 
 import java.awt.RenderingHints;
 
-public class AntiAliasing 
+public interface AntiAliasing 
 {
 	/**
      * Antialiasing hint value -- rendering is done with a defaultantialiasing mode chosen by the implementation.

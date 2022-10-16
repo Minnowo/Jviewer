@@ -1,4 +1,5 @@
 import java.awt.EventQueue;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -22,7 +23,6 @@ public class Program extends JFrame
 					{
 						ProcessStarter.setGlobalSearchPath(System.getenv("PATH"));
 					}
-					
 
 					if(Configuration.GUISettings.DEBUG_MODE)
 					{

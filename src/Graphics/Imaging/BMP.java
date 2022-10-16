@@ -2,6 +2,7 @@ package Graphics.Imaging;
 
 import java.io.File;
 
+import Graphics.ImageUtil;
 import Graphics.Imaging.Enums.ImageFormat;
 
 public class BMP extends IMAGE 
@@ -15,13 +16,13 @@ public class BMP extends IMAGE
 	@Override
 	public void load(File path) 
 	{
-		super.image = super.loadImage(path);
+		super.image = ImageUtil.loadImage(path);
 	}
 
 	@Override
 	public void load(String path) 
 	{
-		super.image = super.loadImage(path);
+		super.image = ImageUtil.loadImage(path);
 	}
 
 	@Override

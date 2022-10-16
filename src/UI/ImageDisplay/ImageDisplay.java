@@ -11,7 +11,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
@@ -20,6 +19,7 @@ import java.util.Set;
 import javax.swing.JPanel;
 
 import Graphics.ImageUtil;
+import Graphics.Rotation;
 import Graphics.Imaging.IMAGE;
 import UI.Events.ImageSizeChangedEvent;
 import UI.Events.ImageZoomChangedEvent;
@@ -321,7 +321,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 
     public void tryLoadImage(String path, boolean flushLastImage)
     {
-    	BufferedImage i = IMAGE.loadImage(path);
+    	BufferedImage i = ImageUtil.loadImage(path);
     	
     	if(i == null)
     	{
@@ -383,28 +383,31 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(this.image == null)
     		return; 
     	
-    	rotateImage(270d);
+    	this.setImage(ImageUtil.rotate(image, Rotation.CCW_90), true);
     }
-    
     
     public void rotate90Right()
     {
     	if(this.image == null)
     		return; 
     	
-    	rotateImage(90d);
+    	this.setImage(ImageUtil.rotate(image, Rotation.CW_90), true);
     }
     
     public void flipVertical()
     {
-    	ImageUtil.flipVertical(this.image);
-    	this.repaint();
+    	if(this.image == null)
+    		return; 
+    	
+    	this.setImage(ImageUtil.rotate(image, Rotation.MIRROR_VERTICAL), true);
     }
     
     public void flipHorizontal()
     {
-    	ImageUtil.flipHorizontal(this.image);
-    	this.repaint();
+    	if(this.image == null)
+    		return; 
+    	
+    	this.setImage(ImageUtil.rotate(image, Rotation.MIRROR_HORIZONTAL), true);
     }
     
     public void rotateImage(double degree)
@@ -414,7 +417,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	
     	final int w = imageWidth;
     	final int h = imageHeight;
-    	
+
     	this.setImage(ImageUtil.rotateImageByDegrees(this.image, degree), true);
     	this.onImageSizeChanged(w, h, imageWidth, imageHeight);
     }

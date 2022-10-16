@@ -1,6 +1,6 @@
 package UI.ImageDisplay.Enums;
 
-public class ImageDrawMode 
+public interface ImageDrawMode 
 {
 	/**
 	 * Always scale the image to fit the maximum possible size.

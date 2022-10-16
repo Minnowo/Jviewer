@@ -5,7 +5,7 @@ package UI.ImageDisplay.Enums;
 /**
  * C like enum that represents the zoom type 
  */
-public class ZoomType 
+public interface ZoomType 
 {
 	/**
 	 * Zooms into the bottom right of the image.
