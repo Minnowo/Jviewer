@@ -30,12 +30,14 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -47,13 +49,11 @@ import UI.ComboBox.Items.ComboBoxItemInt;
 import UI.Events.ImageSizeChangedEvent;
 import UI.Events.ImageZoomChangedEvent;
 import UI.Events.Listeners.ImageDisplayListener;
-import UI.ImageDisplay.ImageDisplay;
 import UI.ImageDisplay.ImageTabPage;
 import UI.ImageDisplay.Enums.AntiAliasing;
 import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
-import javax.swing.JTabbedPane;
 
 public class MainForm extends JFrame implements ImageDisplayListener, ChangeListener
 {

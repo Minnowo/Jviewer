@@ -526,15 +526,15 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 
             case ImageDrawMode.ACTUAL_SIZE:
 
-                if (iWidth < cWidth)
-                {
+//                if (iWidth < cWidth)
+//                {
                     this.drX = (cWidth >> 1) - (iWidth >> 1);
-                }
+//                }
 
-                if (iHeight < cheight)
-                {
+//                if (iHeight < cheight)
+//                {
                     this.drY = (cheight >> 1) - (iHeight >> 1);
-                }
+//                }
                 break;
 
             case ImageDrawMode.DOWNSCALE_IMAGE:
