@@ -42,6 +42,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.im4java.process.ProcessStarter;
+
 import Configuration.GUISettings;
 import Graphics.ImageUtil;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
@@ -533,16 +535,9 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	      .collect(Collectors.toSet());
 	}
 	
-	public void askOpenFileInNewTab()
+	public void openInNewTab(File f)
 	{
-		File f = DialogHelper.askChooseFile();
-        
-        if(!f.exists())
-        {
-        	return;
-        }
-
-        ImageTabPage img = new ImageTabPage(tabbedPane);
+		ImageTabPage img = new ImageTabPage(tabbedPane);
         tabbedPane.addTab("", img);
         tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
         
@@ -551,6 +546,26 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
         img.tryLoadImage(f.getPath(), true);
 
         setStatusLabelText();
+	}
+	
+	public void openInPlace(File f)
+	{
+
+        getCurrentDisplay().tryLoadImage(f.getPath(), true);
+
+        setStatusLabelText();
+	}
+	
+	public void askOpenFileInNewTab()
+	{
+		File f = DialogHelper.askChooseFile();
+        
+        if(!f.exists())
+        {
+        	return;
+        }
+        
+        openInNewTab(f);
 	}
 	
 	public void askOpenFileInPlace()
@@ -562,9 +577,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
          	return;
          }
 
-         getCurrentDisplay().tryLoadImage(f.getPath(), true);
-
-         setStatusLabelText();
+         openInPlace(f);
 	}
 	
 	public void askSaveImage()
@@ -704,6 +717,48 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	{
 		return (ImageTabPage)this.tabbedPane.getSelectedComponent();
 	}
+	
+	
+	public void handleStartArguments(String[] args)
+	{
+		int openedImaegs = 0;
+		
+		for(String a : args)
+		{
+			if(a.contains("="))
+			{
+				int index = a.indexOf('=');
+				
+				String key = a.substring(0, index).toLowerCase();
+				String value = a.substring(index + 1);
+				
+				
+				switch (key) 
+				{
+					case "im4java_toolpath":
+						
+						ProcessStarter.setGlobalSearchPath(value);
+						
+						continue;
+				}
+				
+				continue;
+			}
+			
+			
+			File f = new File(a);
+			
+			// limit to 5 for now to prevent computer dying here from accidentally opening way more 
+			// TODO: make this better isntead of just a limit of 5
+			if(f.exists() && !(openedImaegs > 5))
+			{
+				openedImaegs++;
+				
+				openInNewTab(f);
+			}
+		}
+	}
+	
 	
 	@Override
 	public void ImageZoomChanged(ImageZoomChangedEvent e) 
