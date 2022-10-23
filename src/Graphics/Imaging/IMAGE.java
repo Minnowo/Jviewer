@@ -23,10 +23,11 @@ import Graphics.ImageUtil;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import Graphics.Imaging.Exceptions.RequiresMagickException;
+import Util.Logging.LogUtil;
 
 public abstract class IMAGE 
 {
-    protected final static Logger logger = Logger.getLogger(IMAGE.class.getName());
+    protected final static Logger logger = LogUtil.getLogger(IMAGE.class.getName());
     
 	protected BufferedImage image;
 	protected byte imageFormat;

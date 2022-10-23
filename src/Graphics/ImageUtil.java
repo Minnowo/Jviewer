@@ -31,10 +31,11 @@ import Configuration.ImageMagick;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import Graphics.Imaging.Exceptions.RequiresMagickException;
+import Util.Logging.LogUtil;
 
 public class ImageUtil 
 {	
-	protected final static Logger logger = Logger.getLogger(ImageUtil.class.getName());
+	protected final static Logger logger = LogUtil.getLogger(ImageUtil.class.getName());
 	
 	
 	/**

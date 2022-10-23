@@ -31,10 +31,11 @@ import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 import UI.ImageDisplay.Enums.ZoomType;
+import Util.Logging.LogUtil;
 
 public class ImageDisplay extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener
 {
-	protected final static Logger logger = Logger.getLogger(ImageDisplay.class.getName());
+	protected final static Logger logger = LogUtil.getLogger(ImageDisplay.class.getName());
 	
 	/**
 	 * listeners to evens created by this control

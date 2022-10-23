@@ -57,10 +57,11 @@ import UI.ImageDisplay.Enums.AntiAliasing;
 import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
+import Util.Logging.LogUtil;
 
 public class MainForm extends JFrame implements ImageDisplayListener, ChangeListener
 {
-	protected static final Logger logger = Logger.getLogger(MainForm.class.getName());
+	protected static final Logger logger = LogUtil.getLogger(MainForm.class.getName());
 	
 	private boolean _preventOverflow = false;
 	
