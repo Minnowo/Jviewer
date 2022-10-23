@@ -1,6 +1,7 @@
 package UI;
 
 import java.awt.BorderLayout;
+import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -719,46 +720,62 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	}
 	
 	
-	public void handleStartArguments(String[] args)
+	int openedImaegs = 0;
+	public void handleStartArgument(String arg)
 	{
-		int openedImaegs = 0;
-		
-		for(String a : args)
+		if(arg.contains("="))
 		{
-			if(a.contains("="))
+			int index = arg.indexOf('=');
+			
+			String key = arg.substring(0, index).toLowerCase();
+			String value = arg.substring(index + 1);
+			
+			
+			switch (key) 
 			{
-				int index = a.indexOf('=');
-				
-				String key = a.substring(0, index).toLowerCase();
-				String value = a.substring(index + 1);
-				
-				
-				switch (key) 
-				{
-					case "im4java_toolpath":
-						
-						ProcessStarter.setGlobalSearchPath(value);
-						
-						continue;
-				}
-				
-				continue;
+				case "im4java_toolpath":
+					
+					ProcessStarter.setGlobalSearchPath(value);
+					
+					return;
 			}
 			
+			return;
+		}
+		
+		
+		File f = new File(arg);
+		
+		// limit to 5 for now to prevent computer dying here from accidentally opening way more 
+		// TODO: make this better isntead of just a limit of 5
+		if(f.exists() && !(openedImaegs > 5))
+		{
+			openedImaegs++;
 			
-			File f = new File(a);
-			
-			// limit to 5 for now to prevent computer dying here from accidentally opening way more 
-			// TODO: make this better isntead of just a limit of 5
-			if(f.exists() && !(openedImaegs > 5))
-			{
-				openedImaegs++;
-				
-				openInNewTab(f);
-			}
+			openInNewTab(f);
 		}
 	}
 	
+	public void handleStartArguments(String[] args)
+	{
+		for(String a : args)
+		{
+			handleStartArgument(a);
+		}
+		
+		openedImaegs = 0;
+	}
+	
+	public void bringToFront()
+	{
+		if(getState() != Frame.NORMAL) 
+		{ 
+			setState(Frame.NORMAL); 
+		}
+		
+		toFront();
+		repaint();
+	}
 	
 	@Override
 	public void ImageZoomChanged(ImageZoomChangedEvent e) 
