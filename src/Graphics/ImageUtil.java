@@ -332,6 +332,8 @@ public class ImageUtil
 		if(!path_.exists())
 			return null;
 		
+		logger.log(Level.INFO, "loading %s".formatted(path));
+		
 		if(ImageMagick.useImageMagick) 
 		{
 			try 

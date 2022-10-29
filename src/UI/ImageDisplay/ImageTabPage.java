@@ -30,7 +30,10 @@ public class ImageTabPage extends ImageDisplay
 		this.parent = parent;
 	}
 	
-	
+	public void SetTabName(String name)
+	{
+		onTabNameChangedEvent(name);
+	}
 	
 	public int getCurrentTabIndex()
 	{

@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Set;
 import java.util.logging.Level;
@@ -14,12 +15,14 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -33,12 +36,12 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -46,6 +49,7 @@ import javax.swing.event.ChangeListener;
 import org.im4java.process.ProcessStarter;
 
 import Configuration.GUISettings;
+import Configuration.KeyboardSettings;
 import Graphics.ImageUtil;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import UI.ComboBox.Items.ComboBoxItemInt;
@@ -57,9 +61,10 @@ import UI.ImageDisplay.Enums.AntiAliasing;
 import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
+import Util.ClipboardHelper;
 import Util.Logging.LogUtil;
 
-public class MainForm extends JFrame implements ImageDisplayListener, ChangeListener
+public class MainForm extends JFrame implements ImageDisplayListener, ChangeListener 
 {
 	protected static final Logger logger = LogUtil.getLogger(MainForm.class.getName());
 	
@@ -86,6 +91,38 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
     private JMenuItem mntmNewMenuItem_4;
     
     DefaultListModel listModel1 = new DefaultListModel();
+    
+    class KeyAction extends AbstractAction 
+    {
+    	public final String actionName;
+    	public final KeyStroke keystroke;
+    	private final Runnable action;
+    	
+    	public KeyAction(String actionName, KeyStroke key, final Runnable action) 
+    	{
+			this.actionName = actionName;
+			this.action = action;
+			this.keystroke = key;
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) 
+		{
+			 if ( SwingUtilities.isEventDispatchThread()) 
+			 {
+				 this.action.run();
+			 } 
+			 else 
+			 {
+			     SwingUtilities.invokeLater(this.action);
+			 }
+		}
+	}
+    
+    final KeyAction PASTE_IMAGE = new KeyAction("PasteImage", KeyboardSettings.PASTE_IMAGE_KEY, this::pasteImage);
+    final KeyAction COPY_IMAGE = new KeyAction("CopyImage", KeyboardSettings.COPY_IMAGE_KEY, this::copyImage);
+
+    
     
     ItemListener ilToggleAlwaysOnTop = new ItemListener() {
 		public void itemStateChanged(ItemEvent e) 
@@ -442,14 +479,22 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		mnNewMenu_2.add(mntmNewMenuItem_2);
 	}
 	
-	/**
-	 * Create the frame.
-	 */
+
+    private class MoveAction extends AbstractAction 
+    {
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        {
+
+           System.out.println("ctrl + v pressed");
+        }
+    }
 	public MainForm() 
 	{
 		this.setTitle("Hello World");
 		this.setSize(847, 659);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
 		
 		tabbedPane = new TabPage();
 		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -501,9 +546,6 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		statusPanel.add(statusLabel);
 
-		
-		
-		
 		mainContentPanel.add(mainSplitPane);
 		getContentPane().add(mainContentPanel, BorderLayout.CENTER);
 		
@@ -516,8 +558,24 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
         statusPanel.add(progressBar);
         chckbxmntmNewCheckItem_1.setSelected(false);
         this.setLocationRelativeTo(null);
+        setupKeybindings();
 	}
 
+	
+	private void setupKeybindings()
+	{
+		if(tabbedPane == null)
+			return;
+		
+		final int IFW = JComponent.WHEN_IN_FOCUSED_WINDOW;
+		
+		tabbedPane.getInputMap(IFW).put(PASTE_IMAGE.keystroke, PASTE_IMAGE.actionName);
+	    tabbedPane.getActionMap().put(PASTE_IMAGE.actionName, PASTE_IMAGE);
+	    
+	    tabbedPane.getInputMap(IFW).put(COPY_IMAGE.keystroke, COPY_IMAGE.actionName);
+	    tabbedPane.getActionMap().put(COPY_IMAGE.actionName, COPY_IMAGE);
+	}
+	
 	public void setStatusLabelText()
 	{
 		if(getCurrentDisplay().getImage() == null)
@@ -535,6 +593,19 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	      .filter(file -> !file.isDirectory())
 	      .map(File::getName)
 	      .collect(Collectors.toSet());
+	}
+	
+	public void openInNewTab(BufferedImage image)
+	{
+		ImageTabPage img = new ImageTabPage(tabbedPane);
+        tabbedPane.addTab("%d x %d".formatted(image.getWidth(), image.getHeight()), img);
+        tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
+        
+        img.addImageDisplayListener(this);
+        	
+        img.setImage(image, true);
+
+        setStatusLabelText();
 	}
 	
 	public void openInNewTab(File f)
@@ -776,6 +847,25 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		
 		toFront();
 		repaint();
+	}
+	
+	
+	public void pasteImage()
+	{
+		BufferedImage img = ClipboardHelper.getClipboardImage();
+		
+		if(img == null)
+			return;
+		
+		openInNewTab(img);
+	}
+	
+	public void copyImage()
+	{
+		if(getCurrentDisplay() == null || getCurrentDisplay().getImage() == null)
+			return;
+		
+		ClipboardHelper.copyImageToClipboard(getCurrentDisplay().getImage());
 	}
 	
 	@Override

@@ -57,6 +57,9 @@ public class TabPage extends JTabbedPane implements ImageTabPageListener, Change
 	@Override
 	public void imagePathChanged(ImageTabPathChangedEvent e) 
 	{
+		if(e.getCurrentTabIndex() < 0 || e.getCurrentTabIndex() >= super.getTabCount())
+			return;
+		
 		super.setToolTipTextAt(e.getCurrentTabIndex(), e.getAfter());
 	}
 
