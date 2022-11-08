@@ -53,6 +53,8 @@ public class ClipboardHelper
 
     public static void copyImageToClipboard(BufferedImage img) 
     {
+    	if(img == null)
+    		return; 
     	// this prints a big stack trace if the image has transparency
     	// idk how to remove it or catch the error or what but it doesn't seem to do anything?
 		clipboard.setContents(new TransferableImage(img), null);        

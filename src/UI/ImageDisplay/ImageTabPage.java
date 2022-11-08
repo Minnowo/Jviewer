@@ -1,14 +1,14 @@
 package UI.ImageDisplay;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.JTabbedPane;
 
-import UI.Events.ImageTabPathChangedEvent;
+import Graphics.Imaging.ImageBase;
 import UI.Events.ImageTabNameChangedEvent;
+import UI.Events.ImageTabPathChangedEvent;
 import UI.Events.Listeners.ImageTabPageListener;
 
 public class ImageTabPage extends ImageDisplay 
@@ -70,7 +70,7 @@ public class ImageTabPage extends ImageDisplay
 	
     
 	@Override 
-	public void setImage(BufferedImage image, boolean flushLastImage)
+	public void setImage(ImageBase image, boolean flushLastImage)
 	{
 		super.setImage(image, flushLastImage);
 		

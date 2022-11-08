@@ -2,7 +2,6 @@ import java.awt.EventQueue;
 import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import javax.swing.JFrame;
 
@@ -19,6 +18,7 @@ public class Program extends JFrame
 	protected static final Logger logger = LogUtil.getLogger(Program.class.getName());
 
 	public static MainForm frame;
+
 	
 	
 	public static void main(String[] args) 

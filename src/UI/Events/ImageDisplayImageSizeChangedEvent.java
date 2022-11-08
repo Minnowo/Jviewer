@@ -1,13 +1,13 @@
 package UI.Events;
 
-public class ImageSizeChangedEvent implements Event  
+public class ImageDisplayImageSizeChangedEvent implements Event  
 {
 	 	private int newHeight;
 	    private int newWidth;
 	    private int oldHeight;
 	    private int oldWidth;
 	    
-	    public ImageSizeChangedEvent(int newWidth, int newHeight, int oldWidth, int oldHeight)
+	    public ImageDisplayImageSizeChangedEvent(int newWidth, int newHeight, int oldWidth, int oldHeight)
 	    {
 	    	this.newHeight = newHeight;
 	    	this.newWidth = newWidth;

@@ -6,6 +6,8 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.TexturePaint;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -19,12 +21,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JPanel;
+import javax.swing.Timer;
 
 import Graphics.ImageUtil;
 import Graphics.Rotation;
-import Graphics.Imaging.IMAGE;
-import UI.Events.ImageSizeChangedEvent;
-import UI.Events.ImageZoomChangedEvent;
+import Graphics.Imaging.ImageBase;
+import Graphics.Imaging.Gif.GIF;
+import UI.Events.ImageDisplayImageSizeChangedEvent;
+import UI.Events.ImageDisplayZoomChangedEvent;
 import UI.Events.Listeners.ImageDisplayListener;
 import UI.ImageDisplay.Enums.AntiAliasing;
 import UI.ImageDisplay.Enums.ImageDrawMode;
@@ -33,7 +37,7 @@ import UI.ImageDisplay.Enums.RenderQuality;
 import UI.ImageDisplay.Enums.ZoomType;
 import Util.Logging.LogUtil;
 
-public class ImageDisplay extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener
+public class ImageDisplay extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener 
 {
 	protected final static Logger logger = LogUtil.getLogger(ImageDisplay.class.getName());
 	
@@ -207,9 +211,14 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	private boolean drawImageBorder = false;
 	
 	/**
+	 * timer that controls repaint for gifs 
+	 */
+	private Timer timer = new Timer(10, this);
+	
+	/**
 	 * the current image
 	 */
-    private BufferedImage image;
+    private ImageBase image;
 
     /**
      * the current image width
@@ -284,6 +293,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	initTileBrush();
     }
     
+    
     /**
      * lets you specify the zoom levels
      * @param zoomPercent the int[] of zoomLevelPercent to use, THIS SHOULD BE SORTED
@@ -353,7 +363,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      */
     public void tryLoadImage(String path, boolean flushLastImage)
     {
-    	BufferedImage i = ImageUtil.loadImage(path);
+    	ImageBase i = ImageUtil.loadImage(path);
     	
     	if(i == null)
     	{
@@ -363,7 +373,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.setImage(i, flushLastImage);
     }
   
-    public void setImage(BufferedImage image, boolean flushLastImage)
+    public void setImage(ImageBase image, boolean flushLastImage)
     {
     	if(this.image != null && flushLastImage)
     	{
@@ -375,17 +385,27 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(image != null)
     	{
     		this.image = image;
+    		this.isAnimating = image instanceof GIF;
         	this.imageWidth = image.getWidth();
         	this.imageHeight = image.getHeight();
         	this.CenterCurrentImage();
+        	
+        	if(this.isAnimating)
+        	{
+        		this.animationPaused = false;
+        		this.timer.start();
+        	}
     	}
     	else 
     	{
+    		this.isAnimating = false;
     		this.imageWidth = -1;
     		this.imageHeight = -1;
+    		this.timer.stop();
     	}
     	
     	this.repaint();
+    	this.onImageChanged();
     }
     
     protected Rect GetControlSize(boolean includePadding)
@@ -415,7 +435,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(this.image == null)
     		return; 
     	
-    	this.setImage(ImageUtil.rotate(image, Rotation.CCW_90), true);
+    	this.image.rotate(Rotation.CCW_90);
+//    	this.setImage(ImageUtil.rotate(image, Rotation.CCW_90), true);
+    	this.repaint();
     }
     
     public void rotate90Right()
@@ -423,7 +445,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(this.image == null)
     		return; 
     	
-    	this.setImage(ImageUtil.rotate(image, Rotation.CW_90), true);
+    	this.image.rotate(Rotation.CW_90);
+//    	this.setImage(ImageUtil.rotate(image, Rotation.CW_90), true);
+    	this.repaint();
     }
     
     public void flipVertical()
@@ -431,7 +455,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(this.image == null)
     		return; 
     	
-    	this.setImage(ImageUtil.rotate(image, Rotation.MIRROR_VERTICAL), true);
+    	this.image.rotate(Rotation.MIRROR_VERTICAL);
+//    	this.setImage(ImageUtil.rotate(image, Rotation.MIRROR_VERTICAL), true);
+    	this.repaint();
     }
     
     public void flipHorizontal()
@@ -439,7 +465,8 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(this.image == null)
     		return; 
     	
-    	this.setImage(ImageUtil.rotate(image, Rotation.MIRROR_HORIZONTAL), true);
+    	this.image.rotate(Rotation.MIRROR_HORIZONTAL);
+//    	this.setImage(ImageUtil.rotate(image, Rotation.MIRROR_HORIZONTAL), true);
     	this.repaint();
     }
     
@@ -451,7 +478,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	final int w = imageWidth;
     	final int h = imageHeight;
 
-    	this.setImage(ImageUtil.rotateImageByDegrees(this.image, degree), true);
+    	this.image.rotateByDegrees(degree);
+    	this.repaint();
+//    	this.setImage(ImageUtil.rotateImageByDegrees(this.image, degree), true);
     	this.onImageSizeChanged(w, h, imageWidth, imageHeight);
     }
     
@@ -460,8 +489,8 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(this.image == null)
     		return; 
     	
-    	ImageUtil.convertGreyscale(this.image);
-//    	this.setImage(ImageUtil.convertGreyscaleFast(this.image), true);
+//    	ImageUtil.convertGreyscale(this.image);
+    	this.image.convertGreyscale();
     	this.repaint();
     }
     
@@ -470,7 +499,8 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(this.image == null)
     		return; 
     	
-    	ImageUtil.convertInverse(this.image);
+//    	ImageUtil.convertInverse(this.image);
+    	this.image.convertInverse();
     	this.repaint();
     }
     
@@ -598,7 +628,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
-    public BufferedImage getImage()
+    public ImageBase getImage()
     {
     	return this.image;
     }
@@ -708,6 +738,40 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	return this.drawImageBorder;
     }
     
+    
+    public void setAnimationPaused(boolean isPaused)
+    {
+    	this.animationPaused = isPaused;
+    	
+    	if(!isPaused)
+    	{
+    		this.timer.start();
+    	}
+    	else 
+    	{
+    		this.timer.stop();
+    	}
+    	
+    	this.repaint();
+    }
+    
+    public boolean getAnimationPaused()
+    {
+    	return this.animationPaused;
+    }
+    
+    public void setAnimationFrame(int index)
+    {
+    	if(!this.isAnimating)
+    		return;
+    	
+    	GIF g = (GIF)this.image;
+    	
+    	g.setFrameIndex(index);
+    	
+    	if(this.isAnimating)
+    		setAnimationPaused(true);
+    }
 
     /**
      * sets the {@link AntiAliasing} and repaints the control
@@ -1100,9 +1164,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 
         // uses x1 x2 etc
         // so we need to add the x to the width 
-    	g.drawImage(image, 
+    	g.drawImage(image.getBuffered(), 
     			r.x, r.y, r.x + r.width, r.y + r.height, 
-    			0, 0, this.imageWidth, this.imageHeight, null);
+    			0, 0, this.imageWidth, this.imageHeight, this);
     	
     	// draw border around image bounds 
     	// this uses actual width / height for some reason? 
@@ -1199,6 +1263,17 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     
     
     
+    /**
+     * called when the image changes to notify listeners
+     */
+    protected void onImageChanged() 
+    {
+    	for(ImageDisplayListener ls : this.listeners)
+    	{
+    		ls.ImageChanged();
+    	}
+	}
+    
     
     
     /**
@@ -1206,7 +1281,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      */
     protected void onImageZoomChanged() 
     {
-    	ImageZoomChangedEvent event = new ImageZoomChangedEvent(this.getZoomPercent(), this._zoom);
+    	ImageDisplayZoomChangedEvent event = new ImageDisplayZoomChangedEvent(this.getZoomPercent(), this._zoom);
     	
     	for(ImageDisplayListener ls : this.listeners)
     	{
@@ -1228,7 +1303,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      */
     protected void onImageSizeChanged(int newWidth, int newheight, int oldWidth, int oldHeight) 
     {
-    	ImageSizeChangedEvent event = new ImageSizeChangedEvent(newWidth, newheight, oldWidth, oldHeight);
+    	ImageDisplayImageSizeChangedEvent event = new ImageDisplayImageSizeChangedEvent(newWidth, newheight, oldWidth, oldHeight);
     	
     	for(ImageDisplayListener ls : this.listeners)
     	{
@@ -1363,8 +1438,47 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	}
 	
 	
+	@Override
+	public void actionPerformed(ActionEvent e) 
+	{
+		if(this.isAnimating)
+    	{
+    		GIF _image = (GIF)this.image;
+    		
+    		_image.updateCurrentFrame();
+    	
+    		this.timer.setDelay(_image.getCurrentFrameDelay());
+    		
+    		this.repaint();
+    	}
+	}
 	
 	
+
+	@Override
+    public void setVisible(boolean makeVisible)
+    {
+		// pause the animation timer when the control visibility changes
+		// for some reason using any of https://stackoverflow.com/a/10881669 solutions didn't work
+		// so overriding this is the way to go it would seem 
+    	if(makeVisible)
+    	{
+    		if(this.isAnimating && !this.animationPaused)
+    		{
+    			this.timer.start();
+    		}
+        	else 
+        	{
+        		this.timer.stop();
+        	}
+    	}
+    	else 
+    	{
+    		this.timer.stop();	
+    	}
+    	
+    	super.setVisible(makeVisible);
+    }
 	
 	@Override
 	public void mouseClicked(MouseEvent e) 	{	}
@@ -1378,4 +1492,5 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     @Override
     public void mouseMoved(MouseEvent e)    {   }
 
+	
 }

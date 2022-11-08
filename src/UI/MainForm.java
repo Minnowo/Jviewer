@@ -10,7 +10,6 @@ import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,11 +49,13 @@ import org.im4java.process.ProcessStarter;
 
 import Configuration.GUISettings;
 import Configuration.KeyboardSettings;
-import Graphics.ImageUtil;
-import Graphics.Imaging.Exceptions.ImageUnsupportedException;
+import Graphics.Imaging.IMAGE;
+import Graphics.Imaging.ImageBase;
+import Graphics.Imaging.Enums.ImageFormat;
+import Graphics.Imaging.Gif.GIF;
 import UI.ComboBox.Items.ComboBoxItemInt;
-import UI.Events.ImageSizeChangedEvent;
-import UI.Events.ImageZoomChangedEvent;
+import UI.Events.ImageDisplayImageSizeChangedEvent;
+import UI.Events.ImageDisplayZoomChangedEvent;
 import UI.Events.Listeners.ImageDisplayListener;
 import UI.ImageDisplay.ImageTabPage;
 import UI.ImageDisplay.Enums.AntiAliasing;
@@ -89,6 +90,9 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
     private JMenuItem mntmNewMenuItem_2;
     private JMenuItem mntmNewMenuItem_3;
     private JMenuItem mntmNewMenuItem_4;
+    
+    
+    SpinnerNumberModel gifFrameNumberModel = new SpinnerNumberModel(Integer.valueOf(0), Integer.valueOf(0), null, Integer.valueOf(1));
     
     DefaultListModel listModel1 = new DefaultListModel();
     
@@ -153,14 +157,34 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	{
 		public void itemStateChanged(ItemEvent e) 
 		{
-			if(e.getStateChange() != ItemEvent.SELECTED) 
-            {
-				getCurrentDisplay().setDrawBorder(false);
-            } 
-            else 
-            {
-            	getCurrentDisplay().setDrawBorder(true);
-            }
+			getCurrentDisplay().setDrawBorder(e.getStateChange() != ItemEvent.SELECTED);
+		}
+	};
+	
+	ItemListener ilToggleAnimation = new ItemListener() 
+	{
+		public void itemStateChanged(ItemEvent e) 
+		{
+			if(_preventOverflow)
+				return;
+			
+			if(e.getStateChange() == ItemEvent.SELECTED)
+			{
+				getCurrentDisplay().setAnimationPaused(true);
+				
+				if(getCurrentDisplay().getImage() != null && getCurrentDisplay().getImage().GetImageFormat() == ImageFormat.GIF)
+				{
+					_preventOverflow = true;
+					
+					gifFrameSpinner.setValue(((GIF)getCurrentDisplay().getImage()).getFrameIndex());
+					
+					_preventOverflow = false;
+				}
+			}
+			else 
+			{
+				getCurrentDisplay().setAnimationPaused(false);
+			}
 		}
 	};
 	
@@ -184,12 +208,27 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
       		_preventOverflow = true;
       		
       		getCurrentDisplay().setZoomPercentAndZoomCenter((int)(double)zoomPercentSpinner.getValue());
-
+      		
       		_preventOverflow = false;
     	}
       };
       
-      
+      ChangeListener gifFrameSpinnerChanged = new ChangeListener() 
+      {
+      	public void stateChanged(ChangeEvent e) 
+      	{
+      		if(_preventOverflow)
+      			return;
+      		
+      		_preventOverflow = true;
+      		
+      		getCurrentDisplay().setAnimationFrame((int)gifFrameSpinner.getValue());
+      		
+      		chckbxmntmNewCheckItem_3.setState(true);
+
+      		_preventOverflow = false;
+    	}
+      };
     
       ItemListener interpolationModeChangedListener = new ItemListener() 
       {
@@ -329,18 +368,26 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
         
         SpinnerModel model = new SpinnerNumberModel(100d, getCurrentDisplay().MIN_ZOOM_PERCENT, getCurrentDisplay().MAX_ZOOM_PERCENT, GUISettings.MAIN_ZOOM_SPINNER_CHANGE_VALUE);     
         zoomPercentSpinner = new JSpinner(model);
+        zoomPercentSpinner.setToolTipText("Zoom Percentage");
         zoomPercentSpinner.addChangeListener(chzoomPercentSpinnerChanged);
         
         btnNewButton = new JButton("Close Page");
         btnNewButton.addActionListener(alCloseCurrentPage);
         toolBar.add(btnNewButton);
         
+
+        gifFrameSpinner = new JSpinner();
+        gifFrameSpinner.addChangeListener(gifFrameSpinnerChanged);
+        gifFrameSpinner.setModel(new SpinnerNumberModel(Integer.valueOf(0), Integer.valueOf(0), null, Integer.valueOf(1)));
+        gifFrameSpinner.setToolTipText("Gif Frame");
+        gifFrameSpinner.setVisible(false);
         
         toolBar.add(comboboxInterpolationMode);
         
         
         toolBar.add(comboBoxDrawMode);
         toolBar.add(zoomPercentSpinner);
+        toolBar.add(gifFrameSpinner);
     }
 	
 	protected void initMenuBar()
@@ -452,6 +499,10 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		chckbxmntmNewCheckItem_2.addItemListener(ilToggleImageBorder);
 		mnNewMenu_3.add(chckbxmntmNewCheckItem_2);
 		
+		chckbxmntmNewCheckItem_3 = new JCheckBoxMenuItem("Pause Animation");
+		chckbxmntmNewCheckItem_3.addItemListener(ilToggleAnimation);
+		mnNewMenu_3.add(chckbxmntmNewCheckItem_3);
+		
 		
 //		mnNewMenu_3.add(comboBoxRenderQuality);
 //		mnNewMenu_3.add(comboBoxAntiAliasingMode);
@@ -480,15 +531,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	}
 	
 
-    private class MoveAction extends AbstractAction 
-    {
-        @Override
-        public void actionPerformed(ActionEvent e) 
-        {
 
-           System.out.println("ctrl + v pressed");
-        }
-    }
 	public MainForm() 
 	{
 		this.setTitle("Hello World");
@@ -551,6 +594,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		
 		
         getContentPane().add(toolBar, BorderLayout.NORTH);
+        
         getContentPane().add(statusPanel, BorderLayout.SOUTH);
         
         progressBar = new JProgressBar();
@@ -595,7 +639,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	      .collect(Collectors.toSet());
 	}
 	
-	public void openInNewTab(BufferedImage image)
+	public void openInNewTab(ImageBase image)
 	{
 		ImageTabPage img = new ImageTabPage(tabbedPane);
         tabbedPane.addTab("%d x %d".formatted(image.getWidth(), image.getHeight()), img);
@@ -663,14 +707,14 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		if(f.getPath() == "")
 			return;
 		
-		try 
-		{
-			ImageUtil.saveImage(getCurrentDisplay().getImage(), f);
-		}
-		catch (ImageUnsupportedException e1) 
-		{
-			logger.log(Level.WARNING, "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s".formatted(f.getAbsolutePath(), e1.getMessage()), e1);
-		}
+//		try 
+//		{
+//			ImageUtil.saveImage(getCurrentDisplay().getImage(), f);
+//		}
+//		catch (ImageUnsupportedException e1) 
+//		{
+//			logger.log(Level.WARNING, "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s".formatted(f.getAbsolutePath(), e1.getMessage()), e1);
+//		}
 	}
 	
 	public void askRotateImage()
@@ -793,6 +837,8 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	
 	
 	int openedImaegs = 0;
+	private JCheckBoxMenuItem chckbxmntmNewCheckItem_3;
+	private JSpinner gifFrameSpinner;
 	public void handleStartArgument(String arg)
 	{
 		if(arg.contains("="))
@@ -857,7 +903,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		if(img == null)
 			return;
 		
-		openInNewTab(img);
+		openInNewTab(IMAGE.fromBuffered(img));
 	}
 	
 	public void copyImage()
@@ -865,11 +911,42 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		if(getCurrentDisplay() == null || getCurrentDisplay().getImage() == null)
 			return;
 		
-		ClipboardHelper.copyImageToClipboard(getCurrentDisplay().getImage());
+		ClipboardHelper.copyImageToClipboard(getCurrentDisplay().getImage().getBuffered());
+	}
+	
+	public void updateGifAnimationStuff()
+	{
+		if(_preventOverflow)
+   			return;
+   		
+		 _preventOverflow = true;
+		 
+		 ImageTabPage tp = getCurrentDisplay();
+		 ImageBase i = tp.getImage();
+		 
+		
+		 if(i != null && i.GetImageFormat() == ImageFormat.GIF)
+		 {
+			 GIF g = (GIF) i;
+			 
+			 gifFrameNumberModel.setMaximum(Integer.valueOf(g.getFrameCount() - 1));
+			 gifFrameNumberModel.setValue(g.getFrameIndex());
+			 gifFrameSpinner.setModel(gifFrameNumberModel);
+			 
+			 gifFrameSpinner.setVisible(true);
+			 
+			 chckbxmntmNewCheckItem_3.setSelected(tp.getAnimationPaused());
+		 }
+		 else 
+		 {
+			gifFrameSpinner.setVisible(false);
+		 }
+		 
+		 _preventOverflow = false;
 	}
 	
 	@Override
-	public void ImageZoomChanged(ImageZoomChangedEvent e) 
+	public void ImageZoomChanged(ImageDisplayZoomChangedEvent e) 
 	{
 		if(_preventOverflow)
 			return;
@@ -882,9 +959,10 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	}
 
 	@Override
-	public void ImageSizeChanged(ImageSizeChangedEvent e) 
+	public void ImageSizeChanged(ImageDisplayImageSizeChangedEvent e) 
 	{
 		setStatusLabelText();
+		updateGifAnimationStuff();
 	}
 
 	@Override
@@ -903,7 +981,15 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
    		 comboBoxDrawMode.setSelectedIndex(tp.getDrawMode());
    		 comboboxInterpolationMode.setSelectedIndex(tp.getInterpolationMode());
    		 comboBoxRenderQuality.setSelectedIndex(tp.getRenderQuality());
-      				 
+      	
    		 _preventOverflow = false;
+   		 
+   		 updateGifAnimationStuff();
+	}
+
+	@Override
+	public void ImageChanged() 
+	{
+		updateGifAnimationStuff();	
 	}
 }

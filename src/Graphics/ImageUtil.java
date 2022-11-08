@@ -28,9 +28,12 @@ import org.im4java.core.IMOperation;
 import org.im4java.core.Stream2BufferedImage;
 
 import Configuration.ImageMagick;
+import Graphics.Imaging.IMAGE;
+import Graphics.Imaging.ImageBase;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import Graphics.Imaging.Exceptions.RequiresMagickException;
+import Graphics.Imaging.Gif.GIF;
 import Util.Logging.LogUtil;
 
 public class ImageUtil 
@@ -111,7 +114,7 @@ public class ImageUtil
 	 * Rotates by the given amount filling the rest with transparency<br/>
 	 * @param src
 	 */
-	public static BufferedImage rotateImageByDegrees(BufferedImage src, double angle) throws IllegalArgumentException, ImagingOpException 
+	public static BufferedImage rotateImageByDegrees(Image src, double angle) throws IllegalArgumentException, ImagingOpException 
 	{
 		if (src == null)
 			throw new IllegalArgumentException("src cannot be null");
@@ -119,8 +122,8 @@ public class ImageUtil
 	    final double rads = Math.toRadians(angle);
 	    final double sin = Math.abs(Math.sin(rads)); 
 	    final double cos = Math.abs(Math.cos(rads));
-	    final int w = src.getWidth();
-	    final int h = src.getHeight();
+	    final int w = src.getWidth(null);
+	    final int h = src.getHeight(null);
 	    final int newWidth = (int) Math.floor(w * cos + h * sin);
 	    final int newHeight = (int) Math.floor(h * cos + w * sin);
 
@@ -320,41 +323,25 @@ public class ImageUtil
     }
     
     
-    public static BufferedImage loadImage(File path)
+    public static ImageBase loadImage(File path)
     {
     	return loadImage(path.getAbsolutePath());
     }
     
-    public static BufferedImage loadImage(String path)
+    public static ImageBase loadImage(String path)
 	{
-		File path_ = new File(path);
+    	final String ext = Util.StringUtil.getFileExtension(new File(path));
+		final byte imageFormat = ImageFormat.getFromFileExtension(ext);
 		
-		if(!path_.exists())
-			return null;
-		
-		logger.log(Level.INFO, "loading %s".formatted(path));
-		
-		if(ImageMagick.useImageMagick) 
+		switch (imageFormat)
 		{
-			try 
-			{
-				return loadImageWithMagick(path);
-			} 
-			catch (IOException | InterruptedException | IM4JavaException e) 
-			{
-				logger.log(Level.WARNING, "Failed to read image %s using ImageMagick:\nMessage: %s".formatted(path, e.getMessage()), e);
-			}
-		}
+			case ImageFormat.GIF:
 	
-		
-		try 
-		{
-		    return ImageIO.read(path_);
-		} 
-		catch (IOException e) 
-		{
-			logger.log(Level.WARNING, "Failed to read image %s using ImageIO.read:\nMessage: %s".formatted(path, e.getMessage()), e);
-			return null;
+				return new GIF(path);
+			
+			default:
+			
+				return new IMAGE(path);
 		}
 	}
 	
@@ -412,11 +399,12 @@ public class ImageUtil
 	    for (int y = 0; y < img.getHeight(); ++y)
 	    {
 	        int rgb = img.getRGB(x, y);
+	        int a = ((rgb >> 24) & 0xFF);
 	        int r = ((rgb >> 16) & 0xFF);
 	        int g = ((rgb >> 8) & 0xFF);
 	        int b = ((rgb & 0xFF));
 	        
-	        img.setRGB(x, y, ((255 - r) << 16) + ((255 - g) << 8) + (255 - b));
+	        img.setRGB(x, y, (a << 24) + ((255 - r) << 16) + ((255 - g) << 8) + (255 - b));
 	    }
 	}
 	
@@ -433,13 +421,14 @@ public class ImageUtil
 	    for (int y = 0; y < img.getHeight(); ++y)
 	    {
 	        int rgb = img.getRGB(x, y);
+	        int a = ((rgb >> 24) & 0xFF);
 	        int r = ((rgb >> 16) & 0xFF);
 	        int g = ((rgb >> 8) & 0xFF);
 	        int b = ((rgb & 0xFF));
 
 	        byte grey = (byte)((r * gsrm) + (g * gsgm) + (b * gsbm));
 	        
-	        img.setRGB(x, y, (grey << 16) + (grey << 8) + grey);
+	        img.setRGB(x, y, (a << 24) + (grey << 16) + (grey << 8) + grey);
 	    }
 	}
 }
