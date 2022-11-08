@@ -1,5 +1,6 @@
 package Graphics;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -30,10 +31,12 @@ import org.im4java.core.Stream2BufferedImage;
 import Configuration.ImageMagick;
 import Graphics.Imaging.IMAGE;
 import Graphics.Imaging.ImageBase;
+import Graphics.Imaging.ImageDetector;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import Graphics.Imaging.Exceptions.RequiresMagickException;
 import Graphics.Imaging.Gif.GIF;
+import Graphics.Imaging.Gif.GifEncoder;
 import Util.Logging.LogUtil;
 
 public class ImageUtil 
@@ -258,21 +261,48 @@ public class ImageUtil
 	
 	
 
-    public static void saveImage(BufferedImage buf, String path) throws ImageUnsupportedException
+    public static void saveImage(ImageBase buf, String path) throws ImageUnsupportedException
     {
     	saveImage(buf, new File(path));
     }
     
-    public static void saveImage(BufferedImage buf, File path) throws ImageUnsupportedException
+    public static void saveImage(ImageBase buf, File path) throws ImageUnsupportedException
     {
     	if(buf == null)
     		return; 
+    	
+    	final String ext = Util.StringUtil.getFileExtension(path, false);
+    	final byte imgFormat = ImageFormat.getFromFileExtension(ext);
+    	
+    	// TODO: fix this 
+    	switch (imgFormat)
+    	{
+    		case ImageFormat.GIF:
+    			
+    			if(buf.GetImageFormat() == ImageFormat.GIF)
+    			{
+    				buf.save(path);
+    			}
+    			
+    			// TODO: allow saving with magick aswell
+    			else 
+    			{
+    				GifEncoder ge = new GifEncoder();
+    				
+    				ge.start(path.getAbsolutePath());
+    				ge.setRepeat(0);
+    				ge.setTransparent(null);
+    				ge.addFrame(buf.getBuffered());
+    				ge.finish();
+    			}
+    			return;
+		}
     	
     	if(ImageMagick.useImageMagick)
     	{
     		try 
     		{
-				saveImageWithMagick(buf, path);
+				saveImageWithMagick(buf.getBuffered(), path);
 				return;
 			} 
     		catch (IOException | InterruptedException | IM4JavaException e) 
@@ -281,10 +311,8 @@ public class ImageUtil
 			}
     	}
     	
-    	final String ext = Util.StringUtil.getFileExtension(path, false);
-    	final byte imgFormat = ImageFormat.getFromFileExtension(ext);
     	
-    	if(imgFormat == -1)
+    	if(imgFormat == ImageFormat.UNKNOWN)
     		throw new ImageUnsupportedException("The image format '%s' is was not recognized".formatted(ext));
     	
     	if(imgFormat == ImageFormat.WEBP)
@@ -292,7 +320,7 @@ public class ImageUtil
     	
     	try 
     	{
-    		ImageIO.write(buf, ImageFormat.getFileExtension(imgFormat), path);
+    		ImageIO.write(buf.getBuffered(), ImageFormat.getFileExtension(imgFormat), path);
     	}
     	catch (IOException e) 
     	{
@@ -330,10 +358,14 @@ public class ImageUtil
     
     public static ImageBase loadImage(String path)
 	{
-    	final String ext = Util.StringUtil.getFileExtension(new File(path));
-		final byte imageFormat = ImageFormat.getFromFileExtension(ext);
+    	final byte imageff = ImageDetector.getImageFormat(path);
+    	
+//    	final String ext = Util.StringUtil.getFileExtension(new File(path));
+//		final byte imageFormat = ImageFormat.getFromFileExtension(ext);
+//		
+		logger.log(Level.INFO, "detected image format " + ImageFormat.getFileExtension(imageff));
 		
-		switch (imageFormat)
+		switch (imageff)
 		{
 			case ImageFormat.GIF:
 	
@@ -393,6 +425,19 @@ public class ImageUtil
 		return (BufferedImage)mage;
 	}
 
+	/**
+	 * gets the inverted color of the given argb pixel
+	 */
+	public static int getInversePixel(int rgb)
+	{
+        int a = ((rgb >> 24) & 0xFF);
+        int r = ((rgb >> 16) & 0xFF);
+        int g = ((rgb >> 8) & 0xFF);
+        int b = ((rgb & 0xFF));
+        
+        return (a << 24) + ((255 - r) << 16) + ((255 - g) << 8) + (255 - b);
+	}
+	
 	public static void convertInverse(BufferedImage img)
 	{
 	    for (int x = 0; x < img.getWidth(); ++x)
@@ -408,15 +453,29 @@ public class ImageUtil
 	    }
 	}
 	
+	static final double gsrm = 0.3; // 0.21
+	
+	static final double gsgm = 0.59; // 0.71
+	
+	static final double gsbm = 0.11; // 0.071
+	
+	/**
+	 * gets the greyscale color for the given argb pixel
+	 */
+	public static int getGreyPixel(int rgb)
+	{
+		int a = ((rgb >> 24) & 0xFF);
+        int r = ((rgb >> 16) & 0xFF);
+        int g = ((rgb >> 8) & 0xFF);
+        int b = ((rgb & 0xFF));
+        
+        byte grey = (byte)((r * gsrm) + (g * gsgm) + (b * gsbm));
+        
+        return  (a << 24) + (grey << 16) + (grey << 8) + grey;
+	}
 
 	public static void convertGreyscale(BufferedImage img)
 	{
-		final double gsrm = 0.3; // 0.21
-		
-		final double gsgm = 0.59; // 0.71
-		
-		final double gsbm = 0.11; // 0.071
-		
 	    for (int x = 0; x < img.getWidth(); ++x)
 	    for (int y = 0; y < img.getHeight(); ++y)
 	    {

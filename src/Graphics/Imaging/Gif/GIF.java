@@ -24,6 +24,7 @@ import org.w3c.dom.NodeList;
 import Graphics.ImageUtil;
 import Graphics.Imaging.ImageBase;
 import Graphics.Imaging.Enums.ImageFormat;
+import Graphics.Imaging.Gif.GifDecoder.GifFrame;
 
 public class GIF extends ImageBase 
 {
@@ -112,6 +113,14 @@ public class GIF extends ImageBase
 		return this.decoder.getFrame(index);
 	}
 	
+	public int getFrameDelay(int index)
+	{
+		if(this.decoder == null)
+			return 0;
+		
+		return this.decoder.getDelay(index);
+	}
+	
 	@Override
 	public int getWidth()
 	{
@@ -134,22 +143,7 @@ public class GIF extends ImageBase
 	@Override
 	public void load(File path) 
 	{
-		if(!path.exists())
-			return;
-		
-		if(this.decoder == null)
-			this.decoder = new GifDecoder();
-		
-		this.decoder.read(path.getAbsolutePath());
-		
-		if(this.decoder.err())
-		{
-			this.decoder = null;
-			this.currentFrameIndex = -1;
-			return;
-		}
-		
-		this.currentFrameIndex = 0;
+		this.load(path.getAbsolutePath());
 	}
 
 	@Override
@@ -171,15 +165,53 @@ public class GIF extends ImageBase
 	}
 
 	@Override
-	public void save(String path) {
-		// TODO Auto-generated method stub
+	public void save(String path) 
+	{
+		GifEncoder e = new GifEncoder();
+		
+		e.start(path);
+		e.setRepeat(0);
+		
+		for(int i = 0; i < this.decoder.getFrameCount(); i++)
+		{
+			GifFrame gf = this.decoder.getFrameSource(i);
+			
+			e.addFrame(gf.image);
+			
+			e.setDelay(gf.delay);	
+			
+			// TODO: fix transparency on encoding, idk why it's so broken
+			
+//			if(this.decoder.hasTransparency())
+//			{
+//				e.setTransparent(new Color(gf.transColor));
+//				
+//				BufferedImage bf = new BufferedImage(gf.image.getWidth(), gf.image.getHeight(), BufferedImage.TYPE_INT_RGB);
+//				Graphics g = bf.getGraphics();
+//				g.setColor(new Color(gf.transColor));
+//				g.fillRect(0, 0, gf.image.getWidth(), gf.image.getHeight());
+//				g.drawImage(gf.image, 0,0, null);
+//				
+//				e.addFrame(bf);
+//			}
+//			else
+//			{
+//				e.addFrame(gf.image);
+//				e.setTransparent(null);
+//				System.out.println("has not trans");
+//			}
+			
+			
+		}
+
+		e.finish();
 		
 	}
 
 	@Override
-	public void save(File path) {
-		// TODO Auto-generated method stub
-		
+	public void save(File path) 
+	{
+		this.save(path.getAbsolutePath());	
 	}
 
 	@Override
@@ -203,12 +235,12 @@ public class GIF extends ImageBase
 		if(this.decoder == null)
 			return;
 		
-//		for(int i = 0; i < this.decoder.getFrameCount(); i++)
-//		{
-//			BufferedImage buff = this.decoder.getFrame(i);
-//			
-//			
-//		}
+		for(int i = 0; i < this.decoder.getFrameCount(); i++)
+		{
+			GifFrame buff = this.decoder.getFrameSource(i);
+			
+			buff.image = ImageUtil.rotate(buff.image, r);
+		}
 	}
 
 	@Override
@@ -217,6 +249,12 @@ public class GIF extends ImageBase
 		if(this.decoder == null)
 			return;
 		
+		for(int i = 0; i < this.decoder.getFrameCount(); i++)
+		{
+			GifFrame buff = this.decoder.getFrameSource(i);
+			
+			buff.image = ImageUtil.rotateImageByDegrees(buff.image, degree);
+		}
 	}
 
 	@Override
@@ -227,9 +265,11 @@ public class GIF extends ImageBase
 		
 		for(int i = 0; i < this.decoder.getFrameCount(); i++)
 		{
-			BufferedImage buff = this.decoder.getFrame(i);
+			GifFrame buff = this.decoder.getFrameSource(i);
 			
-			ImageUtil.convertGreyscale(buff);
+			buff.transColor = ImageUtil.getGreyPixel(buff.transColor);
+			
+			ImageUtil.convertGreyscale(buff.image);
 		}
 	}
 
@@ -241,9 +281,11 @@ public class GIF extends ImageBase
 		
 		for(int i = 0; i < this.decoder.getFrameCount(); i++)
 		{
-			BufferedImage buff = this.decoder.getFrame(i);
+			GifFrame buff = this.decoder.getFrameSource(i);
 			
-			ImageUtil.convertInverse(buff);
+			buff.transColor = ImageUtil.getInversePixel(buff.transColor);
+			
+			ImageUtil.convertInverse(buff.image);
 		}
 	}
 }

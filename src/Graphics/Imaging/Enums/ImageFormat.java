@@ -20,6 +20,8 @@ public interface ImageFormat
     public static final byte GIF = 4;
     
     
+    public static final byte ICO = 7;
+    
     /*
      * requires imagemagick
      */
@@ -64,6 +66,33 @@ public interface ImageFormat
 	    		return "webp";
 	    	case PSD:
 	    		return "psd";
+	    	case ICO:
+	    		return "ico";
+		}
+    }
+    
+    public static String getMimeType(byte format)
+    {
+    	switch (format)
+    	{
+    		default:
+    			return "application/unknown";
+	    	case PNG:
+	    		return "image/png";
+	    	case BMP:
+	    		return "image/bmp";
+	    	case JPG:
+	    		return "image/jpg";
+	    	case GIF:
+	    		return "image/gif";
+	    	case TIFF:
+	    		return "image/tiff";
+	    	case WEBP:
+	    		return "image/webp";
+	    	case PSD:
+	    		return "image/psd";
+	    	case ICO:
+	    		return "image/ico";
 		}
     }
     
@@ -90,6 +119,9 @@ public interface ImageFormat
 	    		
 	    	case "gif":
 	    		return GIF;
+	    		
+	    	case "ico":
+	    		return ICO;
 	    	
 			case "jpg":
 			case "jpe":

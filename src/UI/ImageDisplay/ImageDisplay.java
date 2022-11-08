@@ -479,6 +479,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	final int h = imageHeight;
 
     	this.image.rotateByDegrees(degree);
+    	this.imageWidth = this.image.getWidth();
+    	this.imageHeight = this.image.getHeight();
+    	
     	this.repaint();
 //    	this.setImage(ImageUtil.rotateImageByDegrees(this.image, degree), true);
     	this.onImageSizeChanged(w, h, imageWidth, imageHeight);

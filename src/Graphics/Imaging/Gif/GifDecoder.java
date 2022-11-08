@@ -132,14 +132,17 @@ public class GifDecoder {
 	protected int frameCount;
 
 	static class GifFrame {
-		public GifFrame(BufferedImage im, int del) {
+		public GifFrame(BufferedImage im, int del, int tc) {
 			image = im;
 			delay = del;
+			transColor = tc;
 		}
 
 		public BufferedImage image;
 
 		public int delay;
+		
+		public int transColor;
 	}
 
 	/**
@@ -288,6 +291,20 @@ public class GifDecoder {
 		return im;
 	}
 
+	/**
+	 * Gets the image contents of frame n.
+	 * 
+	 * @return GifFrame representation of frame, or null if n is invalid.
+	 */
+	public GifFrame getFrameSource(int n) {
+		GifFrame im = null;
+		if ((n >= 0) && (n < frameCount)) {
+			im = ((GifFrame) frames.get(n));
+		}
+		return im;
+	}
+
+	
 	/**
 	 * Gets image size.
 	 * 
@@ -726,15 +743,21 @@ public class GifDecoder {
 
 		setPixels(); // transfer pixel data to image
 
-		frames.add(new GifFrame(image, delay)); // add image to frame list
+		frames.add(new GifFrame(image, delay, save)); // add image to frame list
 
 		if (transparency) {
+			
 			act[transIndex] = save;
 		}
 		resetFrame();
 
 	}
 
+	public boolean hasTransparency()
+	{
+		return this.transparency;
+	}
+	
 	/**
 	 * Reads Logical Screen Descriptor
 	 */

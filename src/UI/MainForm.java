@@ -10,6 +10,7 @@ import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -49,9 +50,11 @@ import org.im4java.process.ProcessStarter;
 
 import Configuration.GUISettings;
 import Configuration.KeyboardSettings;
+import Graphics.ImageUtil;
 import Graphics.Imaging.IMAGE;
 import Graphics.Imaging.ImageBase;
 import Graphics.Imaging.Enums.ImageFormat;
+import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import Graphics.Imaging.Gif.GIF;
 import UI.ComboBox.Items.ComboBoxItemInt;
 import UI.Events.ImageDisplayImageSizeChangedEvent;
@@ -157,7 +160,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	{
 		public void itemStateChanged(ItemEvent e) 
 		{
-			getCurrentDisplay().setDrawBorder(e.getStateChange() != ItemEvent.SELECTED);
+			getCurrentDisplay().setDrawBorder(e.getStateChange() == ItemEvent.SELECTED);
 		}
 	};
 	
@@ -525,6 +528,15 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		mntmNewMenuItem_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				new SettingsDialog().showDialog();
+				
+				if(GUISettings.WRAP_TABS)
+				{
+					tabbedPane.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
+				}
+				else 
+				{
+					tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+				}
 			}
 		});
 		mnNewMenu_2.add(mntmNewMenuItem_2);
@@ -707,14 +719,14 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		if(f.getPath() == "")
 			return;
 		
-//		try 
-//		{
-//			ImageUtil.saveImage(getCurrentDisplay().getImage(), f);
-//		}
-//		catch (ImageUnsupportedException e1) 
-//		{
-//			logger.log(Level.WARNING, "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s".formatted(f.getAbsolutePath(), e1.getMessage()), e1);
-//		}
+		try 
+		{
+			ImageUtil.saveImage(getCurrentDisplay().getImage(), f);
+		}
+		catch (ImageUnsupportedException e1) 
+		{
+			logger.log(Level.WARNING, "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s".formatted(f.getAbsolutePath(), e1.getMessage()), e1);
+		}
 	}
 	
 	public void askRotateImage()
@@ -985,6 +997,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
    		 _preventOverflow = false;
    		 
    		 updateGifAnimationStuff();
+   		setStatusLabelText();
 	}
 
 	@Override

@@ -19,10 +19,13 @@ import javax.swing.JTextField;
 
 import org.im4java.process.ProcessStarter;
 
+import Configuration.GUISettings;
 import Configuration.ImageMagick;
 import javax.swing.JButton;
 import java.awt.BorderLayout;
 import java.awt.Font;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 public class SettingsDialog  extends JDialog 
 {
@@ -54,6 +57,7 @@ public class SettingsDialog  extends JDialog
 		
 		ImageMagick.useImageMagick = chckbxNewCheckBox.isSelected();
 		ProcessStarter.setGlobalSearchPath(textArea.getText().replaceAll("\\r?\\n", File.pathSeparator));
+		GUISettings.WRAP_TABS = chckbxNewCheckBox_1.isSelected();
 	}
 	
 	
@@ -66,14 +70,14 @@ public class SettingsDialog  extends JDialog
 		tabPage1 = new JPanel();
 		tabPage2 = new JPanel();
 		
-		tabbedPane.addTab("Page 1", tabPage1);
+		tabbedPane.addTab("General Settings", tabPage1);
 		tabPage1.setLayout(null);
 		
 		btnNewButton = new JButton("New button");
 		btnNewButton.setBounds(35, 228, 89, 23);
 		tabPage1.add(btnNewButton);
 		
-		chckbxNewCheckBox_1 = new JCheckBox("New check box");
+		chckbxNewCheckBox_1 = new JCheckBox("Folding Tabs");
 		chckbxNewCheckBox_1.setBounds(22, 32, 130, 42);
 		tabPage1.add(chckbxNewCheckBox_1);
 		

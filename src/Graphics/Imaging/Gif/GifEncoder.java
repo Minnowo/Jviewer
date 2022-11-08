@@ -346,9 +346,12 @@ public class GifEncoder {
     int dmin = 256 * 256 * 256;
     int len = colorTab.length;
     for (int i = 0; i < len;) {
-      int dr = r - (colorTab[i++] & 0xff);
+      
+    	System.out.println((colorTab[i]&0xff) + " " +( colorTab[i+1]&0xff )+ " " + (colorTab[i+2]&0xff));
+	  int dr = r - (colorTab[i++] & 0xff);
       int dg = g - (colorTab[i++] & 0xff);
       int db = b - (colorTab[i] & 0xff);
+      
       int d = dr * dr + dg * dg + db * db;
       int index = i / 3;
       if (usedEntry[index] && (d < dmin)) {
