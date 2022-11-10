@@ -26,7 +26,7 @@ import javax.swing.Timer;
 import Graphics.ImageUtil;
 import Graphics.Rotation;
 import Graphics.Imaging.ImageBase;
-import Graphics.Imaging.Gif.GIF;
+import Graphics.Imaging.Gif.GifBase;
 import UI.Events.ImageDisplayImageSizeChangedEvent;
 import UI.Events.ImageDisplayZoomChangedEvent;
 import UI.Events.Listeners.ImageDisplayListener;
@@ -385,7 +385,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(image != null)
     	{
     		this.image = image;
-    		this.isAnimating = image instanceof GIF;
+    		this.isAnimating = image instanceof GifBase;
         	this.imageWidth = image.getWidth();
         	this.imageHeight = image.getHeight();
         	this.CenterCurrentImage();
@@ -768,7 +768,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(!this.isAnimating)
     		return;
     	
-    	GIF g = (GIF)this.image;
+    	GifBase g = (GifBase)this.image;
     	
     	g.setFrameIndex(index);
     	
@@ -1446,7 +1446,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	{
 		if(this.isAnimating)
     	{
-    		GIF _image = (GIF)this.image;
+			GifBase _image = (GifBase)this.image;
     		
     		_image.updateCurrentFrame();
     	

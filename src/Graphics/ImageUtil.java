@@ -1,6 +1,5 @@
 package Graphics;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -20,7 +19,6 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.imageio.ImageIO;
 import javax.swing.GrayFilter;
 
 import org.im4java.core.ConvertCmd;
@@ -34,8 +32,8 @@ import Graphics.Imaging.ImageBase;
 import Graphics.Imaging.ImageDetector;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
-import Graphics.Imaging.Exceptions.RequiresMagickException;
 import Graphics.Imaging.Gif.GIF;
+import Graphics.Imaging.Gif.GIF2;
 import Graphics.Imaging.Gif.GifEncoder;
 import Util.Logging.LogUtil;
 
@@ -261,15 +259,15 @@ public class ImageUtil
 	
 	
 
-    public static void saveImage(ImageBase buf, String path) throws ImageUnsupportedException
+    public static boolean saveImage(ImageBase buf, String path) throws ImageUnsupportedException
     {
-    	saveImage(buf, new File(path));
+    	return saveImage(buf, new File(path));
     }
     
-    public static void saveImage(ImageBase buf, File path) throws ImageUnsupportedException
+    public static boolean saveImage(ImageBase buf, File path) throws ImageUnsupportedException
     {
     	if(buf == null)
-    		return; 
+    		return false; 
     	
     	final String ext = Util.StringUtil.getFileExtension(path, false);
     	final byte imgFormat = ImageFormat.getFromFileExtension(ext);
@@ -281,51 +279,24 @@ public class ImageUtil
     			
     			if(buf.GetImageFormat() == ImageFormat.GIF)
     			{
-    				buf.save(path);
+    				return buf.save(path);
     			}
     			
     			// TODO: allow saving with magick aswell
-    			else 
-    			{
-    				GifEncoder ge = new GifEncoder();
-    				
-    				ge.start(path.getAbsolutePath());
-    				ge.setRepeat(0);
-    				ge.setTransparent(null);
-    				ge.addFrame(buf.getBuffered());
-    				ge.finish();
-    			}
-    			return;
+				GifEncoder ge = new GifEncoder();
+				
+				ge.start(path.getAbsolutePath());
+				ge.setRepeat(0);
+				ge.setTransparent(null);
+				ge.addFrame(buf.getBuffered());
+				ge.finish();
+    			
+    			return true;
+    			
+    		default:
+    			
+    			return buf.save(path);
 		}
-    	
-    	if(ImageMagick.useImageMagick)
-    	{
-    		try 
-    		{
-				saveImageWithMagick(buf.getBuffered(), path);
-				return;
-			} 
-    		catch (IOException | InterruptedException | IM4JavaException e) 
-    		{
-    			logger.log(Level.WARNING, "Failed to save image %s using ImageMagick:\nMessage: %s".formatted(path.getAbsolutePath(), e.getMessage()), e);
-			}
-    	}
-    	
-    	
-    	if(imgFormat == ImageFormat.UNKNOWN)
-    		throw new ImageUnsupportedException("The image format '%s' is was not recognized".formatted(ext));
-    	
-    	if(imgFormat == ImageFormat.WEBP)
-    		throw new RequiresMagickException("Saving with the WebP image format requires the use of ImageMagick");
-    	
-    	try 
-    	{
-    		ImageIO.write(buf.getBuffered(), ImageFormat.getFileExtension(imgFormat), path);
-    	}
-    	catch (IOException e) 
-    	{
-            logger.log(Level.WARNING, "Failed to save image %s with ImageIO.write:\nMessage: %s".formatted(path.getAbsolutePath(), e.getMessage()), e);
-    	}
 	}
     
     
@@ -359,10 +330,7 @@ public class ImageUtil
     public static ImageBase loadImage(String path)
 	{
     	final byte imageff = ImageDetector.getImageFormat(path);
-    	
-//    	final String ext = Util.StringUtil.getFileExtension(new File(path));
-//		final byte imageFormat = ImageFormat.getFromFileExtension(ext);
-//		
+
 		logger.log(Level.INFO, "detected image format " + ImageFormat.getFileExtension(imageff));
 		
 		switch (imageff)
@@ -370,22 +338,17 @@ public class ImageUtil
 			case ImageFormat.GIF:
 	
 				return new GIF(path);
+//				return new GIF2(path);
 			
 			default:
 			
-				return new IMAGE(path);
+				return new IMAGE(path, imageff);
 		}
 	}
 	
 
-	
- 		
-	public static BufferedImage loadImageWithMagick(String path ) throws IOException, InterruptedException, IM4JavaException
+    public static BufferedImage loadImageWithMagick(String path, Byte imageFormat ) throws IOException, InterruptedException, IM4JavaException
 	{
-		// TODO: read the header of the file instead of the extension
-		final String ext = Util.StringUtil.getFileExtension(new File(path));
-		final byte imageFormat = ImageFormat.getFromFileExtension(ext);
-		
 		IMOperation op = new IMOperation();
 
 		if(ImageMagick.readRequiresMergeLayers(imageFormat))
@@ -414,6 +377,11 @@ public class ImageUtil
 		BufferedImage b = ImageUtil.createOptimalImageFrom2(s2b.getImage());
 
 		return b;
+	}
+ 		
+	public static BufferedImage loadImageWithMagick(String path ) throws IOException, InterruptedException, IM4JavaException
+	{
+		return loadImageWithMagick(path, ImageDetector.getImageFormat(path));
 	}
 
 	public static BufferedImage convertGreyscaleFast(BufferedImage src)

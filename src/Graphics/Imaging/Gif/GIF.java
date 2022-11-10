@@ -1,32 +1,28 @@
 package Graphics.Imaging.Gif;
 
-import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.ImageObserver;
-import java.awt.image.ImageProducer;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
-import javax.imageio.metadata.IIOMetadata;
-import javax.imageio.metadata.IIOMetadataNode;
-
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import javax.imageio.stream.ImageInputStream;
 
 import Graphics.ImageUtil;
 import Graphics.Imaging.ImageBase;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Gif.GifDecoder.GifFrame;
 
-public class GIF extends ImageBase 
+/**
+ * a gif wrapper around the GifDecoder extending the ImageBase class<br>
+ * can be used to draw the image with animation via updateCurrentFame()<br<
+ * 
+ * NOTE: this class uses a TON of memory, this is because it decodes the gif into an array of frames
+ * rather than using a single Image object, this is more flexible but uses a lot more memory 
+ * @author minno
+ *
+ */
+public class GIF extends GifBase 
 {
 	private int currentFrameIndex;
 	private GifDecoder decoder;
@@ -34,23 +30,23 @@ public class GIF extends ImageBase
 	
 	public GIF()
 	{
-		super(ImageFormat.GIF, "image/gif");
 		this.currentFrameIndex = -1;
 	}
 	
 	public GIF(String path)
 	{
-		super(ImageFormat.GIF, "image/gif");
 		this.currentFrameIndex = -1;
 		
 		this.load(path);
 	}
 	
+	@Override
 	public int getFrameIndex()
 	{
 		return this.currentFrameIndex;
 	}
 	
+	@Override
 	public void setFrameIndex(int index)
 	{
 		if(index < 0 || index >= this.getFrameCount())
@@ -64,6 +60,7 @@ public class GIF extends ImageBase
 		this.lastRenderTime = System.nanoTime();
 	}
 	
+	@Override
 	public void updateCurrentFrame()
 	{
 		if(this.decoder == null)
@@ -78,6 +75,7 @@ public class GIF extends ImageBase
 		}
 	}
 	
+	
 	public int getFrameCount()
 	{
 		if(this.decoder == null)
@@ -86,12 +84,10 @@ public class GIF extends ImageBase
 		return this.decoder.getFrameCount();
 	}
 	
+	@Override
 	public int getCurrentFrameDelay()
 	{
-		if(this.decoder == null)
-			return 0;
-		
-		return this.decoder.getDelay(currentFrameIndex);
+		return this.getFrameDelay(currentFrameIndex);
 	}
 	
 	@Override
@@ -121,6 +117,8 @@ public class GIF extends ImageBase
 		return this.decoder.getDelay(index);
 	}
 	
+	
+	
 	@Override
 	public int getWidth()
 	{
@@ -141,13 +139,13 @@ public class GIF extends ImageBase
 	
 
 	@Override
-	public void load(File path) 
+	public boolean load(File path) 
 	{
-		this.load(path.getAbsolutePath());
+		return this.load(path.getAbsolutePath());
 	}
 
 	@Override
-	public void load(String path) 
+	public boolean load(String path) 
 	{
 		if(this.decoder == null)
 			this.decoder = new GifDecoder();
@@ -158,14 +156,15 @@ public class GIF extends ImageBase
 		{
 			this.decoder = null;
 			this.currentFrameIndex = -1;
-			return;
+			return false;
 		}
 		
 		this.currentFrameIndex = 0;
+		return true;
 	}
 
 	@Override
-	public void save(String path) 
+	public boolean save(String path) 
 	{
 		GifEncoder e = new GifEncoder();
 		
@@ -205,13 +204,14 @@ public class GIF extends ImageBase
 		}
 
 		e.finish();
-		
+	
+		return true;
 	}
 
 	@Override
-	public void save(File path) 
+	public boolean save(File path) 
 	{
-		this.save(path.getAbsolutePath());	
+		return this.save(path.getAbsolutePath());	
 	}
 
 	@Override

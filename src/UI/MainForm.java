@@ -55,7 +55,7 @@ import Graphics.Imaging.IMAGE;
 import Graphics.Imaging.ImageBase;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
-import Graphics.Imaging.Gif.GIF;
+import Graphics.Imaging.Gif.GifBase;
 import UI.ComboBox.Items.ComboBoxItemInt;
 import UI.Events.ImageDisplayImageSizeChangedEvent;
 import UI.Events.ImageDisplayZoomChangedEvent;
@@ -179,7 +179,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 				{
 					_preventOverflow = true;
 					
-					gifFrameSpinner.setValue(((GIF)getCurrentDisplay().getImage()).getFrameIndex());
+					gifFrameSpinner.setValue(((GifBase)getCurrentDisplay().getImage()).getFrameIndex());
 					
 					_preventOverflow = false;
 				}
@@ -640,7 +640,23 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 			return;
 		}
 		
-		statusLabel.setText("  " + getCurrentDisplay().getImageWidth() + " x " + getCurrentDisplay().getImageHeight());
+		final ImageBase i = getCurrentDisplay().getImage();
+		final String sep1 = "   ";
+		final String sep2 = sep1 + "|" + sep1;
+		
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append(sep1 + i.getWidth() + " x " + i.getHeight());
+		
+		sb.append(sep2 + ImageFormat.getMimeType(i.GetImageFormat()));
+		
+		if(i.GetImageFormat() == ImageFormat.GIF)
+		{
+			GifBase g = (GifBase)i;
+			sb.append(sep2 + "%d frames".formatted(g.getFrameCount()));
+		}
+		
+		statusLabel.setText(sb.toString());
 	}
 	
 	
@@ -939,7 +955,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		
 		 if(i != null && i.GetImageFormat() == ImageFormat.GIF)
 		 {
-			 GIF g = (GIF) i;
+			 GifBase g = (GifBase) i;
 			 
 			 gifFrameNumberModel.setMaximum(Integer.valueOf(g.getFrameCount() - 1));
 			 gifFrameNumberModel.setValue(g.getFrameIndex());

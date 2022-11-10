@@ -7,6 +7,8 @@ import java.awt.Insets;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -21,6 +23,8 @@ import org.im4java.process.ProcessStarter;
 
 import Configuration.GUISettings;
 import Configuration.ImageMagick;
+import Util.Logging.LogUtil;
+
 import javax.swing.JButton;
 import java.awt.BorderLayout;
 import java.awt.Font;
@@ -29,6 +33,8 @@ import javax.swing.event.ChangeEvent;
 
 public class SettingsDialog  extends JDialog 
 {
+	protected static final Logger logger = LogUtil.getLogger(SettingsDialog.class.getName());
+	
 	private JTabbedPane tabbedPane;
 	private JPanel tabPage1, tabPage2 ;
 	private JTextField textField;
@@ -55,9 +61,15 @@ public class SettingsDialog  extends JDialog
 	{
 		this.setVisible(true);
 		
+		// update the changed settings here
 		ImageMagick.useImageMagick = chckbxNewCheckBox.isSelected();
+		this.logger.log(Level.INFO, "updated setting 'UseImageMagick' set value '%s'".formatted(ImageMagick.useImageMagick));
+		
 		ProcessStarter.setGlobalSearchPath(textArea.getText().replaceAll("\\r?\\n", File.pathSeparator));
+		this.logger.log(Level.INFO, "updated setting 'MagickGlobalSearchPath' set value '%s'".formatted(ProcessStarter.getGlobalSearchPath()));
+		
 		GUISettings.WRAP_TABS = chckbxNewCheckBox_1.isSelected();
+		this.logger.log(Level.INFO, "updated setting 'WrapTabs' set value '%s'".formatted(GUISettings.WRAP_TABS));
 	}
 	
 	

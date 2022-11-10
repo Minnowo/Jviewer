@@ -11,8 +11,10 @@ import org.im4java.core.IM4JavaException;
 
 import Configuration.ImageMagick;
 import Graphics.ImageUtil;
-import Graphics.Rotation;
 import Graphics.Imaging.Enums.ImageFormat;
+import Graphics.Imaging.Exceptions.ImageUnsupportedException;
+import Graphics.Imaging.Exceptions.RequiresMagickException;
+import Util.StringUtil;
 
 public class IMAGE extends ImageBase 
 {
@@ -20,23 +22,24 @@ public class IMAGE extends ImageBase
 	
 	public IMAGE()
 	{
-		super(ImageFormat.BMP, "image/bmp");
+		super(ImageFormat.BMP);
 	}
 	
 	public IMAGE(String path) 
 	{
-		super(ImageFormat.BMP, "image/bmp");
+		super(ImageFormat.BMP);
 		this.load(path);
 	}
 	
-	public IMAGE(byte imageFormat, String mime) 
+	public IMAGE(String path, byte imageFormat) 
 	{
-		super(imageFormat, mime);
+		super(ImageFormat.BMP);
+		this.loadWithoutDetect(new File(path), imageFormat);
 	}
 	
-	private IMAGE(byte imageFormat, String mime, BufferedImage b) 
+	private IMAGE(byte imageFormat, BufferedImage b) 
 	{
-		super(imageFormat, mime);
+		super(imageFormat);
 		
 		this.image = b;
 		super.width = b.getWidth();
@@ -48,7 +51,7 @@ public class IMAGE extends ImageBase
 	public static IMAGE fromBuffered(BufferedImage i)
 	{
 		// TODO: fix this constructor 
-		return new IMAGE(ImageFormat.BMP, "image/bmp", i);
+		return new IMAGE(ImageFormat.BMP, i);
 	}
 
 	@Override
@@ -57,17 +60,21 @@ public class IMAGE extends ImageBase
 		return this.image;
 	}
 
-	@Override
-	public void load(File path) 
+	/**
+	 * this method should be used to load the image if you detect the image format previously to avoid extra reading
+	 * since the standard load function reads the image byte headers to detect the image, this trusts the given format
+	 * @param path the image paath
+	 * @param imageFormat the image format to set this image, and pass onto image magick
+	 * @return
+	 */
+	public boolean loadWithoutDetect(File path, byte imageFormat)
 	{
 		if(!path.exists())
-			return;
+			return false;
 		
-		logger.log(Level.INFO, "loading %s".formatted(path.getAbsolutePath()));
+		final String absp = path.toString();
 		
-		// TODO: stop using file extension and read image headers 
-		final String ext = Util.StringUtil.getFileExtension(path);
-		final byte imageFormat = ImageFormat.getFromFileExtension(ext);
+		logger.log(Level.INFO, "loading %s".formatted(absp));
 		
 		super.imageFormat = imageFormat;
 
@@ -75,10 +82,10 @@ public class IMAGE extends ImageBase
 		{
 			try 
 			{
-				this.image = ImageUtil.loadImageWithMagick(path.getAbsolutePath());
+				this.image = ImageUtil.loadImageWithMagick(absp, super.imageFormat);
 				super.width = this.image.getWidth();
 				super.height = this.image.getHeight();
-				return;
+				return true;
 			} 
 			catch (IOException | InterruptedException | IM4JavaException e) 
 			{
@@ -88,9 +95,10 @@ public class IMAGE extends ImageBase
 	
 		try 
 		{
-		    this.image = ImageIO.read(path);
+		    this.image = ImageUtil.createOptimalImageFrom2(ImageIO.read(path));
 		    super.width = this.image.getWidth();
 			super.height = this.image.getHeight();
+			return true;
 		} 
 		catch (IOException e) 
 		{
@@ -98,26 +106,68 @@ public class IMAGE extends ImageBase
 			super.width = 0;
 			super.height = 0;
 		}
+		
+		return false;
+	}
+	
+	@Override
+	public boolean load(File path) 
+	{
+		return loadWithoutDetect(path, ImageDetector.getImageFormat(path.getAbsolutePath()));
 	}
 
 	@Override
-	public void load(String path) 
+	public boolean load(String path) 
 	{
 		File path_ = new File(path);
 		
-		this.load(path_);
+		return this.load(path_);
 	}
 
 	@Override
-	public void save(String path) {
-		// TODO Auto-generated method stub
-		
+	public boolean save(String path) throws ImageUnsupportedException 
+	{
+    	return this.save(new File(path));
 	}
 
 	@Override
-	public void save(File path) {
-		// TODO Auto-generated method stub
+	public boolean save(File path) throws ImageUnsupportedException 
+	{
+		if(!path.exists())
+			return false;
 		
+		if(ImageMagick.useImageMagick)
+    	{
+    		try 
+    		{
+				ImageUtil.saveImageWithMagick(this.image, path);
+				return true;
+			} 
+    		catch (IOException | InterruptedException | IM4JavaException e) 
+    		{
+    			logger.log(Level.WARNING, "Failed to save image %s using ImageMagick:\nMessage: %s".formatted(path, e.getMessage()), e);
+			}
+    	}
+    	
+		final byte imgFormat = ImageFormat.getFromFileExtension(StringUtil.getFileExtension(path, false));
+    	
+    	if(imgFormat == ImageFormat.UNKNOWN)
+    		throw new ImageUnsupportedException("The image format from '%s' was not recognized".formatted(path));
+    	
+    	if(imgFormat == ImageFormat.WEBP)
+    		throw new RequiresMagickException("Saving with the WebP image format requires the use of ImageMagick");
+    	
+    	try 
+    	{
+    		ImageIO.write(this.image, ImageFormat.getFileExtension(imgFormat), path);
+    		return true;
+    	}
+    	catch (IOException e) 
+    	{
+            logger.log(Level.WARNING, "Failed to save image %s with ImageIO.write:\nMessage: %s".formatted(path, e.getMessage()), e);
+    	}
+    	
+    	return false;
 	}
 
 
