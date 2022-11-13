@@ -1,5 +1,6 @@
 package Graphics;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -10,10 +11,15 @@ import java.awt.Toolkit;
 import java.awt.Transparency;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferInt;
+import java.awt.image.DirectColorModel;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.ImageFilter;
 import java.awt.image.ImageProducer;
 import java.awt.image.ImagingOpException;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -169,6 +175,28 @@ public class ImageUtil
 	        }
 	}
 	
+	public static void mirrorHorizontal2(BufferedImage src) throws IllegalArgumentException 
+	{
+		if (src == null)
+			throw new IllegalArgumentException("src cannot be null");
+		
+		final int w = src.getWidth();
+	    final int h = src.getHeight();
+	    final int hw = w / 2;
+	    
+	    DataBufferInt db = (DataBufferInt)src.getRaster().getDataBuffer();
+	    
+	    for (int y = 0; y < h; y++)
+	        for (int x = 0; x < hw; x++)
+	        {
+	        	int i1 = x + w*y;
+	        	int i2 = (w - x - 1) + w*y;
+
+	        	int tmp = db.getElem(i1);
+	            db.setElem(i1, db.getElem(i2));
+	            db.setElem(i2, tmp);
+	        }
+	}
 	
 	/**
 	 * Mirrors the image vertically over the x axis without creating a new image via the use of setRGB and getRGB<br/>
@@ -192,8 +220,32 @@ public class ImageUtil
 	            src.setRGB(x, h - y - 1, tmp);
 	        }
 	}
+	
+	/*
+	 * much faster implementation of mirrorVertical
+	 */
+	public static void mirrorVertical2(BufferedImage src) throws IllegalArgumentException 
+	{
+		if (src == null)
+			throw new IllegalArgumentException("src cannot be null");
+		
+	    final int w = src.getWidth();
+	    final int h = src.getHeight();
+	    final int hh = h / 2;
+	    
+	    DataBufferInt db = (DataBufferInt)src.getRaster().getDataBuffer();
+	    
+	    for (int x = 0; x < w; x++)
+	        for (int y = 0; y < hh; y++)
+	        {
+	        	int i1 = x + w*y;
+	        	int i2 = x + w*(h - y - 1);
 
-
+	        	int tmp = db.getElem(i1);
+	            db.setElem(i1, db.getElem(i2));
+	            db.setElem(i2, tmp);
+	        }
+	}
 	
 	public static BufferedImage rotate(BufferedImage src, byte rotation) throws IllegalArgumentException, ImagingOpException 
 	{
@@ -379,7 +431,7 @@ public class ImageUtil
 		if(s2b.getImage() == null)
 			throw new IM4JavaException("null image recieved from magick");
 		
-		BufferedImage b = ImageUtil.createOptimalImageFrom2(s2b.getImage());
+		BufferedImage b = ImageUtil.createOptimalImageFrom(s2b.getImage());
 
 		return b;
 	}
@@ -411,9 +463,29 @@ public class ImageUtil
         return (a << 24) + ((255 - r) << 16) + ((255 - g) << 8) + (255 - b);
 	}
 	
-	public static void convertInverse(BufferedImage img)
+	public static void convertInverse1(BufferedImage img)
 	{
-	    for (int x = 0; x < img.getWidth(); ++x)
+		int[] rgbs = new int[img.getWidth() * img.getHeight()];
+		
+		img.getRGB(0, 0, img.getWidth(), img.getHeight(), rgbs, 0, img.getWidth());
+	    
+		for(int i = 0; i < rgbs.length; i++)
+		{
+			int rgb = rgbs[i];
+	        int a = ((rgb >> 24) & 0xFF);
+	        int r = ((rgb >> 16) & 0xFF);
+	        int g = ((rgb >> 8) & 0xFF);
+	        int b = ((rgb & 0xFF));
+	        
+	        rgbs[i] = (a << 24) + ((255 - r) << 16) + ((255 - g) << 8) + (255 - b);
+		}
+		
+		img.setRGB(0, 0, img.getWidth(), img.getHeight(), rgbs, 0, img.getWidth());
+	}
+		
+	public static void convertInverse2(BufferedImage img)
+	{
+		for (int x = 0; x < img.getWidth(); ++x)
 	    for (int y = 0; y < img.getHeight(); ++y)
 	    {
 	        int rgb = img.getRGB(x, y);
@@ -426,6 +498,41 @@ public class ImageUtil
 	    }
 	}
 	
+	/**
+	 * a much faster implementation of convertInverse1 and convertInverse2<br>
+	 * only works on argb images if there is transparency, otherwise works on everything
+	 */
+	public static void convertInverse3(BufferedImage img)
+	{
+		// since we're re-writing the inverted color back in argb format, it will do it wrong 
+		// when there is transparency and it's not argb, so use the other method, which handles the color convertion
+		if(img.getTransparency() == Transparency.TRANSLUCENT && img.getType() != BufferedImage.TYPE_INT_ARGB)
+		{
+			logger.log(Level.INFO, "trying to invert none argb/rgb image, fallingback to convertIverse");
+			convertInverse1(img);
+			return;
+		}
+
+		DataBufferInt db = (DataBufferInt)img.getRaster().getDataBuffer();
+		
+		for(int i = 0; i < img.getWidth() * img.getHeight(); i++)
+		{
+			int rgb = db.getElem(i);
+			
+			// argb holds alpha of 0 with just the whole color as 0 
+			// so skip it, otherwise it changes the color to white
+//	        if(rgb == 0 && img.getType() == BufferedImage.TYPE_INT_ARGB)
+//	        	continue;
+	        
+	        int a = ((rgb >> 24) & 0xFF);
+	        int r = ((rgb >> 16) & 0xFF);
+	        int g = ((rgb >> 8) & 0xFF);
+	        int b = ((rgb & 0xFF));
+	        
+			db.setElem(i, (a << 24) + ((255 - r) << 16) + ((255 - g) << 8) + (255 - b));
+		}
+	}
+	
 	static final double gsrm = 0.3; // 0.21
 	
 	static final double gsgm = 0.59; // 0.71
@@ -435,12 +542,12 @@ public class ImageUtil
 	/**
 	 * gets the greyscale color for the given argb pixel
 	 */
-	public static int getGreyPixel(int rgb)
+	public static int getGreyPixel(int argb)
 	{
-		int a = ((rgb >> 24) & 0xFF);
-        int r = ((rgb >> 16) & 0xFF);
-        int g = ((rgb >> 8) & 0xFF);
-        int b = ((rgb & 0xFF));
+		int a = ((argb >> 24) & 0xFF);
+        int r = ((argb >> 16) & 0xFF);
+        int g = ((argb >> 8) & 0xFF);
+        int b = ((argb & 0xFF));
         
         byte grey = (byte)((r * gsrm) + (g * gsgm) + (b * gsbm));
         
@@ -462,6 +569,30 @@ public class ImageUtil
 	        
 	        img.setRGB(x, y, (a << 24) + (grey << 16) + (grey << 8) + grey);
 	    }
+	}
+	
+	/**
+	 * a much faster implementation of convertGreyscale
+	 */
+	public static void convertGreyscale2(BufferedImage img)
+	{
+		// for some reason this has no issues for any image format??? 
+		// but the invert image does, so wtf 
+		DataBufferInt db = (DataBufferInt)img.getRaster().getDataBuffer();
+		
+		for(int i = 0; i < img.getWidth() * img.getHeight(); i++)
+		{
+			int rgb = db.getElem(i);
+	        int a = ((rgb >> 24) & 0xFF);
+	        int r = ((rgb >> 16) & 0xFF);
+	        int g = ((rgb >> 8) & 0xFF);
+	        int b = ((rgb & 0xFF));
+
+	        byte grey = (byte)((r * gsrm) + (g * gsgm) + (b * gsbm));
+			
+			db.setElem(i, (a << 24) + (grey << 16) + (grey << 8) + grey);
+			
+		}
 	}
 }
 

@@ -11,6 +11,7 @@ import org.im4java.core.IM4JavaException;
 
 import Configuration.ImageMagick;
 import Graphics.ImageUtil;
+import Graphics.Rotation;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import Graphics.Imaging.Exceptions.RequiresMagickException;
@@ -113,7 +114,7 @@ public class IMAGE extends ImageBase
 				throw new IOException("unable to read image, ImageIO.read returned null");
 			}
 			
-		    this.image = ImageUtil.createOptimalImageFrom2(i);
+		    this.image = ImageUtil.createOptimalImageFrom(i);
 		    super.width = this.image.getWidth();
 			super.height = this.image.getHeight();
 			super.error = false;
@@ -194,7 +195,18 @@ public class IMAGE extends ImageBase
 		if(this.image == null)
 			return;
 		
+		super.delayFlush = true;
+		
+		if(isProcessing())
+			return;
+		
+		super.delayFlush = false;
+		
 		this.image.flush();
+		this.image = null;
+		
+		if(super.getInvokeGC())
+			System.gc();
 	}
 
 	@Override
@@ -203,7 +215,31 @@ public class IMAGE extends ImageBase
 		if(this.image == null)
 			return;
 		
-		this.image = ImageUtil.rotate(this.image, r);
+		super.isprocessing++;
+		
+		synchronized (this) 
+		{
+			switch (r) 
+			{
+				case Rotation.MIRROR_HORIZONTAL:
+					ImageUtil.mirrorHorizontal2(image);
+					super.isprocessing--;
+					super.checkDelayedFlush();
+					return;
+				case Rotation.MIRROR_VERTICAL:
+					ImageUtil.mirrorVertical2(image);
+					super.isprocessing--;
+					super.checkDelayedFlush();
+					return;
+			}
+			
+			this.image = ImageUtil.rotate(this.image, r);
+			super.width = this.image.getWidth();
+			super.height = this.image.getHeight();
+		}
+		
+		super.isprocessing--;
+		super.checkDelayedFlush();
 	}
 
 	@Override
@@ -212,7 +248,17 @@ public class IMAGE extends ImageBase
 		if(this.image == null)
 			return;
 		
-		this.image = ImageUtil.rotateImageByDegrees(this.image, degree);
+		super.isprocessing++;
+		
+		synchronized (this) 
+		{
+			this.image = ImageUtil.rotateImageByDegrees(this.image, degree);
+			super.width = this.image.getWidth();
+			super.height = this.image.getHeight();
+		}
+		
+		super.isprocessing--;
+		super.checkDelayedFlush();
 	}
 
 	@Override
@@ -221,7 +267,15 @@ public class IMAGE extends ImageBase
 		if(this.image == null)
 			return;
 		
-		ImageUtil.convertGreyscale(this.image);
+		super.isprocessing++;
+		
+		synchronized (this) 
+		{
+			ImageUtil.convertGreyscale2(this.image);
+		}
+		
+		super.isprocessing--;
+		super.checkDelayedFlush();
 	}
 
 	@Override
@@ -230,7 +284,15 @@ public class IMAGE extends ImageBase
 		if(this.image == null)
 			return;
 		
-		ImageUtil.convertInverse(this.image);
+		super.isprocessing++;
+		
+		synchronized (this) 
+		{
+			ImageUtil.convertInverse3(this.image);
+		}
+		
+		super.isprocessing--;
+		super.checkDelayedFlush();
 	}
 
 	@Override

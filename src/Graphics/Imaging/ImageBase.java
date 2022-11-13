@@ -15,6 +15,9 @@ public abstract class ImageBase
 	protected int width;
 	protected int height;
 	protected boolean error = false;
+	protected int isprocessing = 0;
+	protected boolean delayFlush = false;
+	protected boolean invokeGC = true;
 	
 	public ImageBase(byte imageFormat)
 	{
@@ -36,6 +39,26 @@ public abstract class ImageBase
     	return this.height;
     }
     
+    public boolean isProcessing()
+    {
+    	return this.isprocessing > 0;
+    }
+    
+    protected void checkDelayedFlush()
+    {
+    	if(this.delayFlush && this.isprocessing <= 0)
+    		this.flush();
+    }
+    
+    public void changeGCInvoke(boolean callGConFlush)
+    {
+    	this.invokeGC = callGConFlush;
+    }
+    
+    public boolean getInvokeGC()
+    {
+    	return this.invokeGC;
+    }
     
     public abstract BufferedImage getBuffered();
     

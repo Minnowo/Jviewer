@@ -667,6 +667,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		
 		StringBuilder sb = new StringBuilder();
 		
+		logger.info("changing size to " + i.getWidth() + " x " + i.getHeight());
 		sb.append(sep1 + i.getWidth() + " x " + i.getHeight());
 		
 		sb.append(sep2 + ImageFormat.getMimeType(i.GetImageFormat()));

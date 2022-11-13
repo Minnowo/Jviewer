@@ -9,6 +9,7 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
 import Graphics.ImageUtil;
+import Graphics.Rotation;
 import Graphics.Imaging.ImageBase;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Gif.GifDecoder.GifFrame;
@@ -222,6 +223,13 @@ public class GIF extends GifBase
 		if(this.decoder == null)
 			return;
 		
+		super.delayFlush = true;
+		
+		if(isProcessing())
+			return;
+		
+		super.delayFlush = false;
+		
 		for(int i = 0; i < this.decoder.getFrameCount(); i++)
 		{
 			this.decoder.getFrame(i).flush();
@@ -229,6 +237,9 @@ public class GIF extends GifBase
 		
 		this.decoder = null;
 		this.currentFrameIndex = -1;
+		
+		if(super.getInvokeGC())
+			System.gc();
 	}
 
 	@Override
@@ -237,12 +248,31 @@ public class GIF extends GifBase
 		if(this.decoder == null)
 			return;
 		
-		for(int i = 0; i < this.decoder.getFrameCount(); i++)
+		super.isprocessing++;
+		
+		synchronized (this) 
 		{
-			GifFrame buff = this.decoder.getFrameSource(i);
-			
-			buff.image = ImageUtil.rotate(buff.image, r);
+		
+			for(int i = 0; i < this.decoder.getFrameCount(); i++)
+			{
+				GifFrame buff = this.decoder.getFrameSource(i);
+				
+				switch (r) 
+				{
+					case Rotation.MIRROR_HORIZONTAL:
+						ImageUtil.mirrorHorizontal2(buff.image);
+						continue;
+					case Rotation.MIRROR_VERTICAL:
+						ImageUtil.mirrorVertical2(buff.image);
+						continue;
+				}
+				
+				buff.image = ImageUtil.rotate(buff.image, r);
+			}
 		}
+		
+		super.isprocessing--;
+		checkDelayedFlush();
 	}
 
 	@Override
@@ -251,12 +281,19 @@ public class GIF extends GifBase
 		if(this.decoder == null)
 			return;
 		
-		for(int i = 0; i < this.decoder.getFrameCount(); i++)
+		super.isprocessing++;
+		
+		synchronized (this) 
 		{
-			GifFrame buff = this.decoder.getFrameSource(i);
-			
-			buff.image = ImageUtil.rotateImageByDegrees(buff.image, degree);
+			for(int i = 0; i < this.decoder.getFrameCount(); i++)
+			{
+				GifFrame buff = this.decoder.getFrameSource(i);
+				
+				buff.image = ImageUtil.rotateImageByDegrees(buff.image, degree);
+			}
 		}
+		super.isprocessing--;
+		checkDelayedFlush();
 	}
 
 	@Override
@@ -265,14 +302,22 @@ public class GIF extends GifBase
 		if(this.decoder == null)
 			return;
 		
-		for(int i = 0; i < this.decoder.getFrameCount(); i++)
+		super.isprocessing++;
+		
+		synchronized (this) 
 		{
-			GifFrame buff = this.decoder.getFrameSource(i);
-			
-			buff.transColor = ImageUtil.getGreyPixel(buff.transColor);
-			
-			ImageUtil.convertGreyscale(buff.image);
+			for(int i = 0; i < this.decoder.getFrameCount(); i++)
+			{
+				GifFrame buff = this.decoder.getFrameSource(i);
+				
+				buff.transColor = ImageUtil.getGreyPixel(buff.transColor);
+				
+				ImageUtil.convertGreyscale2(buff.image);
+			}
 		}
+		
+		super.isprocessing--;
+		checkDelayedFlush();
 	}
 
 	@Override
@@ -281,14 +326,22 @@ public class GIF extends GifBase
 		if(this.decoder == null)
 			return;
 		
-		for(int i = 0; i < this.decoder.getFrameCount(); i++)
+		super.isprocessing++;
+		
+		synchronized (this) 
 		{
-			GifFrame buff = this.decoder.getFrameSource(i);
-			
-			buff.transColor = ImageUtil.getInversePixel(buff.transColor);
-			
-			ImageUtil.convertInverse(buff.image);
+			for(int i = 0; i < this.decoder.getFrameCount(); i++)
+			{
+				GifFrame buff = this.decoder.getFrameSource(i);
+				
+				buff.transColor = ImageUtil.getInversePixel(buff.transColor);
+				
+				ImageUtil.convertInverse3(buff.image);
+			}
 		}
+		
+		super.isprocessing--;
+		checkDelayedFlush();
 	}
 
 	@Override

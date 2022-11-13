@@ -377,9 +377,16 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     {
     	if(this.image != null && flushLastImage)
     	{
-    		this.image.flush();
-    		this.image = null;
-    		System.gc();
+    		if(!this.image.isProcessing())
+    		{
+    			this.image.flush();
+    			this.image = null;
+    			System.gc();
+    		}
+    		else 
+    		{
+    			this.image = null;	
+    		}
     	}
     	
     	if(image != null)
@@ -435,19 +442,31 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(this.image == null)
     		return; 
     	
+    	final int w = imageWidth;
+    	final int h = imageHeight;
+
     	this.image.rotate(Rotation.CCW_90);
-//    	this.setImage(ImageUtil.rotate(image, Rotation.CCW_90), true);
+    	this.imageWidth = this.image.getWidth();
+    	this.imageHeight = this.image.getHeight();
+    	
     	this.repaint();
+    	this.onImageSizeChanged(w, h, imageWidth, imageHeight);
     }
     
     public void rotate90Right()
     {
     	if(this.image == null)
     		return; 
-    	
+
+    	final int w = imageWidth;
+    	final int h = imageHeight;
+
     	this.image.rotate(Rotation.CW_90);
-//    	this.setImage(ImageUtil.rotate(image, Rotation.CW_90), true);
+    	this.imageWidth = this.image.getWidth();
+    	this.imageHeight = this.image.getHeight();
+    	
     	this.repaint();
+    	this.onImageSizeChanged(w, h, imageWidth, imageHeight);
     }
     
     public void flipVertical()
@@ -456,7 +475,6 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		return; 
     	
     	this.image.rotate(Rotation.MIRROR_VERTICAL);
-//    	this.setImage(ImageUtil.rotate(image, Rotation.MIRROR_VERTICAL), true);
     	this.repaint();
     }
     
@@ -466,7 +484,6 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		return; 
     	
     	this.image.rotate(Rotation.MIRROR_HORIZONTAL);
-//    	this.setImage(ImageUtil.rotate(image, Rotation.MIRROR_HORIZONTAL), true);
     	this.repaint();
     }
     
@@ -483,7 +500,6 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.imageHeight = this.image.getHeight();
     	
     	this.repaint();
-//    	this.setImage(ImageUtil.rotateImageByDegrees(this.image, degree), true);
     	this.onImageSizeChanged(w, h, imageWidth, imageHeight);
     }
     
@@ -1310,6 +1326,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	
     	for(ImageDisplayListener ls : this.listeners)
     	{
+    		
     		ls.ImageSizeChanged(event);
     	}
 	}

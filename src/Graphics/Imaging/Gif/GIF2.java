@@ -131,27 +131,27 @@ public class GIF2 extends GifBase
 	}
 
 
-//	@Override
-//	public int getWidth()
-//	{
-//		BufferedImage b = this.getBuffered();
-//		
-//		if(b == null)
-//			return 0;
-//		
-//		return b.getWidth();
-//	}
-//	
-//	@Override
-//	public int getHeight()
-//	{
-//		BufferedImage b = this.getBuffered();
-//		
-//		if(b == null)
-//			return 0;
-//		
-//		return b.getWidth();
-//	}
+	@Override
+	public int getWidth()
+	{
+		BufferedImage b = this.getBuffered();
+		
+		if(b == null)
+			return 0;
+		
+		return b.getWidth();
+	}
+	
+	@Override
+	public int getHeight()
+	{
+		BufferedImage b = this.getBuffered();
+		
+		if(b == null)
+			return 0;
+		
+		return b.getWidth();
+	}
 	
 	@Override
 	public boolean load(String path) 
