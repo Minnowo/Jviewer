@@ -376,6 +376,9 @@ public class ImageUtil
 		// run command and extract BufferedImage from OutputConsumer
 		convert.run(op);
 
+		if(s2b.getImage() == null)
+			throw new IM4JavaException("null image recieved from magick");
+		
 		BufferedImage b = ImageUtil.createOptimalImageFrom2(s2b.getImage());
 
 		return b;

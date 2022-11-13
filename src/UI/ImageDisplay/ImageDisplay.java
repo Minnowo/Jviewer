@@ -365,7 +365,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     {
     	ImageBase i = ImageUtil.loadImage(path);
     	
-    	if(i == null)
+    	if(i == null || i.err())
     	{
     		return;
     	}

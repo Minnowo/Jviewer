@@ -14,6 +14,7 @@ public abstract class ImageBase
 	protected byte imageFormat;
 	protected int width;
 	protected int height;
+	protected boolean error = false;
 	
 	public ImageBase(byte imageFormat)
 	{
@@ -37,6 +38,8 @@ public abstract class ImageBase
     
     
     public abstract BufferedImage getBuffered();
+    
+    public abstract boolean err();
     
     public abstract boolean load(File path);
     

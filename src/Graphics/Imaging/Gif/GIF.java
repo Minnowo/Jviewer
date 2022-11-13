@@ -156,10 +156,12 @@ public class GIF extends GifBase
 		{
 			this.decoder = null;
 			this.currentFrameIndex = -1;
+			super.error = true;
 			return false;
 		}
 		
 		this.currentFrameIndex = 0;
+		super.error = false;
 		return true;
 	}
 
@@ -287,5 +289,11 @@ public class GIF extends GifBase
 			
 			ImageUtil.convertInverse(buff.image);
 		}
+	}
+
+	@Override
+	public boolean err() {
+		// TODO Auto-generated method stub
+		return super.error;
 	}
 }

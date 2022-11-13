@@ -29,6 +29,8 @@ public interface ImageFormat
     
     public static final byte PSD = 7;
     
+    public static final byte JXL = 8;
+    
     public static interface HEIF_BRAND
     {
     	public static final byte UNKNOWN_BRAND = 13;
@@ -85,6 +87,9 @@ public interface ImageFormat
 	    	case ICO:
 	    		return "ico";
 	    		
+	    	case JXL:
+	    		return "jxl";
+	    		
 	    	case HEIF_BRAND.AVIF:
 	    	case HEIF_BRAND.AVIS:
 	    		return "avif";
@@ -128,6 +133,8 @@ public interface ImageFormat
 	    	case ICO:
 	    		return "image/ico";
 
+	    	case JXL:
+	    		return "image/jxl";
 	    		
 	    	case HEIF_BRAND.UNKNOWN_BRAND:
 	    		return "image/heic-unknown";
@@ -196,6 +203,9 @@ public interface ImageFormat
 				
 			case "psd":
 				return PSD;
+				
+			case "jxl":
+				return JXL;
 				
 			case "avif":
 				return HEIF_BRAND.AVIF;

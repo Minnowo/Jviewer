@@ -82,27 +82,47 @@ public class IMAGE extends ImageBase
 		{
 			try 
 			{
-				this.image = ImageUtil.loadImageWithMagick(absp, super.imageFormat);
+				this.image =  ImageUtil.loadImageWithMagick(absp, super.imageFormat);
 				super.width = this.image.getWidth();
 				super.height = this.image.getHeight();
+				super.error = false;
 				return true;
 			} 
 			catch (IOException | InterruptedException | IM4JavaException e) 
 			{
+				super.error = true;
 				logger.log(Level.WARNING, "Failed to read image %s using ImageMagick:\nMessage: %s".formatted(path, e.getMessage()), e);
 			}
 		}
 	
+		if(!ImageFormat.hasNativeSupport(imageFormat))
+		{
+			logger.log(Level.WARNING, "unsupported image format %s, no native support".formatted(ImageFormat.getMimeType(imageFormat)));
+			super.error = true;
+			super.width = 0;
+			super.height = 0;
+			return false;
+		}
+		
 		try 
 		{
-		    this.image = ImageUtil.createOptimalImageFrom2(ImageIO.read(path));
+			BufferedImage i = ImageIO.read(path);
+			
+			if(i == null)
+			{
+				throw new IOException("unable to read image, ImageIO.read returned null");
+			}
+			
+		    this.image = ImageUtil.createOptimalImageFrom2(i);
 		    super.width = this.image.getWidth();
 			super.height = this.image.getHeight();
+			super.error = false;
 			return true;
 		} 
 		catch (IOException e) 
 		{
 			logger.log(Level.WARNING, "Failed to read image %s using ImageIO.read:\nMessage: %s".formatted(path, e.getMessage()), e);
+			super.error = true;
 			super.width = 0;
 			super.height = 0;
 		}
@@ -211,6 +231,12 @@ public class IMAGE extends ImageBase
 			return;
 		
 		ImageUtil.convertInverse(this.image);
+	}
+
+	@Override
+	public boolean err() {
+		// TODO Auto-generated method stub
+		return super.error;
 	}
 
 }

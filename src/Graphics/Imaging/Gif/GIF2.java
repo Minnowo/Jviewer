@@ -119,11 +119,12 @@ public class GIF2 extends GifBase
 		    	this.width = b.getWidth();
 		    	this.height = b.getHeight();
 		    }
-		    
+		    super.error = frameCount == -1;
 		    return frameCount != -1;
 		} 
 		catch (IOException ex) 
 		{
+			super.error = true;
 		    // An I/O problem has occurred
 		}
 		return false;
@@ -220,5 +221,11 @@ public class GIF2 extends GifBase
 	public int getFrameDelay(int index) {
 		// TODO Auto-generated method stub
 		return 100;
+	}
+
+	@Override
+	public boolean err() {
+		// TODO Auto-generated method stub
+		return super.error;
 	}
 }

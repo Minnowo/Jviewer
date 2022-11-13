@@ -13,13 +13,19 @@ import Graphics.Imaging.Enums.ImageFormat;
 
 public class ImageDetector 
 {
-	public static final int MAX_HEADER_LENGTH = 8;
+	public static final int MAX_HEADER_LENGTH = 12;
 	
     public static final byte[] BMP_BYTE_IDENTIFIER = new byte[] { 0x42, 0x4D };
 
     public static final byte[] ICO_BYTE_IDENTIFIER = new byte[] { 0x00, 0x00, 0x01, 0x00 };
 
     public static final byte[] JPEG_BYTE_IDENTIFIER = new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF };
+    
+    // https://github.com/libjxl/libjxl/blob/main/lib/jxl/decode.cc#L92
+    public static final byte[] JXL_BYTE_IDENTIFIER_1 = new byte[] { (byte) 0xFF, (byte) 0x0A };
+    
+    // https://github.com/libjxl/libjxl/blob/main/lib/jxl/decode.cc#L105
+    public static final byte[] JXL_BYTE_IDENTIFIER_2 = new byte[] { 0x00, 0x00, 0x00, 0xC, 0x4A, 0x58, 0x4C, 0x20, 0xD, 0xA, (byte)0x87, 0xA };
     
     public static final byte[] PNG_BYTE_IDENTIFIER  = new byte[] { (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 
@@ -66,6 +72,8 @@ public class ImageDetector
     		new ImageFormatHeader(GIF_BYTE_IDENTIFIER_1, ImageFormat.GIF, 0),
     		new ImageFormatHeader(GIF_BYTE_IDENTIFIER_2, ImageFormat.GIF, 0),
     		new ImageFormatHeader(PSD_BYTE_IDENTIFIER, ImageFormat.PSD, 0),
+    		new ImageFormatHeader(JXL_BYTE_IDENTIFIER_1, ImageFormat.JXL, 0),
+    		new ImageFormatHeader(JXL_BYTE_IDENTIFIER_2, ImageFormat.JXL, 0),
     };    
 
     public static boolean startsWith(byte[] thisBytes, byte[] thatBytes, int offset)
@@ -87,6 +95,9 @@ public class ImageDetector
     
     public static byte heifBrand(final byte[] brand)
     {
+    	// most of this stuff is more or less from
+    	// https://github.com/strukturag/libheif/blob/master/libheif/heif.cc
+    	
     	// heic
     	if(Arrays.equals(brand, new byte[] { 0x68, 0x65, 0x69, 0x63, }))
     		return ImageFormat.HEIF_BRAND.HEIC;
