@@ -377,16 +377,8 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     {
     	if(this.image != null && flushLastImage)
     	{
-    		if(!this.image.isProcessing())
-    		{
-    			this.image.flush();
-    			this.image = null;
-    			System.gc();
-    		}
-    		else 
-    		{
-    			this.image = null;	
-    		}
+    		this.image.flush();
+			this.image = null;
     	}
     	
     	if(image != null)

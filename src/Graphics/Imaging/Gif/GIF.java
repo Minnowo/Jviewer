@@ -146,68 +146,90 @@ public class GIF extends GifBase
 	}
 
 	@Override
-	public boolean load(String path) 
+	public synchronized boolean load(String path) 
 	{
-		if(this.decoder == null)
-			this.decoder = new GifDecoder();
-		
-		this.decoder.read(path);
-		
-		if(this.decoder.err())
+		try 
 		{
-			this.decoder = null;
-			this.currentFrameIndex = -1;
-			super.error = true;
-			return false;
+			super.isprocessing++;
+			
+			if(this.decoder == null)
+				this.decoder = new GifDecoder();
+			
+			this.decoder.read(path);
+			
+			if(this.decoder.err())
+			{
+				this.decoder = null;
+				this.currentFrameIndex = -1;
+				super.error = true;
+				return false;
+			}
+			
+			this.currentFrameIndex = 0;
+			super.error = false;
 		}
-		
-		this.currentFrameIndex = 0;
-		super.error = false;
+		finally 
+		{
+			super.isprocessing--;
+			checkDelayedFlush();
+		}
 		return true;
 	}
 
 	@Override
-	public boolean save(String path) 
+	public synchronized boolean save(String path) 
 	{
-		GifEncoder e = new GifEncoder();
+		if(this.decoder == null)
+			return false;
 		
-		e.start(path);
-		e.setRepeat(0);
-		
-		for(int i = 0; i < this.decoder.getFrameCount(); i++)
+		try 
 		{
-			GifFrame gf = this.decoder.getFrameSource(i);
+			super.isprocessing++;
+		
+			GifEncoder e = new GifEncoder();
 			
-			e.addFrame(gf.image);
+			e.start(path);
+			e.setRepeat(0);
 			
-			e.setDelay(gf.delay);	
-			
-			// TODO: fix transparency on encoding, idk why it's so broken
-			
-//			if(this.decoder.hasTransparency())
-//			{
-//				e.setTransparent(new Color(gf.transColor));
-//				
-//				BufferedImage bf = new BufferedImage(gf.image.getWidth(), gf.image.getHeight(), BufferedImage.TYPE_INT_RGB);
-//				Graphics g = bf.getGraphics();
-//				g.setColor(new Color(gf.transColor));
-//				g.fillRect(0, 0, gf.image.getWidth(), gf.image.getHeight());
-//				g.drawImage(gf.image, 0,0, null);
-//				
-//				e.addFrame(bf);
-//			}
-//			else
-//			{
-//				e.addFrame(gf.image);
-//				e.setTransparent(null);
-//				System.out.println("has not trans");
-//			}
-			
-			
-		}
-
-		e.finish();
+			for(int i = 0; i < this.decoder.getFrameCount(); i++)
+			{
+				GifFrame gf = this.decoder.getFrameSource(i);
+				
+				e.addFrame(gf.image);
+				
+				e.setDelay(gf.delay);	
+				
+				// TODO: fix transparency on encoding, idk why it's so broken
+				
+	//			if(this.decoder.hasTransparency())
+	//			{
+	//				e.setTransparent(new Color(gf.transColor));
+	//				
+	//				BufferedImage bf = new BufferedImage(gf.image.getWidth(), gf.image.getHeight(), BufferedImage.TYPE_INT_RGB);
+	//				Graphics g = bf.getGraphics();
+	//				g.setColor(new Color(gf.transColor));
+	//				g.fillRect(0, 0, gf.image.getWidth(), gf.image.getHeight());
+	//				g.drawImage(gf.image, 0,0, null);
+	//				
+	//				e.addFrame(bf);
+	//			}
+	//			else
+	//			{
+	//				e.addFrame(gf.image);
+	//				e.setTransparent(null);
+	//				System.out.println("has not trans");
+	//			}
+				
+				
+			}
 	
+			e.finish();
+		}
+		finally 
+		{
+			super.isprocessing--;
+			checkDelayedFlush();
+		}
 		return true;
 	}
 
@@ -228,31 +250,36 @@ public class GIF extends GifBase
 		if(isProcessing())
 			return;
 		
-		super.delayFlush = false;
-		
-		for(int i = 0; i < this.decoder.getFrameCount(); i++)
+		synchronized (this) 
 		{
-			this.decoder.getFrame(i).flush();
+			super.delayFlush = false;
+			
+			for(int i = 0; i < this.decoder.getFrameCount(); i++)
+			{
+				BufferedImage buff =this.decoder.getFrame(i);
+				
+				if(buff != null)
+					buff.flush();
+			}
+			
+			this.decoder = null;
+			this.currentFrameIndex = -1;
+			
+			if(super.getInvokeGC())
+				System.gc();
 		}
-		
-		this.decoder = null;
-		this.currentFrameIndex = -1;
-		
-		if(super.getInvokeGC())
-			System.gc();
 	}
 
 	@Override
-	public void rotate(Byte r) 
+	public synchronized void rotate(Byte r) 
 	{
 		if(this.decoder == null)
 			return;
 		
-		super.isprocessing++;
-		
-		synchronized (this) 
+		try 
 		{
-		
+			super.isprocessing++;
+			
 			for(int i = 0; i < this.decoder.getFrameCount(); i++)
 			{
 				GifFrame buff = this.decoder.getFrameSource(i);
@@ -270,21 +297,23 @@ public class GIF extends GifBase
 				buff.image = ImageUtil.rotate(buff.image, r);
 			}
 		}
-		
-		super.isprocessing--;
-		checkDelayedFlush();
+		finally 
+		{
+			super.isprocessing--;
+			checkDelayedFlush();
+		}
 	}
 
 	@Override
-	public void rotateByDegrees(double degree) 
+	public synchronized void rotateByDegrees(double degree) 
 	{
 		if(this.decoder == null)
 			return;
 		
-		super.isprocessing++;
-		
-		synchronized (this) 
+		try 
 		{
+			super.isprocessing++;
+			
 			for(int i = 0; i < this.decoder.getFrameCount(); i++)
 			{
 				GifFrame buff = this.decoder.getFrameSource(i);
@@ -292,20 +321,23 @@ public class GIF extends GifBase
 				buff.image = ImageUtil.rotateImageByDegrees(buff.image, degree);
 			}
 		}
-		super.isprocessing--;
-		checkDelayedFlush();
+		finally 
+		{
+			super.isprocessing--;
+			checkDelayedFlush();
+		}
 	}
 
 	@Override
-	public void convertGreyscale() 
+	public synchronized void convertGreyscale() 
 	{
 		if(this.decoder == null)
 			return;
 		
-		super.isprocessing++;
-		
-		synchronized (this) 
+		try
 		{
+			super.isprocessing++;
+			
 			for(int i = 0; i < this.decoder.getFrameCount(); i++)
 			{
 				GifFrame buff = this.decoder.getFrameSource(i);
@@ -315,21 +347,23 @@ public class GIF extends GifBase
 				ImageUtil.convertGreyscale2(buff.image);
 			}
 		}
-		
-		super.isprocessing--;
-		checkDelayedFlush();
+		finally 
+		{
+			super.isprocessing--;
+			checkDelayedFlush();
+		}
 	}
 
 	@Override
-	public void convertInverse() 
+	public synchronized void convertInverse() 
 	{
 		if(this.decoder == null)
 			return;
 		
-		super.isprocessing++;
-		
-		synchronized (this) 
+		try
 		{
+			super.isprocessing++;
+			
 			for(int i = 0; i < this.decoder.getFrameCount(); i++)
 			{
 				GifFrame buff = this.decoder.getFrameSource(i);
@@ -339,9 +373,11 @@ public class GIF extends GifBase
 				ImageUtil.convertInverse3(buff.image);
 			}
 		}
-		
-		super.isprocessing--;
-		checkDelayedFlush();
+		finally 
+		{
+			super.isprocessing--;
+			checkDelayedFlush();
+		}
 	}
 
 	@Override

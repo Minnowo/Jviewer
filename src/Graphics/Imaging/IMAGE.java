@@ -68,64 +68,74 @@ public class IMAGE extends ImageBase
 	 * @param imageFormat the image format to set this image, and pass onto image magick
 	 * @return
 	 */
-	public boolean loadWithoutDetect(File path, byte imageFormat)
+	public synchronized boolean loadWithoutDetect(File path, byte imageFormat)
 	{
 		if(!path.exists())
 			return false;
-		
-		final String absp = path.toString();
-		
-		logger.log(Level.INFO, "loading %s".formatted(absp));
-		
-		super.imageFormat = imageFormat;
-
-		if(ImageMagick.useImageMagick) 
+	
+		try 
 		{
+			super.isprocessing++;
+		
+			final String absp = path.toString();
+			
+			logger.log(Level.INFO, "loading %s".formatted(absp));
+			
+			super.imageFormat = imageFormat;
+	
+			if(ImageMagick.useImageMagick) 
+			{
+				try 
+				{
+					this.image =  ImageUtil.loadImageWithMagick(absp, super.imageFormat);
+					super.width = this.image.getWidth();
+					super.height = this.image.getHeight();
+					super.error = false;
+					return true;
+				} 
+				catch (IOException | InterruptedException | IM4JavaException e) 
+				{
+					super.error = true;
+					logger.log(Level.WARNING, "Failed to read image %s using ImageMagick:\nMessage: %s".formatted(path, e.getMessage()), e);
+				}
+			}
+		
+			if(!ImageFormat.hasNativeSupport(imageFormat))
+			{
+				logger.log(Level.WARNING, "unsupported image format %s, no native support".formatted(ImageFormat.getMimeType(imageFormat)));
+				super.error = true;
+				super.width = 0;
+				super.height = 0;
+				return false;
+			}
+			
 			try 
 			{
-				this.image =  ImageUtil.loadImageWithMagick(absp, super.imageFormat);
-				super.width = this.image.getWidth();
+				BufferedImage i = ImageIO.read(path);
+				
+				if(i == null)
+				{
+					throw new IOException("unable to read image, ImageIO.read returned null");
+				}
+				
+			    this.image = ImageUtil.createOptimalImageFrom(i);
+			    super.width = this.image.getWidth();
 				super.height = this.image.getHeight();
 				super.error = false;
 				return true;
 			} 
-			catch (IOException | InterruptedException | IM4JavaException e) 
+			catch (IOException e) 
 			{
+				logger.log(Level.WARNING, "Failed to read image %s using ImageIO.read:\nMessage: %s".formatted(path, e.getMessage()), e);
 				super.error = true;
-				logger.log(Level.WARNING, "Failed to read image %s using ImageMagick:\nMessage: %s".formatted(path, e.getMessage()), e);
+				super.width = 0;
+				super.height = 0;
 			}
 		}
-	
-		if(!ImageFormat.hasNativeSupport(imageFormat))
+		finally 
 		{
-			logger.log(Level.WARNING, "unsupported image format %s, no native support".formatted(ImageFormat.getMimeType(imageFormat)));
-			super.error = true;
-			super.width = 0;
-			super.height = 0;
-			return false;
-		}
-		
-		try 
-		{
-			BufferedImage i = ImageIO.read(path);
-			
-			if(i == null)
-			{
-				throw new IOException("unable to read image, ImageIO.read returned null");
-			}
-			
-		    this.image = ImageUtil.createOptimalImageFrom(i);
-		    super.width = this.image.getWidth();
-			super.height = this.image.getHeight();
-			super.error = false;
-			return true;
-		} 
-		catch (IOException e) 
-		{
-			logger.log(Level.WARNING, "Failed to read image %s using ImageIO.read:\nMessage: %s".formatted(path, e.getMessage()), e);
-			super.error = true;
-			super.width = 0;
-			super.height = 0;
+			super.isprocessing--;
+			checkDelayedFlush();
 		}
 		
 		return false;
@@ -152,39 +162,48 @@ public class IMAGE extends ImageBase
 	}
 
 	@Override
-	public boolean save(File path) throws ImageUnsupportedException 
+	public synchronized boolean save(File path) throws ImageUnsupportedException 
 	{
-		if(ImageMagick.useImageMagick)
-    	{
-    		try 
-    		{
-				ImageUtil.saveImageWithMagick(this.image, path);
-				return true;
-			} 
-    		catch (IOException | InterruptedException | IM4JavaException e) 
-    		{
-    			logger.log(Level.WARNING, "Failed to save image %s using ImageMagick:\nMessage: %s".formatted(path, e.getMessage()), e);
-			}
-    	}
-    	
-		final byte imgFormat = ImageFormat.getFromFileExtension(StringUtil.getFileExtension(path, false));
-    	
-    	if(imgFormat == ImageFormat.UNKNOWN)
-    		throw new ImageUnsupportedException("The image format from '%s' was not recognized".formatted(path));
-    	
-    	if(imgFormat == ImageFormat.WEBP)
-    		throw new RequiresMagickException("Saving with the WebP image format requires the use of ImageMagick");
-    	
-    	try 
-    	{
-    		ImageIO.write(this.image, ImageFormat.getFileExtension(imgFormat), path);
-    		return true;
-    	}
-    	catch (IOException e) 
-    	{
-            logger.log(Level.WARNING, "Failed to save image %s with ImageIO.write:\nMessage: %s".formatted(path, e.getMessage()), e);
-    	}
-    	
+		try 
+		{
+			super.isprocessing++;
+			
+			if(ImageMagick.useImageMagick)
+	    	{
+	    		try 
+	    		{
+					ImageUtil.saveImageWithMagick(this.image, path);
+					return true;
+				} 
+	    		catch (IOException | InterruptedException | IM4JavaException e) 
+	    		{
+	    			logger.log(Level.WARNING, "Failed to save image %s using ImageMagick:\nMessage: %s".formatted(path, e.getMessage()), e);
+				}
+	    	}
+	    	
+			final byte imgFormat = ImageFormat.getFromFileExtension(StringUtil.getFileExtension(path, false));
+	    	
+	    	if(imgFormat == ImageFormat.UNKNOWN)
+	    		throw new ImageUnsupportedException("The image format from '%s' was not recognized".formatted(path));
+	    	
+	    	if(imgFormat == ImageFormat.WEBP)
+	    		throw new RequiresMagickException("Saving with the WebP image format requires the use of ImageMagick");
+	    	
+	    	try 
+	    	{
+	    		ImageIO.write(this.image, ImageFormat.getFileExtension(imgFormat), path);
+	    		return true;
+	    	}
+	    	catch (IOException e) 
+	    	{
+	            logger.log(Level.WARNING, "Failed to save image %s with ImageIO.write:\nMessage: %s".formatted(path, e.getMessage()), e);
+	    	}
+		}
+		finally 
+		{
+			super.isprocessing--;
+			checkDelayedFlush();
+		}
     	return false;
 	}
 
@@ -200,36 +219,38 @@ public class IMAGE extends ImageBase
 		if(isProcessing())
 			return;
 		
-		super.delayFlush = false;
-		
-		this.image.flush();
-		this.image = null;
-		
-		if(super.getInvokeGC())
-			System.gc();
+		synchronized (this) 
+		{	
+			super.delayFlush = false;
+			
+			if(this.image != null)
+				this.image.flush();
+			
+			this.image = null;
+			
+			if(super.getInvokeGC())
+				System.gc();
+		}
 	}
 
 	@Override
-	public void rotate(Byte r) 
+	public synchronized void rotate(Byte r) 
 	{
 		if(this.image == null)
 			return;
 		
-		super.isprocessing++;
-		
-		synchronized (this) 
+		try 
 		{
+			super.isprocessing++;
+			
 			switch (r) 
 			{
 				case Rotation.MIRROR_HORIZONTAL:
 					ImageUtil.mirrorHorizontal2(image);
-					super.isprocessing--;
-					super.checkDelayedFlush();
 					return;
+					
 				case Rotation.MIRROR_VERTICAL:
 					ImageUtil.mirrorVertical2(image);
-					super.isprocessing--;
-					super.checkDelayedFlush();
 					return;
 			}
 			
@@ -237,62 +258,71 @@ public class IMAGE extends ImageBase
 			super.width = this.image.getWidth();
 			super.height = this.image.getHeight();
 		}
-		
-		super.isprocessing--;
-		super.checkDelayedFlush();
+		finally 
+		{
+			super.isprocessing--;
+			super.checkDelayedFlush();
+		}
 	}
 
 	@Override
-	public void rotateByDegrees(double degree) 
+	public synchronized void rotateByDegrees(double degree) 
 	{
 		if(this.image == null)
 			return;
 		
-		super.isprocessing++;
 		
-		synchronized (this) 
+		try 
 		{
+			super.isprocessing++;
+			
 			this.image = ImageUtil.rotateImageByDegrees(this.image, degree);
 			super.width = this.image.getWidth();
 			super.height = this.image.getHeight();
 		}
-		
-		super.isprocessing--;
-		super.checkDelayedFlush();
-	}
-
-	@Override
-	public void convertGreyscale() 
-	{
-		if(this.image == null)
-			return;
-		
-		super.isprocessing++;
-		
-		synchronized (this) 
+		finally
 		{
-			ImageUtil.convertGreyscale2(this.image);
+			super.isprocessing--;
+			super.checkDelayedFlush();
 		}
-		
-		super.isprocessing--;
-		super.checkDelayedFlush();
 	}
 
 	@Override
-	public void convertInverse() 
+	public synchronized void convertGreyscale() 
 	{
 		if(this.image == null)
 			return;
 		
-		super.isprocessing++;
-		
-		synchronized (this) 
+		try 
 		{
+			super.isprocessing++;
+			
+			ImageUtil.convertGreyscale2(this.image);	
+		}
+		finally 
+		{
+			super.isprocessing--;
+			super.checkDelayedFlush();
+		}
+	}
+
+	@Override
+	public synchronized void convertInverse() 
+	{
+		if(this.image == null)
+			return;
+		
+		try 
+		{
+			super.isprocessing++;
+		
 			ImageUtil.convertInverse3(this.image);
 		}
-		
-		super.isprocessing--;
-		super.checkDelayedFlush();
+		finally 
+		{
+			super.isprocessing--;
+			super.checkDelayedFlush();
+		}
 	}
 
 	@Override
