@@ -56,6 +56,8 @@ import Graphics.Imaging.ImageBase;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import Graphics.Imaging.Gif.GifBase;
+import Threading.NotifyingThread;
+import Threading.ThreadCompleteListener;
 import UI.ComboBox.Items.ComboBoxItemInt;
 import UI.Events.ImageDisplayImageSizeChangedEvent;
 import UI.Events.ImageDisplayZoomChangedEvent;
@@ -66,13 +68,21 @@ import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 import Util.ClipboardHelper;
+import Util.ParamRunnable;
 import Util.Logging.LogUtil;
 
-public class MainForm extends JFrame implements ImageDisplayListener, ChangeListener 
+public class MainForm extends JFrame implements ImageDisplayListener, ChangeListener, ThreadCompleteListener
 {
 	protected static final Logger logger = LogUtil.getLogger(MainForm.class.getName());
 	
+	/**
+	 * used to prevent events from calling other events in infinite loops
+	 */
 	private boolean _preventOverflow = false;
+	
+	
+	private int threadCount = 0;
+	
 	
 	Icon iconMenu = UIManager.getIcon("html.pendingImage");
 	
@@ -546,7 +556,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 
 	public MainForm() 
 	{
-		this.setTitle("Hello World");
+		this.setTitle(GUISettings.MAIN_WINDOW_TITLE);
 		this.setSize(847, 659);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
@@ -632,6 +642,17 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	    tabbedPane.getActionMap().put(COPY_IMAGE.actionName, COPY_IMAGE);
 	}
 	
+	public void setTitle()
+	{
+		if(getCurrentDisplay().getImage() == null)
+		{
+			this.setTitle(GUISettings.MAIN_WINDOW_TITLE);
+			return;
+		}
+		
+		this.setTitle(GUISettings.MAIN_WINDOW_TITLE + " - " + getCurrentDisplay().getCurrentPath());
+	}
+	
 	public void setStatusLabelText()
 	{
 		if(getCurrentDisplay().getImage() == null)
@@ -656,7 +677,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 			sb.append(sep2 + "%d frames".formatted(g.getFrameCount()));
 		}
 		
-		statusLabel.setText(sb.toString());
+		statusLabel.setText(sb.toString() + sep1);
 	}
 	
 	
@@ -710,7 +731,21 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
         	return;
         }
         
-        openInNewTab(f);
+        
+        NotifyingThread t = new NotifyingThread() 
+        {	 
+       	 @Override
+       	 public void doRun()
+       	 {
+       		 showProgressBar();
+       		 openInNewTab(f);
+       		 resetProgressbar();
+       	 }
+        };
+        
+        this.threadCount += 1;
+        t.addListener(this);
+        t.start();
 	}
 	
 	public void askOpenFileInPlace()
@@ -721,8 +756,21 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
          {
          	return;
          }
-
-         openInPlace(f);
+         
+         NotifyingThread t = new NotifyingThread() 
+         {	 
+        	 @Override
+        	 public void doRun()
+        	 {
+        		 showProgressBar();
+ 				 openInPlace(f);
+ 				 resetProgressbar();
+        	 }
+         };
+         
+         this.threadCount += 1;
+         t.addListener(this);
+         t.start();
 	}
 	
 	public void askSaveImage()
@@ -735,14 +783,30 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		if(f.getPath() == "")
 			return;
 		
-		try 
-		{
-			ImageUtil.saveImage(getCurrentDisplay().getImage(), f);
-		}
-		catch (ImageUnsupportedException e1) 
-		{
-			logger.log(Level.WARNING, "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s".formatted(f.getAbsolutePath(), e1.getMessage()), e1);
-		}
+		NotifyingThread t = new NotifyingThread() 
+        {	 
+	       	 @Override
+	       	 public void doRun()
+	       	 {
+	       		 showProgressBar();
+	       		 
+	       		 try 
+	       		 {
+	       			 ImageUtil.saveImage(getCurrentDisplay().getImage(), f);
+	       		 }
+	       		 catch (ImageUnsupportedException e1) 
+	       		 {
+	       			 logger.log(Level.WARNING, "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s".formatted(f.getAbsolutePath(), e1.getMessage()), e1);
+	       		 }
+	       		 
+	       		 resetProgressbar();
+	       	 }
+        };
+        
+        this.threadCount += 1;
+        t.addListener(this);
+        t.start();
+		
 	}
 	
 	public void askRotateImage()
@@ -819,6 +883,13 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	    	   progressBar.setIndeterminate(true);
 	       }
 	     };
+	     
+     Runnable resetProgressBar = new Runnable() {
+	       public void run() {
+	    	   progressBar.setVisible(false);
+	   		   progressBar.setIndeterminate(false);
+	       }
+		     };
 	private JCheckBoxMenuItem chckbxmntmNewCheckItem_2;
 	private JMenuItem mntmNewMenuItem_11;
 	private JMenuItem mntmNewMenuItem_12;
@@ -827,15 +898,14 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	private JMenuItem mntmNewMenuItem_13;
 	private JButton btnNewButton;
 	     
-	public void setProgress(boolean rue)
+	public void showProgressBar()
 	{
 		SwingUtilities.invokeLater(runProgressBar);   
 	}
 	
 	public void resetProgressbar()
 	{
-		progressBar.setVisible(false);
-		progressBar.setIndeterminate(false);
+		SwingUtilities.invokeLater(resetProgressBar);   
 	}
 	
 	public void clearCurrentImage()
@@ -1014,11 +1084,20 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
    		 
    		 updateGifAnimationStuff();
    		setStatusLabelText();
+   		setTitle();
 	}
 
 	@Override
 	public void ImageChanged() 
 	{
-		updateGifAnimationStuff();	
+		updateGifAnimationStuff();
+		setTitle();
+	}
+
+	@Override
+	public void notifyOfThreadComplete(NotifyingThread t) 
+	{
+		this.logger.log(Level.INFO, "thread %s exiting".formatted(t.getName()));
+		this.threadCount -= 1;
 	}
 }

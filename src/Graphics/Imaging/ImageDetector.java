@@ -6,9 +6,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Arrays;
 
 import Graphics.Imaging.Enums.ImageFormat;
+
 
 public class ImageDetector 
 {
@@ -34,32 +35,40 @@ public class ImageDetector
 
     public static final byte[] PSD_BYTE_IDENTIFIER = new byte[] { 0x38, 0x42, 0x50, 0x53 };
     
+    // this comes after 4 bytes stating the length
+    // see https://nokiatech.github.io/heif/technical.html
+    public static final byte[] HEIF_FTYP_IDENTIFIER = new byte[] { 0x66, 0x74, 0x79, 0x70 };
+    
+
+    
     static class ImageFormatHeader
     {
     	byte[] header;
     	byte imageFormat;
+    	int offset;
     	
-    	public ImageFormatHeader(byte[] h, byte i) {
+    	public ImageFormatHeader(byte[] h, byte i, int offset) {
 			this.header = h;
 			this.imageFormat = i;
+			this.offset = offset;
 		}
     }
     
     public static final ImageFormatHeader[] HEADER_MAP = new ImageFormatHeader[] 
 	{
-    		new ImageFormatHeader(BMP_BYTE_IDENTIFIER, ImageFormat.BMP),
-    		new ImageFormatHeader(ICO_BYTE_IDENTIFIER, ImageFormat.ICO),
-    		new ImageFormatHeader(PNG_BYTE_IDENTIFIER, ImageFormat.PNG),
-    		new ImageFormatHeader(JPEG_BYTE_IDENTIFIER, ImageFormat.JPG),
-    		new ImageFormatHeader(TIFF_BYTE_IDENTIFIER_LE, ImageFormat.TIFF),
-    		new ImageFormatHeader(TIFF_BYTE_IDENTIFIER_BE, ImageFormat.TIFF),
-    		new ImageFormatHeader(WEBP_BYTE_IDENTIFIER, ImageFormat.WEBP),
-    		new ImageFormatHeader(GIF_BYTE_IDENTIFIER_1, ImageFormat.GIF),
-    		new ImageFormatHeader(GIF_BYTE_IDENTIFIER_2, ImageFormat.GIF),
-    		new ImageFormatHeader(PSD_BYTE_IDENTIFIER, ImageFormat.PSD),
+    		new ImageFormatHeader(BMP_BYTE_IDENTIFIER, ImageFormat.BMP, 0),
+    		new ImageFormatHeader(ICO_BYTE_IDENTIFIER, ImageFormat.ICO, 0),
+    		new ImageFormatHeader(PNG_BYTE_IDENTIFIER, ImageFormat.PNG, 0),
+    		new ImageFormatHeader(JPEG_BYTE_IDENTIFIER, ImageFormat.JPG, 0),
+    		new ImageFormatHeader(TIFF_BYTE_IDENTIFIER_LE, ImageFormat.TIFF, 0),
+    		new ImageFormatHeader(TIFF_BYTE_IDENTIFIER_BE, ImageFormat.TIFF, 0),
+    		new ImageFormatHeader(WEBP_BYTE_IDENTIFIER, ImageFormat.WEBP, 0),
+    		new ImageFormatHeader(GIF_BYTE_IDENTIFIER_1, ImageFormat.GIF, 0),
+    		new ImageFormatHeader(GIF_BYTE_IDENTIFIER_2, ImageFormat.GIF, 0),
+    		new ImageFormatHeader(PSD_BYTE_IDENTIFIER, ImageFormat.PSD, 0),
     };    
 
-    public static boolean startsWith(byte[] thisBytes, byte[] thatBytes)
+    public static boolean startsWith(byte[] thisBytes, byte[] thatBytes, int offset)
     {
     	int shortest = thisBytes.length;
     	
@@ -67,12 +76,66 @@ public class ImageDetector
     		
     		shortest = thatBytes.length;
     	
-    	for (int i = 0; i < shortest; i += 1)
-            
-    		if (thatBytes[i] != thisBytes[i])
+    	for (int i = 0; i < shortest; i += 1) 
+    		
+    		if (thatBytes[i] != thisBytes[i + offset]) 
+    			
                 return false;
-
+    	
         return true;
+    }
+    
+    public static byte heifBrand(final byte[] brand)
+    {
+    	// heic
+    	if(Arrays.equals(brand, new byte[] { 0x68, 0x65, 0x69, 0x63, }))
+    		return ImageFormat.HEIF_BRAND.HEIC;
+    	
+    	// heix
+    	if(Arrays.equals(brand, new byte[] { 0x68, 0x65, 0x69, 0x78, }))
+    		return ImageFormat.HEIF_BRAND.HEIX;
+    	
+    	// hevc
+    	if(Arrays.equals(brand, new byte[] { 0x68, 0x65, 0x76, 0x63, }))
+    		return ImageFormat.HEIF_BRAND.HEVC;
+    	
+    	// hevx
+    	if(Arrays.equals(brand, new byte[] { 0x68, 0x65, 0x76, 0x78, }))
+    		return ImageFormat.HEIF_BRAND.HEVX;
+    	
+    	// heim
+    	if(Arrays.equals(brand, new byte[] { 0x68, 0x65, 0x69, 0x6d, }))
+    		return ImageFormat.HEIF_BRAND.HEIM;
+    	
+    	// heis
+    	if(Arrays.equals(brand, new byte[] { 0x68, 0x65, 0x69, 0x73, }))	
+    		return ImageFormat.HEIF_BRAND.HEIS;
+    	
+    	// hevm
+    	if(Arrays.equals(brand, new byte[] { 0x68, 0x65, 0x76, 0x6d, }))
+    		return ImageFormat.HEIF_BRAND.HEVM;
+    	
+    	// hevs
+    	if(Arrays.equals(brand, new byte[] { 0x68, 0x65, 0x76, 0x73, }))
+    		return ImageFormat.HEIF_BRAND.HEVS;
+    	
+    	// mif1
+    	if(Arrays.equals(brand, new byte[] { 0x6d, 0x69, 0x66, 0x31, }))
+    		return ImageFormat.HEIF_BRAND.MIF1;
+    	
+    	// msf1
+    	if(Arrays.equals(brand, new byte[] { 0x6d, 0x73, 0x66, 0x31, }))
+    		return ImageFormat.HEIF_BRAND.MSF1;
+    	
+    	// avif
+    	if(Arrays.equals(brand, new byte[] { 0x61, 0x76, 0x69, 0x66, }))
+    		return ImageFormat.HEIF_BRAND.AVIF;
+    	
+    	// avis
+    	if(Arrays.equals(brand, new byte[] { 0x61, 0x76, 0x69, 0x73, }))
+    		return ImageFormat.HEIF_BRAND.AVIS;
+    	
+    	return ImageFormat.HEIF_BRAND.UNKNOWN_BRAND;
     }
     
     public static byte getImageFormat(String path)
@@ -91,10 +154,59 @@ public class ImageDetector
 
                  for (ImageFormatHeader ifh : HEADER_MAP)
                  {
-                     if (startsWith(magicBytes, ifh.header))
+                     if (startsWith(magicBytes, ifh.header, ifh.offset))
                      {
                          return ifh.imageFormat;
                      }
+                 }
+                 
+                 if(i == 7 && startsWith(magicBytes, HEIF_FTYP_IDENTIFIER, 4))
+                 {
+                	 byte[] buff = new byte[4];
+                	  
+                	 int read = is.read(buff);
+                	 
+                	 if(read != 4)
+                		 break;
+                	 
+                	 byte majorBrand = heifBrand(buff);
+                	 
+                	 return majorBrand;
+                	 
+                	 /* don't need minor brand detection
+                	  * 
+                	  * 
+                	 // read the first 4 bytes as an int big endian order to get box length
+                	 int boxLen = ((magicBytes[0] & 0xFF) << 24) | ((magicBytes[1] & 0xFF) << 16)
+                		        | ((magicBytes[2] & 0xFF) << 8)  | (magicBytes[3] & 0xFF);
+                	 
+                	 if(boxLen <= 12)
+                		 return majorBrand;
+                	 
+                	 byte[] minorBrands = new byte[boxLen - 12];
+                	 
+                	 read = is.read(minorBrands);
+                	 
+                	 System.out.println("minor brands length " + read);
+                	 
+                	 if(read < 4)
+                		 return majorBrand;
+                	 
+                	 byte minorBrand = ImageFormat.HEIF_BRAND.UNKNOWN_BRAND;
+                	 
+                	 read = 4 * (int)(read / 4);
+                	 
+                	 for(int j = 0; j < read; j += 4)
+                	 {
+                		 if(minorBrand != ImageFormat.HEIF_BRAND.UNKNOWN_BRAND && minorBrand != majorBrand)
+                			 return minorBrand;
+                		 
+                		 minorBrand = heifBrand(new byte[] { minorBrands[j], minorBrands[j + 1], minorBrands[j + 2], minorBrands[j + 3]});
+                		 System.out.println(minorBrand);
+                	 }
+                	 
+                	 return majorBrand;
+                	 */
                  }
 			}
 		} 

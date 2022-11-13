@@ -20,15 +20,31 @@ public interface ImageFormat
     public static final byte GIF = 4;
     
     
-    public static final byte ICO = 7;
+    public static final byte ICO = 5;
     
     /*
      * requires imagemagick
      */
-    public static final byte WEBP = 5;
+    public static final byte WEBP = 6;
     
-    public static final byte PSD = 6;
+    public static final byte PSD = 7;
     
+    public static interface HEIF_BRAND
+    {
+    	public static final byte UNKNOWN_BRAND = 13;
+    	public static final byte HEIC = 14; // the usual HEIF images
+    	public static final byte HEIX = 15; // 10bit images, or anything that uses h265 with range extension
+    	public static final byte HEVC = 16; // brand for image sequences
+    	public static final byte HEVX = 17; // brand for image sequences
+    	public static final byte HEIM = 18; // multiview
+    	public static final byte HEIS = 19; // scalable
+    	public static final byte HEVM = 20; // multiview sequence
+    	public static final byte HEVS = 21; // scalable sequence
+    	public static final byte MIF1 = 22; // image, any coding algorithm
+    	public static final byte MSF1 = 23; // sequence, any coding algorithm
+    	public static final byte AVIF = 24;
+    	public static final byte AVIS = 25;
+    };
     
     public static boolean hasNativeSupport(byte format)
     {
@@ -68,6 +84,24 @@ public interface ImageFormat
 	    		return "psd";
 	    	case ICO:
 	    		return "ico";
+	    		
+	    	case HEIF_BRAND.AVIF:
+	    	case HEIF_BRAND.AVIS:
+	    		return "avif";
+	    		
+	    	case HEIF_BRAND.HEIC:
+	    	case HEIF_BRAND.HEIX:
+	    	case HEIF_BRAND.HEIM:
+	    	case HEIF_BRAND.HEIS:
+	    	case HEIF_BRAND.HEVC:
+	    	case HEIF_BRAND.HEVX:
+	    	case HEIF_BRAND.HEVM:
+	    	case HEIF_BRAND.HEVS:
+	    		return "heic";
+	    		
+	    	case HEIF_BRAND.MIF1:
+	    	case HEIF_BRAND.MSF1:
+	    		return "heif";
 		}
     }
     
@@ -93,6 +127,34 @@ public interface ImageFormat
 	    		return "image/psd";
 	    	case ICO:
 	    		return "image/ico";
+
+	    		
+	    	case HEIF_BRAND.UNKNOWN_BRAND:
+	    		return "image/heic-unknown";
+	    		
+	    	case HEIF_BRAND.HEIC:
+	    	case HEIF_BRAND.HEIX:
+	    	case HEIF_BRAND.HEIM:
+	    	case HEIF_BRAND.HEIS:
+	    		return "image/heic";
+	    		
+	    	case HEIF_BRAND.MIF1:
+	    		return "image/heif";
+	    		
+	    	case HEIF_BRAND.HEVC:
+	    	case HEIF_BRAND.HEVX:
+	    	case HEIF_BRAND.HEVM:
+	    	case HEIF_BRAND.HEVS:
+	    		return "image/heic-sequence";
+	    			  
+	    	case HEIF_BRAND.MSF1:
+	    		return "image/heif-sequence";
+	    		
+	    	case HEIF_BRAND.AVIF:
+	    		return "image/avif";
+	    		
+	    	case HEIF_BRAND.AVIS:
+	    		return "image/avif-sequence";
 		}
     }
     
@@ -134,6 +196,14 @@ public interface ImageFormat
 				
 			case "psd":
 				return PSD;
+				
+			case "avif":
+				return HEIF_BRAND.AVIF;
+				
+			case "heif":
+	    		return HEIF_BRAND.MIF1;
+	    	case "heic":
+	    		return HEIF_BRAND.HEIC;
 		}
     }
 }

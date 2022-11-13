@@ -11,4 +11,6 @@ public class GUISettings
 	public static double MAIN_ZOOM_SPINNER_CHANGE_VALUE = 15d;
 	
 	public static boolean WRAP_TABS = false;
+	
+	public static String MAIN_WINDOW_TITLE = "Jviewer";
 }

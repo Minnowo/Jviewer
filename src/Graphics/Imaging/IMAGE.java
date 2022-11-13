@@ -133,9 +133,6 @@ public class IMAGE extends ImageBase
 	@Override
 	public boolean save(File path) throws ImageUnsupportedException 
 	{
-		if(!path.exists())
-			return false;
-		
 		if(ImageMagick.useImageMagick)
     	{
     		try 
