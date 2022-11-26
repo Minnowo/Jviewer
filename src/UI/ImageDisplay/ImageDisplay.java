@@ -8,6 +8,8 @@ import java.awt.RenderingHints;
 import java.awt.TexturePaint;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -23,6 +25,7 @@ import java.util.logging.Logger;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import Configuration.GUISettings;
 import Graphics.ImageUtil;
 import Graphics.Rotation;
 import Graphics.Imaging.ImageBase;
@@ -37,7 +40,7 @@ import UI.ImageDisplay.Enums.RenderQuality;
 import UI.ImageDisplay.Enums.ZoomType;
 import Util.Logging.LogUtil;
 
-public class ImageDisplay extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener 
+public class ImageDisplay extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener, ComponentListener
 {
 	protected final static Logger logger = LogUtil.getLogger(ImageDisplay.class.getName());
 	
@@ -280,6 +283,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	super.addMouseListener(this);
     	super.addMouseMotionListener(this);
     	super.addMouseWheelListener(this);
+    	super.addComponentListener(this);
     	
     	this.cellSize = 32;
     	this.cellScale = 1;
@@ -304,7 +308,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	super.addMouseListener(this);
     	super.addMouseMotionListener(this);
     	super.addMouseWheelListener(this);
-    	
+    	super.addComponentListener(this);
     	this.cellSize = 32;
     	this.cellScale = 1;
     	ZOOM_PERCENT = zoomPercent;
@@ -1318,7 +1322,6 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	
     	for(ImageDisplayListener ls : this.listeners)
     	{
-    		
     		ls.ImageSizeChanged(event);
     	}
 	}
@@ -1503,6 +1506,44 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	
     @Override
     public void mouseMoved(MouseEvent e)    {   }
+
+
+	@Override
+	public void componentResized(ComponentEvent e) 
+	{
+		if(!GUISettings.CENTER_IMAGE_ON_RESIZE || this.image == null)
+			return;
+		
+       // this.CenterCurrentImageWithoutResize();
+       // pasted the above functions code here to not have the repaint called cause yes :)
+		
+	   final int iWidth = (int)(this.imageWidth  * this._zoom);
+       final int iHeight =(int)(this.imageHeight * this._zoom);
+
+       this.drX = (this.getWidth() >> 1) - (iWidth >> 1);
+       this.drY = (this.getHeight() >> 1) - (iHeight >> 1);
+	}
+
+
+	@Override
+	public void componentMoved(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void componentShown(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void componentHidden(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	
 }

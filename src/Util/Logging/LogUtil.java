@@ -8,6 +8,8 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import Configuration.GUISettings;
+
 public class LogUtil 
 {
 	public static final Path LOG_FILE_DIRECTORY = Paths.get(System.getProperty("user.home"), ".local", "Jviewer");
@@ -48,7 +50,7 @@ public class LogUtil
 	    	
 	        logger.addHandler(fh);
 	        
-	        logger.setLevel(Level.ALL);
+	        logger.setLevel(GUISettings.LOG_LEVEL);
 	    } 
 	    catch (SecurityException e) 
 	    {  

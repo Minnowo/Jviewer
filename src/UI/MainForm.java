@@ -3,12 +3,22 @@ package UI;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,15 +46,18 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
+import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.tree.TreePath;
 
 import org.im4java.process.ProcessStarter;
 
@@ -68,7 +81,6 @@ import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 import Util.ClipboardHelper;
-import Util.ParamRunnable;
 import Util.Logging.LogUtil;
 
 public class MainForm extends JFrame implements ImageDisplayListener, ChangeListener, ThreadCompleteListener
@@ -104,6 +116,29 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
     private JMenuItem mntmNewMenuItem_3;
     private JMenuItem mntmNewMenuItem_4;
     
+    
+    DropTarget ddTarget = new DropTarget() 
+    {
+	    public synchronized void drop(DropTargetDropEvent evt) 
+	    {
+	        try 
+	        {
+	            evt.acceptDrop(DnDConstants.ACTION_COPY);
+	            
+	            List<File> droppedFiles = (List<File>)evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+	            
+	            openFilesAsync(droppedFiles);
+//	            for (File file : droppedFiles) 
+//	            {
+//	                openInNewTab(file);
+//	            }
+	        } 
+	        catch (Exception e) 
+	        {
+	            logger.log(Level.WARNING, "error recieving file drop", e);
+	        }
+	    }
+	};
     
     SpinnerNumberModel gifFrameNumberModel = new SpinnerNumberModel(Integer.valueOf(0), Integer.valueOf(0), null, Integer.valueOf(1));
     
@@ -553,7 +588,6 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	}
 	
 
-
 	public MainForm() 
 	{
 		this.setTitle(GUISettings.MAIN_WINDOW_TITLE);
@@ -565,6 +599,8 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		tabbedPane.addTab(ImageTabPage.EMPTY_TAB_PAGE_NAME, new ImageTabPage(tabbedPane));
 		tabbedPane.addChangeListener(this);
+		
+		tabbedPane.setDropTarget(ddTarget);
 		
 		initComboBox();
 		initToolbar();
@@ -721,6 +757,29 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
         getCurrentDisplay().tryLoadImage(f.getPath(), true);
 
         setStatusLabelText();
+	}
+	
+	public void openFilesAsync(List<File> f)
+	{
+		NotifyingThread t = new NotifyingThread() 
+        {	 
+       	 @Override
+       	 public void doRun()
+       	 {
+       		 showProgressBar();
+       		 
+       		 for(File f_ : f)
+       		 {
+       			 openInNewTab(f_);
+       		 }
+       		 
+       		 resetProgressbar();
+       	 }
+        };
+        
+        this.threadCount += 1;
+        t.addListener(this);
+        t.start();
 	}
 	
 	public void askOpenFileInNewTab()

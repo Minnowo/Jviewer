@@ -1,5 +1,7 @@
 package Configuration;
 
+import java.util.logging.Level;
+
 import javax.swing.UIManager;
 
 public class GUISettings 
@@ -13,4 +15,8 @@ public class GUISettings
 	public static boolean WRAP_TABS = false;
 	
 	public static String MAIN_WINDOW_TITLE = "Jviewer";
+	
+	public static Level LOG_LEVEL = Level.ALL;
+	
+	public static boolean CENTER_IMAGE_ON_RESIZE = true;
 }

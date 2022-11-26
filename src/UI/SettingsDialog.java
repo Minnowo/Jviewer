@@ -30,6 +30,7 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
+import java.awt.FlowLayout;
 
 public class SettingsDialog  extends JDialog 
 {
@@ -42,10 +43,9 @@ public class SettingsDialog  extends JDialog
 	private JTextArea textArea;
 	private JPanel panel_1;
 	private JCheckBox chckbxNewCheckBox;
-	private JTextField textField_1;
 	private JCheckBox chckbxNewCheckBox_1;
-	private JButton btnNewButton;
 	private JTextArea textArea_1;
+	private JCheckBox chckbxNewCheckBox_1_1 ;
 	
 	public SettingsDialog()
 	{
@@ -63,13 +63,16 @@ public class SettingsDialog  extends JDialog
 		
 		// update the changed settings here
 		ImageMagick.useImageMagick = chckbxNewCheckBox.isSelected();
-		this.logger.log(Level.INFO, "updated setting 'UseImageMagick' set value '%s'".formatted(ImageMagick.useImageMagick));
+		this.logger.log(Level.CONFIG, "updated setting 'UseImageMagick' set value '%s'".formatted(ImageMagick.useImageMagick));
 		
 		ProcessStarter.setGlobalSearchPath(textArea.getText().replaceAll("\\r?\\n", File.pathSeparator));
-		this.logger.log(Level.INFO, "updated setting 'MagickGlobalSearchPath' set value '%s'".formatted(ProcessStarter.getGlobalSearchPath()));
+		this.logger.log(Level.CONFIG, "updated setting 'MagickGlobalSearchPath' set value '%s'".formatted(ProcessStarter.getGlobalSearchPath()));
 		
 		GUISettings.WRAP_TABS = chckbxNewCheckBox_1.isSelected();
-		this.logger.log(Level.INFO, "updated setting 'WrapTabs' set value '%s'".formatted(GUISettings.WRAP_TABS));
+		this.logger.log(Level.CONFIG, "updated setting 'WrapTabs' set value '%s'".formatted(GUISettings.WRAP_TABS));
+		
+		GUISettings.CENTER_IMAGE_ON_RESIZE = chckbxNewCheckBox_1_1.isSelected();
+		this.logger.log(Level.CONFIG, "updated setting 'CenterImageOnResize' set value '%s'".formatted(GUISettings.CENTER_IMAGE_ON_RESIZE));
 	}
 	
 	
@@ -83,20 +86,15 @@ public class SettingsDialog  extends JDialog
 		tabPage2 = new JPanel();
 		
 		tabbedPane.addTab("General Settings", tabPage1);
-		tabPage1.setLayout(null);
-		
-		btnNewButton = new JButton("New button");
-		btnNewButton.setBounds(35, 228, 89, 23);
-		tabPage1.add(btnNewButton);
+		tabPage1.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
 		chckbxNewCheckBox_1 = new JCheckBox("Folding Tabs");
-		chckbxNewCheckBox_1.setBounds(22, 32, 130, 42);
+		chckbxNewCheckBox_1.setSelected(GUISettings.WRAP_TABS);
 		tabPage1.add(chckbxNewCheckBox_1);
 		
-		textField_1 = new JTextField();
-		textField_1.setBounds(219, 45, 273, 217);
-		tabPage1.add(textField_1);
-		textField_1.setColumns(10);
+		chckbxNewCheckBox_1_1 = new JCheckBox("Center Image On Resize");
+		chckbxNewCheckBox_1_1.setSelected(GUISettings.CENTER_IMAGE_ON_RESIZE);
+		tabPage1.add(chckbxNewCheckBox_1_1);
 		tabbedPane.addTab("Magick Settings", tabPage2);
 		tabPage2.setLayout(new BoxLayout(tabPage2, BoxLayout.Y_AXIS));
 		
