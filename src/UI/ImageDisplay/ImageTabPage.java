@@ -1,12 +1,17 @@
 package UI.ImageDisplay;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 
 import javax.swing.JTabbedPane;
 
 import Graphics.Imaging.ImageBase;
+import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import UI.Events.ImageTabNameChangedEvent;
 import UI.Events.ImageTabPathChangedEvent;
 import UI.Events.Listeners.ImageTabPageListener;
@@ -48,6 +53,43 @@ public class ImageTabPage extends ImageDisplay
 	public File getCurrentPath()
 	{
 		return this.currentFilePath;
+	}
+	
+	public File getCurrentPathOrTempPath()
+	{
+		if(this.currentFilePath != null && this.currentFilePath.exists())
+			return this.currentFilePath;
+		
+		if(super.getImage() == null)
+			return null;
+		
+		try 
+		{
+			Path tempDirWithPrefix = Files.createTempDirectory("jview");
+			File filePath = File.createTempFile("tmp", ".jpg", tempDirWithPrefix.toFile());
+			
+			logger.log(Level.INFO, "creating temp file: %s".formatted(filePath));
+			
+			if(super.getImage().save(filePath))
+			{
+				this.currentFilePath = filePath;
+				return filePath;
+			}
+			
+			return null;
+		} 
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		catch (ImageUnsupportedException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	@Override

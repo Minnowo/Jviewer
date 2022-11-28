@@ -83,8 +83,10 @@ public class Program extends JFrame
 						logger.log(Level.INFO, "global magick search path set [" + ProcessStarter.getGlobalSearchPath() + "]");
 					}
 
-					frame = new MainForm();
 					
+					
+					frame = new MainForm();
+
 				    frame.setVisible(true);
 				    
 				    frame.handleStartArguments(args);
