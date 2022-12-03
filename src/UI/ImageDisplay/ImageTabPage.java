@@ -15,13 +15,15 @@ import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import UI.Events.ImageTabNameChangedEvent;
 import UI.Events.ImageTabPathChangedEvent;
 import UI.Events.Listeners.ImageTabPageListener;
+import Util.AVL_FileTree;
 
 public class ImageTabPage extends ImageDisplay 
 {
 	public static final String EMPTY_TAB_PAGE_NAME = "---";
 	
-	
 	private Set<ImageTabPageListener> listeners = new HashSet<ImageTabPageListener>();
+	
+	private AVL_FileTree directory;
 	
 	private File currentFilePath;
 	
@@ -33,6 +35,7 @@ public class ImageTabPage extends ImageDisplay
 	public ImageTabPage(JTabbedPane parent)
 	{
 		this.parent = parent;
+		this.directory = new AVL_FileTree();
 	}
 	
 	public void SetTabName(String name)
@@ -92,6 +95,16 @@ public class ImageTabPage extends ImageDisplay
 		return null;
 	}
 	
+	public void nextImage()
+	{
+		File f = this.directory.inOrderSuccessor(currentFilePath);
+
+		if(f == null || !f.exists())
+			return;
+		
+		tryLoadImage(f.getAbsolutePath(), true);
+	}
+	
 	@Override
 	public void tryLoadImage(String path, boolean flushLastImage)
 	{
@@ -103,6 +116,13 @@ public class ImageTabPage extends ImageDisplay
 		String current = f.getAbsolutePath();
 		
 		currentFilePath = f;
+		
+		if(!path.equals(directory.getDirectory()))
+		{
+			directory.loadDirectory(path);
+			System.out.println("loading directory");
+		}
+			
 		
 		super.tryLoadImage(f.getAbsolutePath(), flushLastImage);
 		

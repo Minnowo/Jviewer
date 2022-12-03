@@ -80,6 +80,7 @@ import UI.ImageDisplay.Enums.AntiAliasing;
 import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
+import Util.AVL_FileTree;
 import Util.ClipboardHelper;
 import Util.Logging.LogUtil;
 
@@ -172,7 +173,8 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	}
     
     final KeyAction PASTE_IMAGE = new KeyAction("PasteImage", KeyboardSettings.PASTE_IMAGE_KEY, this::pasteImage);
-    final KeyAction COPY_IMAGE = new KeyAction("CopyImage", KeyboardSettings.COPY_IMAGE_KEY, this::copyImage);
+    final KeyAction COPY_IMAGE  = new KeyAction("CopyImage", KeyboardSettings.COPY_IMAGE_KEY, this::copyImage);
+    final KeyAction NEXT_IMAGE  = new KeyAction("NextImage", KeyboardSettings.NEXT_IMAGE_KEY, this::nextImage);
 
     
     
@@ -585,8 +587,44 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 			}
 		});
 		mnNewMenu_2.add(mntmNewMenuItem_2);
+		
+		mnNewMenu_4 = new JMenu("Debug");
+		mnNewMenu_2.add(mnNewMenu_4);
+		
+		mntmNewMenuItem_14 = new JMenuItem("Print Folder Contents");
+		mntmNewMenuItem_14.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+//				if(avlft != null)
+//				{
+////					avlft.inOrderPrint();
+//					avlft.printTree();
+//				}
+			}
+		});
+		mnNewMenu_4.add(mntmNewMenuItem_14);
+		
+		mntmNewMenuItem_15 = new JMenuItem("Print Folder Successor");
+		mntmNewMenuItem_15.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+//				if(avlft != null)
+//				{
+//					if(currentFile == null)
+//					{
+//						
+//						currentFile = avlft.getFirstPath();
+//						System.out.println(currentFile);
+//						return;
+//					}
+//					
+//					currentFile = avlft.inOrderSuccessor(currentFile);
+//					System.out.println(currentFile);
+//				}
+			}
+		});
+		mnNewMenu_4.add(mntmNewMenuItem_15);
 	}
 	
+	File currentFile;
 
 	public MainForm() 
 	{
@@ -676,6 +714,11 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	    
 	    tabbedPane.getInputMap(IFW).put(COPY_IMAGE.keystroke, COPY_IMAGE.actionName);
 	    tabbedPane.getActionMap().put(COPY_IMAGE.actionName, COPY_IMAGE);
+	    
+	    tabbedPane.getInputMap(IFW).put(NEXT_IMAGE.keystroke, NEXT_IMAGE.actionName);
+	    tabbedPane.getActionMap().put(NEXT_IMAGE.actionName, NEXT_IMAGE);
+	    
+	    
 	}
 	
 	public void setTitle()
@@ -737,13 +780,13 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 
         setStatusLabelText();
 	}
-	
+
 	public void openInNewTab(File f)
 	{
 		ImageTabPage img = new ImageTabPage(tabbedPane);
         tabbedPane.addTab("", img);
         tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
-        
+
         img.addImageDisplayListener(this);
         	
         img.tryLoadImage(f.getPath(), true);
@@ -997,6 +1040,9 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	int openedImaegs = 0;
 	private JCheckBoxMenuItem chckbxmntmNewCheckItem_3;
 	private JSpinner gifFrameSpinner;
+	private JMenu mnNewMenu_4;
+	private JMenuItem mntmNewMenuItem_14;
+	private JMenuItem mntmNewMenuItem_15;
 	public void handleStartArgument(String arg)
 	{
 		if(arg.contains("="))
@@ -1070,6 +1116,15 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 			return;
 		
 		ClipboardHelper.copyImageToClipboard(getCurrentDisplay().getImage().getBuffered());
+	}
+	
+	public void nextImage()
+	{
+		if(getCurrentDisplay() == null)
+			return;
+		
+		System.out.println("d pressed");
+		getCurrentDisplay().nextImage();
 	}
 	
 	public void updateGifAnimationStuff()

@@ -25,6 +25,8 @@ public class TabPage extends JTabbedPane implements ImageTabPageListener, Change
 	
 	public int mouseDragButton = MouseEvent.BUTTON1;
 	
+	
+	
 	public TabPage()
 	{
 		super();
