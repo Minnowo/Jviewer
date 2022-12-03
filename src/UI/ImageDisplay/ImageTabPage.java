@@ -23,7 +23,7 @@ public class ImageTabPage extends ImageDisplay
 	
 	private Set<ImageTabPageListener> listeners = new HashSet<ImageTabPageListener>();
 	
-	private AVL_FileTree directory;
+	public AVL_FileTree directory;
 	
 	private File currentFilePath;
 	
@@ -102,7 +102,7 @@ public class ImageTabPage extends ImageDisplay
 		if(f == null || !f.exists())
 			return;
 		
-		tryLoadImage(f.getAbsolutePath(), true);
+		this.tryLoadImage(f.getAbsolutePath(), true);
 	}
 	
 	@Override
@@ -117,12 +117,10 @@ public class ImageTabPage extends ImageDisplay
 		
 		currentFilePath = f;
 		
-		if(!path.equals(directory.getDirectory()))
+		if(!f.getParent().equals(directory.getDirectory()))
 		{
 			directory.loadDirectory(path);
-			System.out.println("loading directory");
 		}
-			
 		
 		super.tryLoadImage(f.getAbsolutePath(), flushLastImage);
 		

@@ -1,8 +1,10 @@
 package Util;
 
 import java.io.File;
-import java.util.LinkedList;
-import java.util.Stack;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import Util.Comparators.NaturalOrderComparator;
 
@@ -75,18 +77,21 @@ public class AVL_FileTree
 		this.clear();
 		this.directory = newDirectory.getAbsolutePath();
 		
-		File[] files = newDirectory.listFiles();
+		Path folder = Path.of(newDirectory.getAbsolutePath());
 		
-		if(files == null)
-			return false;
-		
-		for(int i = 0; i < files.length; i++)
+		// massive performance boost 
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder, entry -> !Files.isDirectory(entry))) 
 		{
-			if(files[i].isDirectory())
-				continue;
-			this.insert(files[i].getName());
+		    for (Path entry : stream) 
+		    {
+		    	this.insert(entry.toFile().getName());
+		    }
+		} 
+		catch (IOException ex) 
+		{
+		    // An I/O problem has occurred
 		}
-		 	
+		
 		return true;
 	}
 	
@@ -100,8 +105,8 @@ public class AVL_FileTree
 		if(this.root.filename.equals(path))
 			return leftMost(this.root.right);
 		
+		// this acts like a stack if a certain case appears 
 		BareLinkedList fakeLinkedList = new BareLinkedList(); 
-
 
 		for(AVLNode node = root;;)
 		{
@@ -116,13 +121,16 @@ public class AVL_FileTree
 					return null;
 				
 				// the current nodes left node is what we're looking for, easy 
+				// Case 1, the current node is the parent of a left child
 				if(node.left.filename.equals(path))
 				{
+					// if the left child has no right nodes, return the parent
 					if(node.left.right == null)
 					{
 						return node;
 					}
 					
+					// otherwise we can get the leftmost right node
 					return leftMost(node.left.right);
 				}
 				
@@ -133,7 +141,8 @@ public class AVL_FileTree
 				if(node.right == null)
 					return null;
 				
-				// the current nodes left node is what we're looking for, easy 
+				// Case 2, the current node has a right child, with a right child
+				// get it's leftmost child and we're done
 				if(node.right.filename.equals(path) && node.right.right != null)
 				{
 					return leftMost(node.right.right);
@@ -143,28 +152,30 @@ public class AVL_FileTree
 			}
 			else 
 			{
+				// worst case here
 				break;
 			}
 		}
 
+		// this is worst case for this function, since it's more steps and ram usage by the linked list
 
-		// remove empty last node
+		// remove empty last node, created at the start of the loop above
 		fakeLinkedList = fakeLinkedList.prev;
 		fakeLinkedList.next = null;
 		
-		
-		// remove current node we found
+		// remove current node we found, this node we were looking for 
 		fakeLinkedList = fakeLinkedList.prev;
 		fakeLinkedList.next = null;
 		
 	
 		while(true)
 		{
-
 			// we're at the rightmost node in the tree 
 			if(fakeLinkedList.prev == null)
 				return null;
 
+			// need to keep looking up at the parent nodes until we find where we're on the left
+			// if we can't find a spot we're on the left, we have the rightmost node in the tree
 			if(fakeLinkedList.node.filename.equals(fakeLinkedList.prev.node.left.filename))
 			{
 				return fakeLinkedList.prev.node;

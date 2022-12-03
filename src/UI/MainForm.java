@@ -594,11 +594,10 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		mntmNewMenuItem_14 = new JMenuItem("Print Folder Contents");
 		mntmNewMenuItem_14.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-//				if(avlft != null)
-//				{
-////					avlft.inOrderPrint();
-//					avlft.printTree();
-//				}
+				if(getCurrentDisplay() != null)
+				{
+					getCurrentDisplay().directory.inOrderPrint();
+				}
 			}
 		});
 		mnNewMenu_4.add(mntmNewMenuItem_14);
@@ -1123,7 +1122,6 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		if(getCurrentDisplay() == null)
 			return;
 		
-		System.out.println("d pressed");
 		getCurrentDisplay().nextImage();
 	}
 	
