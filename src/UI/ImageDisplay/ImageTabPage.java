@@ -95,14 +95,49 @@ public class ImageTabPage extends ImageDisplay
 		return null;
 	}
 	
+
+	public void prevImage()
+	{
+		File path = this.currentFilePath;
+		
+		while(true) 
+		{
+			File f = this.directory.inOrderPredessor(path);
+			
+			if(f == null)
+				return;
+
+			if(!f.isFile())
+			{
+				path = f;
+				continue;
+			}
+			
+			this.tryLoadImage(f.getAbsolutePath(), true);
+			return;
+		}
+	}
+	
 	public void nextImage()
 	{
-		File f = this.directory.inOrderSuccessor(currentFilePath);
-
-		if(f == null || !f.exists())
-			return;
+		File path = this.currentFilePath;
 		
-		this.tryLoadImage(f.getAbsolutePath(), true);
+		while(true) 
+		{
+			File f = this.directory.inOrderSuccessor(path);
+			
+			if(f == null)
+				return;
+
+			if(!f.isFile())
+			{
+				path = f;
+				continue;
+			}
+			
+			this.tryLoadImage(f.getAbsolutePath(), true);
+			return;
+		}
 	}
 	
 	@Override

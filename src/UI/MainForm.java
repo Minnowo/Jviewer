@@ -175,6 +175,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
     final KeyAction PASTE_IMAGE = new KeyAction("PasteImage", KeyboardSettings.PASTE_IMAGE_KEY, this::pasteImage);
     final KeyAction COPY_IMAGE  = new KeyAction("CopyImage", KeyboardSettings.COPY_IMAGE_KEY, this::copyImage);
     final KeyAction NEXT_IMAGE  = new KeyAction("NextImage", KeyboardSettings.NEXT_IMAGE_KEY, this::nextImage);
+    final KeyAction PREV_IMAGE  = new KeyAction("PrevImage", KeyboardSettings.PREV_IMAGE_KEY, this::prevImage);
 
     
     
@@ -596,7 +597,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 			public void actionPerformed(ActionEvent e) {
 				if(getCurrentDisplay() != null)
 				{
-					getCurrentDisplay().directory.inOrderPrint();
+					getCurrentDisplay().directory.printTree();
 				}
 			}
 		});
@@ -622,8 +623,8 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		});
 		mnNewMenu_4.add(mntmNewMenuItem_15);
 	}
+
 	
-	File currentFile;
 
 	public MainForm() 
 	{
@@ -717,7 +718,8 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	    tabbedPane.getInputMap(IFW).put(NEXT_IMAGE.keystroke, NEXT_IMAGE.actionName);
 	    tabbedPane.getActionMap().put(NEXT_IMAGE.actionName, NEXT_IMAGE);
 	    
-	    
+	    tabbedPane.getInputMap(IFW).put(PREV_IMAGE.keystroke, PREV_IMAGE.actionName);
+	    tabbedPane.getActionMap().put(PREV_IMAGE.actionName, PREV_IMAGE);
 	}
 	
 	public void setTitle()
@@ -1123,6 +1125,14 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 			return;
 		
 		getCurrentDisplay().nextImage();
+	}
+	
+	public void prevImage()
+	{
+		if(getCurrentDisplay() == null)
+			return;
+		
+		getCurrentDisplay().prevImage();
 	}
 	
 	public void updateGifAnimationStuff()
