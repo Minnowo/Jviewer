@@ -152,10 +152,14 @@ public class ImageTabPage extends ImageDisplay
 		
 		currentFilePath = f;
 		
-		if(!f.getParent().equals(directory.getDirectory()))
+		if(!f.getParent().equalsIgnoreCase(directory.getDirectory()))
 		{
 			directory.loadDirectory(path);
 		}
+		
+		// if your file isn't in the filter it won't be in the tree
+		// so we add it to the tree to make sure, if it's already in who cares, we don't
+		directory.insert(f.getName());
 		
 		super.tryLoadImage(f.getAbsolutePath(), flushLastImage);
 		

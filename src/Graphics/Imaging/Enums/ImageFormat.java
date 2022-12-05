@@ -22,14 +22,18 @@ public interface ImageFormat
     
     public static final byte ICO = 5;
     
+    public static final byte CUR = 6;
+    
     /*
      * requires imagemagick
      */
-    public static final byte WEBP = 6;
+    public static final byte WEBP = 7;
     
-    public static final byte PSD = 7;
+    public static final byte PSD = 8;
     
-    public static final byte JXL = 8;
+    public static final byte JXL = 9;
+    
+    public static final byte QOI = 10;
     
     public static interface HEIF_BRAND
     {
@@ -84,6 +88,8 @@ public interface ImageFormat
 	    		return "webp";
 	    	case PSD:
 	    		return "psd";
+	    	case CUR:
+	    		return "cur";
 	    	case ICO:
 	    		return "ico";
 	    		
@@ -107,6 +113,9 @@ public interface ImageFormat
 	    	case HEIF_BRAND.MIF1:
 	    	case HEIF_BRAND.MSF1:
 	    		return "heif";
+	    		
+	    	case QOI:
+	    		return "qoi";
 		}
     }
     
@@ -130,6 +139,8 @@ public interface ImageFormat
 	    		return "image/webp";
 	    	case PSD:
 	    		return "image/psd";
+	    	case CUR:
+	    		return "image/cursor";
 	    	case ICO:
 	    		return "image/ico";
 
@@ -162,6 +173,9 @@ public interface ImageFormat
 	    		
 	    	case HEIF_BRAND.AVIS:
 	    		return "image/avif-sequence";
+	    		
+	    	case QOI:
+	    		return "image/qoi";
 		}
     }
     
@@ -191,6 +205,8 @@ public interface ImageFormat
 	    		
 	    	case "ico":
 	    		return ICO;
+	    	case "cur":
+	    		return CUR;
 	    	
 			case "jpg":
 			case "jpe":
@@ -214,6 +230,9 @@ public interface ImageFormat
 	    		return HEIF_BRAND.MIF1;
 	    	case "heic":
 	    		return HEIF_BRAND.HEIC;
+	    		
+	    	case "qoi":
+	    		return QOI;
 		}
     }
 }

@@ -405,17 +405,21 @@ public class ImageUtil
 	{
 		IMOperation op = new IMOperation();
 
-		if(ImageMagick.readRequiresMergeLayers(imageFormat))
+		// input image path
+		op.addImage(path + "[0]");
+		
+		/* it would seem you can just always put [0] and it doesn't break which is awesome 
+		if(true || ImageMagick.readRequiresMergeLayers(imageFormat))
 		{
 			// input image path
-			op.addImage(path + "[0]");			
+			op.addImage(path + "[0]");
 		}
 		else 
 		{
 			// input image path
 			op.addImage(path);
 		}
-
+		*/
 		// set image output type into stdout, (bmp seems fastest but slow to render)
 		op.addImage(ImageMagick.getImageDecodeFormat() + ":-"); 
 

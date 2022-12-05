@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 
+import Configuration.GUISettings;
+
 
 class AVLNode 
 {
@@ -47,7 +49,7 @@ public class AVL_FileTree
 	public AVL_FileTree()
 	{
 		this.count = 0;
-		COMPARATOR = Comparators.NATURAL_SORT_WIN_EXPLORER;
+		COMPARATOR = Comparators.NATURAL_SORT;
 	}
 	
 	public AVL_FileTree(String directory)
@@ -85,7 +87,7 @@ public class AVL_FileTree
 		 
 		*/
 	
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of(newDirectory.getAbsolutePath())))// /* BAD DON'T DO THIS , entry -> !Files.isDirectory(entry))) */ 
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of(newDirectory.getAbsolutePath()), GUISettings.IMAGE_FILTER))// /* BAD DON'T DO THIS , entry -> !Files.isDirectory(entry))) */ 
 		{
 		    for (Path entry : stream) 
 		    {

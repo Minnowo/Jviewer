@@ -18,6 +18,8 @@ public class ImageDetector
     public static final byte[] BMP_BYTE_IDENTIFIER = new byte[] { 0x42, 0x4D };
 
     public static final byte[] ICO_BYTE_IDENTIFIER = new byte[] { 0x00, 0x00, 0x01, 0x00 };
+    
+    public static final byte[] CUR_BYTE_IDENTIFIER = new byte[] { 0x00, 0x00, 0x02, 0x00 };
 
     public static final byte[] JPEG_BYTE_IDENTIFIER = new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF };
     
@@ -41,6 +43,9 @@ public class ImageDetector
 
     public static final byte[] PSD_BYTE_IDENTIFIER = new byte[] { 0x38, 0x42, 0x50, 0x53 };
     
+    // https://qoiformat.org/qoi-specification.pdf
+    public static final byte[] QOI_BYTE_IDENTIFIER = new byte[] { 0x71, 0x6F, 0x69, 0x66 };
+    
     // this comes after 4 bytes stating the length
     // see https://nokiatech.github.io/heif/technical.html
     public static final byte[] HEIF_FTYP_IDENTIFIER = new byte[] { 0x66, 0x74, 0x79, 0x70 };
@@ -62,18 +67,20 @@ public class ImageDetector
     
     public static final ImageFormatHeader[] HEADER_MAP = new ImageFormatHeader[] 
 	{
-    		new ImageFormatHeader(BMP_BYTE_IDENTIFIER, ImageFormat.BMP, 0),
-    		new ImageFormatHeader(ICO_BYTE_IDENTIFIER, ImageFormat.ICO, 0),
-    		new ImageFormatHeader(PNG_BYTE_IDENTIFIER, ImageFormat.PNG, 0),
-    		new ImageFormatHeader(JPEG_BYTE_IDENTIFIER, ImageFormat.JPG, 0),
+			new ImageFormatHeader(JPEG_BYTE_IDENTIFIER, ImageFormat.JPG, 0),
+			new ImageFormatHeader(PNG_BYTE_IDENTIFIER, ImageFormat.PNG, 0),
+			new ImageFormatHeader(GIF_BYTE_IDENTIFIER_1, ImageFormat.GIF, 0),
+    		new ImageFormatHeader(GIF_BYTE_IDENTIFIER_2, ImageFormat.GIF, 0),
+    		new ImageFormatHeader(WEBP_BYTE_IDENTIFIER, ImageFormat.WEBP, 0),
     		new ImageFormatHeader(TIFF_BYTE_IDENTIFIER_LE, ImageFormat.TIFF, 0),
     		new ImageFormatHeader(TIFF_BYTE_IDENTIFIER_BE, ImageFormat.TIFF, 0),
-    		new ImageFormatHeader(WEBP_BYTE_IDENTIFIER, ImageFormat.WEBP, 0),
-    		new ImageFormatHeader(GIF_BYTE_IDENTIFIER_1, ImageFormat.GIF, 0),
-    		new ImageFormatHeader(GIF_BYTE_IDENTIFIER_2, ImageFormat.GIF, 0),
     		new ImageFormatHeader(PSD_BYTE_IDENTIFIER, ImageFormat.PSD, 0),
     		new ImageFormatHeader(JXL_BYTE_IDENTIFIER_1, ImageFormat.JXL, 0),
     		new ImageFormatHeader(JXL_BYTE_IDENTIFIER_2, ImageFormat.JXL, 0),
+    		new ImageFormatHeader(BMP_BYTE_IDENTIFIER, ImageFormat.BMP, 0),
+    		new ImageFormatHeader(QOI_BYTE_IDENTIFIER, ImageFormat.QOI, 0),
+    		new ImageFormatHeader(ICO_BYTE_IDENTIFIER, ImageFormat.ICO, 0),
+    		new ImageFormatHeader(CUR_BYTE_IDENTIFIER, ImageFormat.CUR, 0)
     };    
 
     public static boolean startsWith(byte[] thisBytes, byte[] thatBytes, int offset)

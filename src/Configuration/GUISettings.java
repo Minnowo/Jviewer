@@ -20,201 +20,284 @@ public class GUISettings
 	
 	public static boolean CENTER_IMAGE_ON_RESIZE = true;
 	
-	public static String IMAGE_FILTER_NO_MAGICK =String.join(",", 
-			"*.png", "*.jpg", "*.jpeg", "*.jpe", "*.jfif", "*.gif", "*.bmp", "*.tif", "*.tiff");
+	public static String IMAGE_FILTER_NO_MAGICK = "*.{%s}".formatted(String.join(",", 
+			"png", "jpg", "jpeg", "jpe", "jfif", "gif", "bmp", "tif", "tiff"));
 	
-	public static String IMAGE_FILTER = String.join(",", 
-			IMAGE_FILTER_NO_MAGICK,
+	public static String IMAGE_FILTER = "*.{%s}".formatted(String.join(",", 
 			
 			// https://imagemagick.org/script/formats.php
-			"*.jxl", "*.avif", "*.heic", "*.heif", "*.webp", "*.psd",
 			
+			// GIF | RW | CompuServe Graphics Interchange Format
+			"gif",  
+
+			// PNG | RW | Portable Network Graphics
+			// Requires libpng-1.0.11 or later, libpng-1.2.5 or later recommended.
+			"png",  
+			
+			// JPEG | RW | Joint Photographic Experts Group JFIF format 			
+			// Requires jpegsrc.v8c.tar.gz.
+			"jpeg,jpe,jfif,jpg", 
+			
+			// TIFF | RW | Tagged image file multispectral format Also known as TIF. 
+			// Requires tiff-v3.6.1.tar.gz or later.
+			"tiff,tif", 
+			
+			
+			// HEIC | RW | Apple High efficiency Image Format
+			"heic",
+			
+			// BMP, BMP2, BMP3 | RW | Microsoft Windows bitmap 
+			// "bmp,bmp2,bmp3",
+			"bmp,bmp2,bmp3",  
 						
-			// AAI | RW | AAI Dune image 
-			"*.aai" ,
+			// AVIF | RW | Format derived from the keyframes of AV1 video
+			"avif", // tested and working 
+
+			// JXL | RW | JPEG XL image coding system
+			// Requires the JPEG XL delegate library.
+			"jxl", // tested and working 
+
+			// ICO | R | Microsoft icon Also known as ICON.
+			"ico,icon", // java has native support kinda? but tested and working with magick
 			
-			// APNG | RW | Animated Portable Network Graphics 
-			"*.apng",
+			// CUR | R | Microsoft Cursor Icon 
+			"cur", // tested and working 
+			
+			// PSD | RW | Adobe Photoshop multispectral bitmap file
+			"psd", // tested and working
+			
+			// QOI | RW | Quite OK Image Format
+			"qoi", // tested and working 
+						
+			// WEBP | RW | Weppy image format 	
+			// Requires the WEBP delegate library.
+			"webp", // tested and working
+			
+			// SVG | RW | Scalable Vector Graphics
+			"svg", // tested and working 
+			
+			// JP2 | RW | JPEG-2000 JP2 File Format Syntax 
+			"jp2", // tested and working 
+			
+			// --- stuff I think will work but I haven't tested ---
+
+
+			// JBIG | RW | Joint Bi-level Image experts Group file interchange format. 
+			// Requires jbigkit-1.6.tar.gz.
+			"jbig",
+			
+			// JNG | RW | Multiple-image Network Graphics   
+			// Requires libjpeg and libpng-1.0.11 or later, libpng-1.2.5 or later recommended.
+			"jng",
+			
+			// JPT | RW | JPEG-2000 Code Stream Syntax 
+			"jpt",
+			
+			// J2C | RW | JPEG-2000 Code Stream Syntax 
+			"j2c",
+			
+			// J2K | RW | JPEG-2000 Code Stream Syntax 
+			"j2k",
+			
+			// JXR | RW | JPEG extended range 	
+			// Requires the jxrlib delegate library. 
+			"jxr",
+
+			// PNG8 | RW | Portable Network Graphics 
+			"png8",
+			
+			// PNG00 | RW | Portable Network Graphics 
+			"png00",
+			
+			// PNG24 | RW | Portable Network Graphics 
+			"png24",
+			
+			// PNG32 | RW | Portable Network Graphics 
+			"png32",
+			
+			// PNG48 | RW | Portable Network Graphics 
+			"png48",
+			
+			// PNG64 | RW | Portable Network Graphics 
+			"png64"
+			
+			
+			/*
+			// --- Stuff I think won't work but I haven't tested ---
+			
+			// APNG | RW | Animated Portable Network Graphics
+			// I have little faith this actually works 
+			// "apng",
+			
+			// AAI | RW | AAI Dune image 
+			"aai" ,
 			
 			// ART | RW | PFS: 1st Publisher 
-			"*.art",
+			"art",
 			
 			// ARW | R | Sony Digital Camera Alpha Raw Image Format 
-			"*.arw" ,
+			"arw" ,
 			
 			// AVI | R | Microsoft Audio/Visual Interleaved 
-			"*.avi",
-			
-			// AVIF | RW | Format derived from the keyframes of AV1 video 
-			"*.avif",
+			"avi",			
 			
 			// AVS | RW | AVS X image 
-			"*.avs" ,
+			"avs" ,
 			
 			// BAYER | RW | Raw mosaiced samples 
 			".bayer",
 			
 			// BPG | RW | Better Portable Graphics 
-			"*.bpg" ,
-			
-			// BMP, BMP2, BMP3 | RW | Microsoft Windows bitmap 
-			"*.bmp,*.bmp2,*.bmp3",
+			"bpg" ,
 			
 			// BRF | W | Braille Ready Format 
 			// WRITE ONLY
 			
 			// CALS | R | Continuous Acquisition and Life-cycle Support Type 1 image 
-			"*.cals",
+			"cals",
 			
 			// CIN | RW | Kodak Cineon Image Format 
-			"*.cin",
+			"cin",
 			
 			// CIP | W | Cisco IP phone image format 
 			// WRITE ONLY
 			
 			// CMYK | RW | Raw cyan, magenta, yellow, and black samples 
-			"*.cmyk",
+			"cmyk",
 			
 			// CMYKA | RW | Raw cyan, magenta, yellow, black, and alpha samples 
-			"*.cmyka",
+			"cmyka",
 			
 			// CR2 | R | Canon Digital Camera Raw Image Format 
-			"*.cr2",
+			"cr2",
 			
 			// CRW | R | Canon Digital Camera Raw Image Format 
-			"*.crw",
+			"crw",
 			
 			// CUBE | R | Cube Color lookup table converted to a HALD image 
-			"*.cube",
+			"cube",
 			
-			// CUR | R | Microsoft Cursor Icon 
-			"*.cur",
+			
 			
 			// CUT | R | DR Halo 
-			"*.cut",
+			"cut",
 			
 			// DCM | R | Digital Imaging and Communications in Medicine (DICOM) image 
-			"*.dcm",
+			"dcm",
 			
 			// DCR | R | Kodak Digital Camera Raw Image File 
-			"*.dcr",
+			"dcr",
 			
 			// DCX | RW | ZSoft IBM PC multi-page Paintbrush image 
-			"*.dcx",
+			"dcx",
 			
 			// DDS | RW | Microsoft Direct Draw Surface 
-			"*.dds",
+			"dds",
 			
 			// DEBUG | W | Raw pixel debug file, likely only useful to the developers 
 			// WRITE ONLY
 			
 			// DIB | RW | Microsoft Windows Device Independent Bitmap 
-			"*.dib",
+			"dib",
 			
 			// DJVU | R	
-			"*.djvu",
+			"djvu",
 			
 			// DNG | R | Digital Negative 
-			"*.dng",
+			"dng",
 			
 			// DOT | R | Graph Visualization 
-			"*.dot",
+			"dot",
 			
 			// DPX | RW | SMPTE Digital Moving Picture Exchange 2.0 (SMPTE 268M-2003) 
-			"*.dpx",
+			"dpx",
 			
 			// EMF | R | Microsoft Enhanced Metafile (32-bit) 
-			"*.emf",
+			"emf",
 			
 			// EPDF | RW | Encapsulated Portable Document Format 
-			"*.epdf",
+			"epdf",
 			
 			// EPI | RW | Adobe Encapsulated PostScript Interchange format 
-			"*.epi",
+			"epi",
 			
 			// EPS | RW | Adobe Encapsulated PostScript 
 			// REQUIRES Ghostscript to READ.
-			"*.eps",
+			"eps",
 			
 			// EPS2 | W | Adobe Level II Encapsulated PostScript
 			// REQUIRES Ghostscript to READ.
-			"*.eps2",
+			"eps2",
 			
 			// EPS3 | W | Adobe Level III Encapsulated PostScript 	
 			// REQUIRES Ghostscript to read.
-			"*.eps3",
+			"eps3",
 			
 			// EPSF | RW | Adobe Encapsulated PostScript 	
 			// Requires Ghostscript to read.
-			"*.epsf",
+			"epsf",
 			
 			// EPSI | RW | Adobe Encapsulated PostScript Interchange format 	
 			// Requires Ghostscript to read.
-			"*.epsi",
+			"epsi",
 			
 			// EPT | RW | Adobe Encapsulated PostScript Interchange format with TIFF preview 	
 			// Requires Ghostscript to read.
-			"*.ept",
+			"ept",
 			
 			// EXR | RW | High dynamic-range (HDR) file format developed by Industrial Light & Magic 	
-			"*.exr",
+			"exr",
 			
 			// FARBFELD | RW | Farbfeld lossless image format
-			"*.farbfeld",
+			"farbfeld",
 			
 			// FAX | RW | Group 3 TIFF
-			"*.fax",
+			"fax",
 			
 			// FITS | RW | Flexible Image Transport System 
-			"*.fits",
+			"fits",
 			
 			// FL32 | RW | FilmLight floating point image format 	
-			"*.fl32",
+			"fl32",
 			
 			// FLIF | RW | Free Lossless Image Format 	
-			"*.flif",
+			"flif",
 			
 			// FPX | RW | FlashPix Format 
-			"*.fpx",
+			"fpx",
 			
 			// FTXT | RW | Read and write multispectral channels as formatted text 	
-			"*.ftxt",
+			"ftxt",
 			
-			// GIF | RW | CompuServe Graphics Interchange Format
-			"*.gif",
+			
 			
 			// GPLT | R | Gnuplot plot files
 			// Requires gnuplot4.0.tar.Z or later.
-			"*.gplt",
+			"gplt",
 			
 			// GRAY | RW | Raw gray samples 
-			"*.gray",
+			"gray",
 			
 			// GRAYA | RW | Raw gray and alpha samples 
-			"*.graya",
+			"graya",
 			
 			// HDR | RW | Radiance RGBE image format 
 			".hdr",
 			
 			// HDR | RW | Radiance RGBE image format 
-			"*.hdr",
+			"hdr",
 			
-			// HEIC | RW | Apple High efficiency Image Format
-			"*.heic",
 			
 			// HPGL | R | HP-GL plotter language
 			// Requires hp2xx-3.4.4.tar.gz
-			"*.hpgl",
+			"hpgl",
 			
 			// HRZ | RW | Slow Scan TeleVision 	
-			"*.hrz",
+			"hrz",
 			
 			// HTML | RW | Hypertext Markup Language with a client-side image map.
 			// Requires html2ps to read.
-			"*.html",
-			
-			// ICO | R | Microsoft icon Also known as ICON.
-			"*.ico,*.icon",
+			"html",
 			
 			// INFO | W | Format and characteristics of the image
 			// WRITE ONLY
@@ -225,363 +308,295 @@ public class GUISettings
 			// ISOBRL6 | W | ISO/TR 11548-1 BRaiLle 6 dots 
 			// WRITE ONLY
 			
-			// JBIG | RW | Joint Bi-level Image experts Group file interchange format. 
-			// Requires jbigkit-1.6.tar.gz.
-			"*.jbig",
-			
-			// JNG | RW | Multiple-image Network Graphics   
-			// Requires libjpeg and libpng-1.0.11 or later, libpng-1.2.5 or later recommended.
-			"*.jng",
-			
-			// JP2 | RW | JPEG-2000 JP2 File Format Syntax 
-			"*.jp2",
-			
-			// JPT | RW | JPEG-2000 Code Stream Syntax 
-			"*.jpt",
-			
-			// J2C | RW | JPEG-2000 Code Stream Syntax 
-			"*.j2c",
-			
-			// J2K | RW | JPEG-2000 Code Stream Syntax 
-			"*.j2k",
-			
-			// JPEG | RW | Joint Photographic Experts Group JFIF format 			
-			// Requires jpegsrc.v8c.tar.gz.
-			"*.jpeg",
-			
-			// JXR | RW | JPEG extended range 	
-			// Requires the jxrlib delegate library. 
-			"*.jxr",
-			
 			// JSON | W | JavaScript Object Notation, a lightweight data-interchange format 
 			// WRITE ONLY
-			
-			// JXL | RW | JPEG XL image coding system
-			// Requires the JPEG XL delegate library.
-			"*.jxl",
 			
 			// KERNEL | W | Morphology kernel format
 			// WRITE ONLY
 			
 			// MAN | R | Linux reference manual pages 	
 			// Requires that GNU groff and Ghostcript are installed.
-			"*.man",
+			"man",
 			
 			// MAT | R | MATLAB image format 	
-			"*.mat",
+			"mat",
 			
 			// MIFF | RW | Magick multispectral image file format
-			"*.miff",
+			"miff",
 			
 			// MONO | RW | Bi-level bitmap in least-significant-byte first order 	
-			"*.mono",
+			"mono",
 			
 			// MNG | RW | Multiple-image Network Graphics  
 			// Requires libpng-1.0.11 or later, libpng-1.2.5 or later recommended. 
-			"*.mng",
+			"mng",
 			
 			// M2V | RW | Motion Picture Experts Group file interchange format (version 2) 	
 			// Requires ffmpeg.
-			"*.m2v",
+			"m2v",
 			
 			// MPEG | RW | Motion Picture Experts Group file interchange format (version 1)
 			// Requires ffmpeg.
-			"*.mpeg",
+			"mpeg",
 			
 			// MPC | RW | Magick Pixel Cache image file format 
-			"*.mpc",
+			"mpc",
 			
 			// MPR | RW | Magick Persistent Registry
-			"*.mpr",
+			"mpr",
 			
 			// MRW | R | Sony (Minolta) Raw Image File 
-			"*.mrw",
+			"mrw",
 			
 			// MSL | RW | Magick Scripting Language. 
 			// requires the libxml2 delegate library.
-			"*.msl",
+			"msl",
 			
 			// MTV | RW | MTV Raytracing image format 
-			"*.mtv",
+			"mtv",
 			
 			// MVG | RW | Magick Vector Graphics.
-			"*.mvg",
+			"mvg",
 			
 			// NEF | R | Nikon Digital SLR Camera Raw Image File 
-			"*.nef",
+			"nef",
 			
 			// ORF | R | Olympus Digital Camera Raw Image File 
-			"*.orf",
+			"orf",
 			
 			// ORA | R | open exchange format for layered raster based graphics 
-			"*.ora",
+			"ora",
 			
 			// OTB | RW | On-the-air Bitmap 
-			"*.otb",
+			"otb",
 			
 			// P7 | RW | Xvs Visual Schnauzer thumbnail format 
-			"*.p7",
+			"p7",
 			
 			// PALM | RW | Palm pixmap 
-			"*.palm",
+			"palm",
 			
 			// PAM | W | Common 2-dimensional bitmap format 
-			"*.pam",
+			"pam",
 			
 			// PBM | RW | Portable bitmap format (black and white) 
-			"*.pbm",
+			"pbm",
 			
 			// PCD | RW | Photo CD 
-			"*.pcd",
+			"pcd",
 			
 			// PCDS | RW | Photo CD 
-			"*.pcds",
+			"pcds",
 			
 			// PCL | W | HP Page Control Language 
 			// WRITE ONLY
 			
 			// PCX | RW | ZSoft IBM PC Paintbrush file 
-			"*.pcx",
+			"pcx",
 			
 			// PDB | RW | Palm Database ImageViewer Format 
-			"*.pdb",
+			"pdb",
 			
 			// PDF | RW | Portable Document Format 	
 			// Requires Ghostscript to read.
-			"*.pdf",
+			"pdf",
 			
 			// PEF | R | Pentax Electronic File 
-			"*.pef",
+			"pef",
 			
 			// PES | R | Embrid Embroidery Format
-			"*.pes",
+			"pes",
 			
 			// PFA | R | Postscript Type 1 font (ASCII)
-			"*.pfa",
+			"pfa",
 			
 			// PFB | R | Postscript Type 1 font (binary)
-			"*.pfb",
+			"pfb",
 			
 			// PFM | RW | Portable float map format 
-			"*.pfm",
+			"pfm",
 			
 			// PGM | RW | Portable graymap format (gray scale) 
-			"*.pgm",
+			"pgm",
 			
 			// PHM | RW | Portable float map format 16-bit half
-			"*.phm",
+			"phm",
 			
 			// PICON | RW | Personal Icon 
-			"*.picon",
+			"picon",
 			
 			// PICT | RW | Apple Macintosh QuickDraw/PICT file 
-			"*.pict",
+			"pict",
 			
 			// PIX | R | Alias/Wavefront RLE image format 
-			"*.pix",
+			"pix",
 			
-			// PNG | RW | Portable Network Graphics
-			// Requires libpng-1.0.11 or later, libpng-1.2.5 or later recommended.
-			"*.png",
-			
-			// PNG8 | RW | Portable Network Graphics 
-			"*.png8",
-			
-			// PNG00 | RW | Portable Network Graphics 
-			"*.png00",
-			
-			// PNG24 | RW | Portable Network Graphics 
-			"*.png24",
-			
-			// PNG32 | RW | Portable Network Graphics 
-			"*.png32",
-			
-			// PNG48 | RW | Portable Network Graphics 
-			"*.png48",
-			
-			// PNG64 | RW | Portable Network Graphics 
-			"*.png64",
 			
 			// PNM | RW | Portable anymap 
-			"*.pnm",
+			"pnm",
 			
 			// POCKETMOD | RW | Pocketmod personal organizer format
-			"*.pocketmod",
+			"pocketmod",
 			
 			// PPM | RW | Portable pixmap format (color) 
-			"*.ppm",
+			"ppm",
 			
 			// PS | RW | Adobe PostScript file 	
 			// Requires Ghostscript to read.
-			"*.ps",
+			"ps",
 			
 			// PS2 | RW | Adobe Level II PostScript file 	
 			// Requires Ghostscript to read.
-			"*.ps2",
+			"ps2",
 			
 			// PS3 | RW | Adobe Level III PostScript file 	
 			// Requires Ghostscript to read.
-			"*.ps3",
+			"ps3",
 			
 			// PSB | RW | Adobe Large Document Format 
-			"*.psb",
+			"psb",
 			
-			// PSD | RW | Adobe Photoshop multispectral bitmap file
-			"*.psd"
-			,
 			// PTIF | RW | Pyramid encoded TIFF 
-			"*.ptif",
+			"ptif",
 			
 			// PWP | R | Seattle File Works multi-image file 
-			"*.pwp"
+			"pwp"
 			,
-			// QOI | RW | Quite OK Image Format
-			"*.qoi"
-			,
+			
 			// RAD | R | Radiance image file 	
 			// Requires that ra_ppm from the Radiance software package be installed.
-			"*.rad",
+			"rad",
 			
 			// RAF | R | Fuji CCD-RAW Graphic File 
-			"*.raf",
+			"raf",
 			
 			// RAW | RW | Raw gray samples
-			"*.raw"
+			"raw"
 			,
 			// RGB | RW | Raw red, green, and blue samples 
-			"*.rgb"
+			"rgb"
 			,
 			// RGB565 | R | Raw red, green, blue pixels in the 5-6-5 format
-			"*.rgb565"
+			"rgb565"
 			,
 			// RGBA | RW | Raw red, green, blue, and alpha samples
-			"*.rgba"
+			"rgba"
 			,
 			// RGF | RW | LEGO Mindstorms EV3 Robot Graphics File
-			"*.rgf"
+			"rgf"
 			,
 			// RLA | R | Alias/Wavefront image file 
-			"*.rla"
+			"rla"
 			,
 			// RLE | R | Utah Run length encoded image file 
-			"*.rle"
+			"rle"
 			,
 			// SCT | R | Scitex Continuous Tone Picture 
-			"*.sct"
+			"sct"
 			,
 			// SFW | R | Seattle File Works image 
-			"*.sfw"
+			"sfw"
 			,
 			// SGI | RW | Irix RGB image 
-			"*.sgi"
+			"sgi"
 			,
 			// SHTML | W | Hypertext Markup Language client-side image map 
-			"*.shtml"
+			"shtml"
 			,
 			// SID, MrSID | R | Multiresolution seamless image
 			// Requires the mrsidgeodecode command line utility that decompresses MG2 or MG3 SID image files.
-			"*.sid,*.mrsid"
+			"sid,mrsid"
 			,
 			// SPARSE-COLOR | W | Raw text file 
 			// WRITE ONLY
 			
 			// STRIMG | RW | String to images and back 
-			"*.string",
+			"string",
 			
 			// SUN | RW | SUN Rasterfile 
-			"*.sun",
-			
-			// SVG | RW | Scalable Vector Graphics
-			"*.svg",
+			"sun",
 			
 			// TEXT | R | text file
 			// Requires an explicit format specifier to read, e.g. text:README.txt.
-			"*.text"
+			"text"
 			,
 			// TGA | RW | Truevision Targa image
-			"*.tga",
-			
-			// TIFF | RW | Tagged image file multispectral format Also known as TIF. 
-			// Requires tiff-v3.6.1.tar.gz or later.
-			"*.tiff,*.tif",
-			
+			"tga",
+		
 			// TIM | R | PSX TIM file 
-			"*.tim",
+			"tim",
 			
 			// TTF | R | TrueType font file 	Requires freetype 2. 
-			"*.ttf"
+			"ttf"
 			,
 			// TXT | RW | Multispectral raw text file
-			"*.txt"
+			"txt"
 			,
 			// UBRL | W | Unicode BRaiLle 
-			"*.ubrl",
+			"ubrl",
 			
 			// UBRL6 | W | Unicode BRaiLle 6 dots 
-			"*.ubrl6",
+			"ubrl6",
 			
 			// UIL | W | X-Motif UIL table 
-			"*.uil",
+			"uil",
 			
 			// UYVY | RW | Interleaved YUV raw image
-			"*.uyvy",
+			"uyvy",
 			
 			// VICAR | RW | VICAR rasterfile format 
-			"*.vicar",
+			"vicar",
 			
 			// VIDEO | RW | Various video formats such as APNG, AVI, MP4, WEBM, etc.
-			"*.apng,*.avi,*.mp4,*.webm",
+			"apng,avi,mp4,webm",
 			
 			// VIFF | RW | Khoros Visualization Image File Format 
-			"*.viff",
+			"viff",
 			
 			// WBMP | RW | Wireless bitmap 	Support for uncompressed monochrome only.
 			"*wbmp"
 			,
 			// WDP | RW | JPEG extended range 	
 			// Requires the jxrlib delegate library. Put the JxrDecApp and JxrEncApp applications in your execution path.
-			"*.wdp",
-			
-			// WEBP | RW | Weppy image format 	Requires the WEBP delegate library.
-			"*.webp",
+			"wdp",
 			
 			// WMF | R | Windows Metafile 	Requires libwmf. 
-			"*.wmf",
+			"wmf",
 			
 			// WPG | R | Word Perfect Graphics File 
-			"*.wpg",
+			"wpg",
 			
 			// X | RW | display or import an image to or from an X11 server
 			
 			// XBM | RW | X Windows system bitmap, black and white only
-			"*.xbm",
+			"xbm",
 			
 			// XCF | R | GIMP image 
-			"*.xcf",
+			"xcf",
 			
 			// XPM | RW | X Windows system pixmap 
-			"*.xpm"
+			"xpm"
 			,
 			// XWD | RW | X Windows system window dump 
-			"*.xwd"
+			"xwd"
 			,
 			// X3F | R | Sigma Camera RAW Picture File 
-			"*.x3f"
+			"x3f"
 			,
 			// YAML | W | human-readable data-serialization language
-			"*.yaml"
+			"yaml"
 			,
 			// YCbCr | RW | Raw Y, Cb, and Cr samples 
-			"*.ycbcr"
+			"ycbcr"
 			,
 			// YCbCrA | RW | Raw Y, Cb, Cr, and alpha samples 
-			"*.ycbcra"
+			"ycbcra"
 			,
 			// YUV | RW | CCIR 601 4:1:1 
-			"*.yuv"
+			"yuv"
 
-
-			);
+			*/
+			));
 	
 	
 }

@@ -797,10 +797,29 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	
 	public void openInPlace(File f)
 	{
-
         getCurrentDisplay().tryLoadImage(f.getPath(), true);
 
         setStatusLabelText();
+	}
+	
+	public void openInPlaceAsync(File f)
+	{
+		NotifyingThread t = new NotifyingThread() 
+        {	 
+       	 @Override
+       	 public void doRun()
+       	 {
+       		 showProgressBar();
+       		 
+       		 openInPlace(f);
+       		 
+       		 resetProgressbar();
+       	 }
+        };
+        
+        this.threadCount += 1;
+        t.addListener(this);
+        t.start();
 	}
 	
 	public void openFilesAsync(List<File> f)
@@ -1124,7 +1143,24 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		if(getCurrentDisplay() == null)
 			return;
 		
-		getCurrentDisplay().nextImage();
+		File path = getCurrentDisplay().getCurrentPath();
+		
+		while(true) 
+		{
+			File f = getCurrentDisplay().directory.inOrderSuccessor(path);
+			
+			if(f == null)
+				return;
+
+			if(!f.isFile())
+			{
+				path = f;
+				continue;
+			}
+			
+			openInPlaceAsync(f);
+			return;
+		}
 	}
 	
 	public void prevImage()
@@ -1132,7 +1168,24 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		if(getCurrentDisplay() == null)
 			return;
 		
-		getCurrentDisplay().prevImage();
+		File path = getCurrentDisplay().getCurrentPath();
+		
+		while(true) 
+		{
+			File f = getCurrentDisplay().directory.inOrderPredessor(path);
+			
+			if(f == null)
+				return;
+
+			if(!f.isFile())
+			{
+				path = f;
+				continue;
+			}
+			
+			openInPlaceAsync(f);
+			return;
+		}
 	}
 	
 	public void updateGifAnimationStuff()

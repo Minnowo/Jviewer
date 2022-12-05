@@ -57,6 +57,8 @@ public class ImageMagick
 	{
 		switch (format) 
 		{
+			case ImageFormat.ICO:
+			case ImageFormat.CUR:
 			case ImageFormat.PSD:
 				return true;
 		}
