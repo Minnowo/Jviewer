@@ -45,7 +45,7 @@ public class ClipboardHelper
 		} 
 		catch (UnsupportedFlavorException | IOException e) 
 		{
-			logger.log(Level.WARNING, "error getting image from clipboard: %s".formatted(e.getMessage()), e);
+			logger.log(Level.WARNING, String.format("error getting image from clipboard: %s", e.getMessage()), e);
 			return null;
 		}
     }

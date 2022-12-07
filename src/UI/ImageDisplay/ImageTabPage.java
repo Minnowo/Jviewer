@@ -71,7 +71,7 @@ public class ImageTabPage extends ImageDisplay
 			Path tempDirWithPrefix = Files.createTempDirectory("jview");
 			File filePath = File.createTempFile("tmp", ".jpg", tempDirWithPrefix.toFile());
 			
-			logger.log(Level.INFO, "creating temp file: %s".formatted(filePath));
+			logger.log(Level.INFO, String.format("creating temp file: %s", filePath));
 			
 			if(super.getImage().save(filePath))
 			{

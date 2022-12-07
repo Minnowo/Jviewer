@@ -92,7 +92,7 @@ public class GIF2 extends GifBase
 		} 
 		catch (IOException e) 
 		{
-			logger.log(Level.WARNING, "error reading gif frame %d / %d".formatted(this.currentFrameIndex, this.frameCount), e);
+			logger.log(Level.WARNING, String.format("error reading gif frame %d / %d", this.currentFrameIndex, this.frameCount), e);
 			return null;
 		}
 	}

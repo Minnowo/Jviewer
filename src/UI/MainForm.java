@@ -755,7 +755,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		if(i.GetImageFormat() == ImageFormat.GIF)
 		{
 			GifBase g = (GifBase)i;
-			sb.append(sep2 + "%d frames".formatted(g.getFrameCount()));
+			sb.append(sep2 + String.format("%d frames", g.getFrameCount()));
 		}
 		
 		statusLabel.setText(sb.toString() + sep1);
@@ -772,7 +772,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	public void openInNewTab(ImageBase image)
 	{
 		ImageTabPage img = new ImageTabPage(tabbedPane);
-        tabbedPane.addTab("%d x %d".formatted(image.getWidth(), image.getHeight()), img);
+        tabbedPane.addTab(String.format("%d x %d", image.getWidth(), image.getHeight()), img);
         tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
         
         img.addImageDisplayListener(this);
@@ -919,7 +919,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	       		 }
 	       		 catch (ImageUnsupportedException e1) 
 	       		 {
-	       			 logger.log(Level.WARNING, "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s".formatted(f.getAbsolutePath(), e1.getMessage()), e1);
+	       			 logger.log(Level.WARNING, String.format("Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s", f.getAbsolutePath(), e1.getMessage()), e1);
 	       		 }
 	       		 
 	       		 resetProgressbar();
@@ -1273,7 +1273,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	@Override
 	public void notifyOfThreadComplete(NotifyingThread t) 
 	{
-		this.logger.log(Level.INFO, "thread %s exiting".formatted(t.getName()));
+		this.logger.log(Level.INFO, String.format("thread %s exiting", t.getName()));
 		this.threadCount -= 1;
 	}
 }

@@ -7,6 +7,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Comparator;
 
 import Configuration.GUISettings;
@@ -86,8 +87,8 @@ public class AVL_FileTree
 		 it is suuuuper slow if you do that, just trust the file filter
 		 
 		*/
-	
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of(newDirectory.getAbsolutePath()), GUISettings.IMAGE_FILTER))// /* BAD DON'T DO THIS , entry -> !Files.isDirectory(entry))) */ 
+	;
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(newDirectory.getAbsolutePath()), GUISettings.IMAGE_FILTER))// /* BAD DON'T DO THIS , entry -> !Files.isDirectory(entry))) */ 
 		{
 		    for (Path entry : stream) 
 		    {
@@ -128,7 +129,7 @@ public class AVL_FileTree
 				
 				// Case 2, the current node has a left child, with a left child
 				// get it's rightmost child and we're done
-				if(node.left.filename.equals(path) && node.left.left != null)
+				if(node.left.left != null && node.left.filename.equals(path))
 				{
 					return rightMost(node.left.left);
 				}
@@ -183,7 +184,7 @@ public class AVL_FileTree
 
 			// need to keep looking up at the parent nodes until we find where we're on the right
 			// if we can't find a spot we're on the left, we have the leftmost node in the tree
-			if(fakeLinkedList.node.filename.equals(fakeLinkedList.prev.node.right.filename))
+			if(fakeLinkedList.node == fakeLinkedList.prev.node.right)
 			{
 				return fakeLinkedList.prev.node;
 			}
@@ -239,7 +240,7 @@ public class AVL_FileTree
 				
 				// Case 2, the current node has a right child, with a right child
 				// get it's leftmost child and we're done
-				if(node.right.filename.equals(path) && node.right.right != null)
+				if(node.right.right != null && node.right.filename.equals(path))
 				{
 					return leftMost(node.right.right);
 				}
@@ -272,7 +273,7 @@ public class AVL_FileTree
 
 			// need to keep looking up at the parent nodes until we find where we're on the left
 			// if we can't find a spot we're on the left, we have the rightmost node in the tree
-			if(fakeLinkedList.node.filename.equals(fakeLinkedList.prev.node.left.filename))
+			if(fakeLinkedList.node == fakeLinkedList.prev.node.left)
 			{
 				return fakeLinkedList.prev.node;
 			}

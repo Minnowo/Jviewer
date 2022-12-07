@@ -303,7 +303,7 @@ public enum SingleInstanceChecker {
                 
                 if (kind == StandardWatchEventKinds.OVERFLOW) 
                 {
-                	logger.log(Level.SEVERE, "OVERFLOW of directory change events while watching for %s to be created".formatted(DETECTFILE));
+                	logger.log(Level.SEVERE, String.format("OVERFLOW of directory change events while watching for %s to be created", DETECTFILE));
                     continue;
                 }
 
@@ -321,7 +321,7 @@ public enum SingleInstanceChecker {
                 	}
                 	catch (IOException e) 
                 	{
-                		logger.log(Level.WARNING, "error reading lines from %s".formatted(DETECTFILE), e);
+                		logger.log(Level.WARNING, String.format("error reading lines from %s", DETECTFILE), e);
                 		break;
 					}
                 	
@@ -341,14 +341,14 @@ public enum SingleInstanceChecker {
 					} 
                     catch (IOException e) 
                     {
-						logger.log(Level.WARNING, "error removing %s".formatted(DETECTFILE), e);
+						logger.log(Level.WARNING, String.format("error removing %s", DETECTFILE), e);
 					}
                     
                     break;
                 } 
                 else 
                 {
-                	logger.log(Level.INFO, "%s was created in the watch folder".formatted(file));
+                	logger.log(Level.INFO, String.format("%s was created in the watch folder", file));
                 }
 
             }

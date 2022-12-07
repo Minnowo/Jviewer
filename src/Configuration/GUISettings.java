@@ -20,10 +20,10 @@ public class GUISettings
 	
 	public static boolean CENTER_IMAGE_ON_RESIZE = true;
 	
-	public static String IMAGE_FILTER_NO_MAGICK = "*.{%s}".formatted(String.join(",", 
+	public static String IMAGE_FILTER_NO_MAGICK = String.format("*.{%s}", String.join(",", 
 			"png", "jpg", "jpeg", "jpe", "jfif", "gif", "bmp", "tif", "tiff"));
 	
-	public static String IMAGE_FILTER = "*.{%s}".formatted(String.join(",", 
+	public static String IMAGE_FILTER = String.format("*.{%s}", String.join(",", 
 			
 			// https://imagemagick.org/script/formats.php
 			

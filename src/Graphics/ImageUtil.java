@@ -324,7 +324,7 @@ public class ImageUtil
     	final String ext = Util.StringUtil.getFileExtension(path, false);
     	final byte imgFormat = ImageFormat.getFromFileExtension(ext);
     	
-    	logger.info("saving image %s, detected file to save as (%d) (%s)".formatted(path, imgFormat, ext));
+    	logger.info(String.format("saving image %s, detected file to save as (%d) (%s)", path, imgFormat, ext));
     	
     	// TODO: fix this 
     	switch (imgFormat)
@@ -385,7 +385,7 @@ public class ImageUtil
 	{
     	final byte imageff = ImageDetector.getImageFormat(path);
 
-		logger.log(Level.INFO, "detected image format (%d) (%s)".formatted(imageff, ImageFormat.getMimeType(imageff)));
+		logger.log(Level.INFO, String.format("detected image format (%d) (%s)", imageff, ImageFormat.getMimeType(imageff)));
 		
 		switch (imageff)
 		{

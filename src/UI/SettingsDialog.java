@@ -63,16 +63,16 @@ public class SettingsDialog  extends JDialog
 		
 		// update the changed settings here
 		ImageMagick.useImageMagick = chckbxNewCheckBox.isSelected();
-		this.logger.log(Level.CONFIG, "updated setting 'UseImageMagick' set value '%s'".formatted(ImageMagick.useImageMagick));
+		this.logger.log(Level.CONFIG, String.format("updated setting 'UseImageMagick' set value '%s'", ImageMagick.useImageMagick));
 		
 		ProcessStarter.setGlobalSearchPath(textArea.getText().replaceAll("\\r?\\n", File.pathSeparator));
-		this.logger.log(Level.CONFIG, "updated setting 'MagickGlobalSearchPath' set value '%s'".formatted(ProcessStarter.getGlobalSearchPath()));
+		this.logger.log(Level.CONFIG, String.format("updated setting 'MagickGlobalSearchPath' set value '%s'", ProcessStarter.getGlobalSearchPath()));
 		
 		GUISettings.WRAP_TABS = chckbxNewCheckBox_1.isSelected();
-		this.logger.log(Level.CONFIG, "updated setting 'WrapTabs' set value '%s'".formatted(GUISettings.WRAP_TABS));
+		this.logger.log(Level.CONFIG, String.format("updated setting 'WrapTabs' set value '%s'", GUISettings.WRAP_TABS));
 		
 		GUISettings.CENTER_IMAGE_ON_RESIZE = chckbxNewCheckBox_1_1.isSelected();
-		this.logger.log(Level.CONFIG, "updated setting 'CenterImageOnResize' set value '%s'".formatted(GUISettings.CENTER_IMAGE_ON_RESIZE));
+		this.logger.log(Level.CONFIG, String.format("updated setting 'CenterImageOnResize' set value '%s'", GUISettings.CENTER_IMAGE_ON_RESIZE));
 	}
 	
 	
@@ -116,7 +116,7 @@ public class SettingsDialog  extends JDialog
 		textArea_1.setFont(new Font("Consolas", Font.PLAIN, 13));
 		textArea_1.setWrapStyleWord(true);
 		textArea_1.setLineWrap(true);
-		textArea_1.setText("Set the environment-variable IM4JAVA_TOOLPATH.\nThis variable should contain a list of directories to search for your tools.\nThey should be separated by your platform-pathdelemiter (on *NIX typically \":\", on Windows \";\")\nYou can also add paths to the box below (1 line per directory).\nDetected path delimeter \"%s\"".formatted(File.pathSeparator));
+		textArea_1.setText(String.format("Set the environment-variable IM4JAVA_TOOLPATH.\nThis variable should contain a list of directories to search for your tools.\nThey should be separated by your platform-pathdelemiter (on *NIX typically \":\", on Windows \";\")\nYou can also add paths to the box below (1 line per directory).\nDetected path delimeter \"%s\"", File.pathSeparator));
 		textArea_1.setEditable(false);
 		GridBagConstraints gbc_textArea_1 = new GridBagConstraints();
 		gbc_textArea_1.insets = new Insets(0, 0, 5, 0);

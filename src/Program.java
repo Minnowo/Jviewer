@@ -43,7 +43,7 @@ public class Program extends JFrame
 					}
 				}
 				
-				logger.info("recieved %d arguments [%s]".formatted(args.length, sb.toString()));
+				logger.info(String.format("recieved %d arguments [%s]", args.length, sb.toString()));
 				
 				frame.bringToFront();
 			}
@@ -75,7 +75,7 @@ public class Program extends JFrame
 							
 							ProcessStarter.setGlobalSearchPath(s);
 							
-							logger.log(Level.ALL, "debug mode enabled, setting ProcessStarter global search path to %s".formatted(s));
+							logger.log(Level.ALL, String.format("debug mode enabled, setting ProcessStarter global search path to %s", s));
 						}
 					}
 					else 

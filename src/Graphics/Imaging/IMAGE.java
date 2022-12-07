@@ -79,7 +79,7 @@ public class IMAGE extends ImageBase
 		
 			final String absp = path.toString();
 			
-			logger.log(Level.INFO, "loading %s".formatted(absp));
+			logger.log(Level.INFO, String.format("loading %s", absp));
 			
 			super.imageFormat = imageFormat;
 	
@@ -96,13 +96,13 @@ public class IMAGE extends ImageBase
 				catch (IOException | InterruptedException | IM4JavaException e) 
 				{
 					super.error = true;
-					logger.log(Level.WARNING, "Failed to read image %s using ImageMagick:\nMessage: %s".formatted(path, e.getMessage()), e);
+					logger.log(Level.WARNING, String.format("Failed to read image %s using ImageMagick:\nMessage: %s", path, e.getMessage()), e);
 				}
 			}
 		
 			if(!ImageFormat.hasNativeSupport(imageFormat))
 			{
-				logger.log(Level.WARNING, "unsupported image format %s, no native support".formatted(ImageFormat.getMimeType(imageFormat)));
+				logger.log(Level.WARNING, String.format("unsupported image format %s, no native support", ImageFormat.getMimeType(imageFormat)));
 				super.error = true;
 				super.width = 0;
 				super.height = 0;
@@ -126,7 +126,7 @@ public class IMAGE extends ImageBase
 			} 
 			catch (IOException e) 
 			{
-				logger.log(Level.WARNING, "Failed to read image %s using ImageIO.read:\nMessage: %s".formatted(path, e.getMessage()), e);
+				logger.log(Level.WARNING, String.format("Failed to read image %s using ImageIO.read:\nMessage: %s", path, e.getMessage()), e);
 				super.error = true;
 				super.width = 0;
 				super.height = 0;
@@ -177,14 +177,14 @@ public class IMAGE extends ImageBase
 				} 
 	    		catch (IOException | InterruptedException | IM4JavaException e) 
 	    		{
-	    			logger.log(Level.WARNING, "Failed to save image %s using ImageMagick:\nMessage: %s".formatted(path, e.getMessage()), e);
+	    			logger.log(Level.WARNING, String.format("Failed to save image %s using ImageMagick:\nMessage: %s", path, e.getMessage()), e);
 				}
 	    	}
 	    	
 			final byte imgFormat = ImageFormat.getFromFileExtension(StringUtil.getFileExtension(path, false));
 	    	
 	    	if(imgFormat == ImageFormat.UNKNOWN)
-	    		throw new ImageUnsupportedException("The image format from '%s' was not recognized".formatted(path));
+	    		throw new ImageUnsupportedException(String.format("The image format from '%s' was not recognized", path));
 	    	
 	    	if(imgFormat == ImageFormat.WEBP)
 	    		throw new RequiresMagickException("Saving with the WebP image format requires the use of ImageMagick");
@@ -196,7 +196,7 @@ public class IMAGE extends ImageBase
 	    	}
 	    	catch (IOException e) 
 	    	{
-	            logger.log(Level.WARNING, "Failed to save image %s with ImageIO.write:\nMessage: %s".formatted(path, e.getMessage()), e);
+	            logger.log(Level.WARNING, String.format("Failed to save image %s with ImageIO.write:\nMessage: %s", path, e.getMessage()), e);
 	    	}
 		}
 		finally 
