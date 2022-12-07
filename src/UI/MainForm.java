@@ -3,9 +3,8 @@ package UI;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
@@ -14,10 +13,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -29,6 +29,7 @@ import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
@@ -46,18 +47,15 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
-import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.tree.TreePath;
 
 import org.im4java.process.ProcessStarter;
 
@@ -69,6 +67,8 @@ import Graphics.Imaging.ImageBase;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import Graphics.Imaging.Gif.GifBase;
+import Resources.ResourceLoader;
+import Resources.ResourcePaths;
 import Threading.NotifyingThread;
 import Threading.ThreadCompleteListener;
 import UI.ComboBox.Items.ComboBoxItemInt;
@@ -80,7 +80,6 @@ import UI.ImageDisplay.Enums.AntiAliasing;
 import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
-import Util.AVL_FileTree;
 import Util.ClipboardHelper;
 import Util.Logging.LogUtil;
 
@@ -96,6 +95,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	
 	private int threadCount = 0;
 	
+	private int progressBarUsage = 0;
 	
 	Icon iconMenu = UIManager.getIcon("html.pendingImage");
 	
@@ -625,9 +625,9 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	}
 
 	
-
 	public MainForm() 
 	{
+		this.setIconImage(ResourceLoader.loadIconResource(ResourcePaths.MAIN_FORM_ICON_PATH));
 		this.setTitle(GUISettings.MAIN_WINDOW_TITLE);
 		this.setSize(847, 659);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -1021,14 +1021,21 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	private JMenuItem mntmNewMenuItem_13;
 	private JButton btnNewButton;
 	     
-	public void showProgressBar()
+	public synchronized void showProgressBar()
 	{
+		progressBarUsage++;
+		
 		SwingUtilities.invokeLater(runProgressBar);   
 	}
 	
-	public void resetProgressbar()
+	public synchronized void resetProgressbar()
 	{
-		SwingUtilities.invokeLater(resetProgressBar);   
+		if(progressBarUsage > 0)
+			progressBarUsage--;
+		
+		if(progressBarUsage == 0)
+			SwingUtilities.invokeLater(resetProgressBar);
+		
 	}
 	
 	public void clearCurrentImage()
@@ -1100,12 +1107,27 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	
 	public void handleStartArguments(String[] args)
 	{
-		for(String a : args)
-		{
-			handleStartArgument(a);
-		}
-		
-		openedImaegs = 0;
+		NotifyingThread t = new NotifyingThread() 
+        {	 
+	       	 @Override
+	       	 public void doRun()
+	       	 {
+	       		 showProgressBar();
+	       		 
+				 for(String a : args)
+				 {
+				 	handleStartArgument(a);
+				 }
+				
+				 openedImaegs = 0;
+	       		 
+	       		 resetProgressbar();
+	       	 }
+        };
+        
+        this.threadCount += 1;
+        t.addListener(this);
+        t.start();
 	}
 	
 	public void bringToFront()
