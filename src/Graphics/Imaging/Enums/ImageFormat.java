@@ -52,6 +52,22 @@ public interface ImageFormat
     	public static final byte AVIS = 25;
     };
     
+    public static interface UNOFFICIAL_SUPPORT
+    {
+    	// .kra or krita file format, simple handling via zip extraction
+    	public static final byte KRA = 50;
+    }
+    
+    public static boolean hasUnofficalSupport(byte format)
+    {
+    	switch(format)
+    	{
+    	case UNOFFICIAL_SUPPORT.KRA:
+    		return true;
+    	}
+    	return false;
+    }
+    
     public static boolean hasNativeSupport(byte format)
     {
     	switch (format) 
@@ -116,6 +132,9 @@ public interface ImageFormat
 	    		
 	    	case QOI:
 	    		return "qoi";
+	    		
+	    	case UNOFFICIAL_SUPPORT.KRA:
+	    		return "kra";
 		}
     }
     
@@ -176,15 +195,22 @@ public interface ImageFormat
 	    		
 	    	case QOI:
 	    		return "image/qoi";
+	    		
+	    	case UNOFFICIAL_SUPPORT.KRA:
+	    		return "image/krita-document";
 		}
     }
     
     public static byte getFromFileExtension(String ext)
-    {
-    	
+    {	
     	if(ext.startsWith("."))
     		ext = ext.substring(1);
     	
+    	// krita usually puts ~ at the end if the file was overwritten with a newer copy
+    	// i'm assuming like 99% of file formats don't have ~ so i'm gonna remove it here 
+    	// and assume krita or something else put it there for this reason
+    	if(ext.endsWith("~"))
+    		ext = ext.substring(0, ext.length() - 1);
     	
     	switch (ext.toLowerCase())
     	{
@@ -233,6 +259,9 @@ public interface ImageFormat
 	    		
 	    	case "qoi":
 	    		return QOI;
+	    		
+	    	case "kra": 
+	    		return UNOFFICIAL_SUPPORT.KRA;
 		}
     }
 }

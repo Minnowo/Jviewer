@@ -4,16 +4,9 @@ import java.io.File;
 
 public class StringUtil 
 {
-	public static String getFileExtension(File file)
+	public static String getFileExtension(String name, boolean includeDot)
 	{
-		return getFileExtension(file, true);
-	}
-	
-	public static String getFileExtension(File file, boolean includeDot) 
-	{
-	    String name = file.getName();
-	    
-	    int lastIndexOf = name.lastIndexOf(".");
+		int lastIndexOf = name.lastIndexOf(".");
 	    
 	    if (lastIndexOf == -1) 
 	    {
@@ -26,5 +19,20 @@ public class StringUtil
 	    }
 	    
 	    return name.substring(lastIndexOf + 1).toLowerCase();
+	}
+	
+	public static String getFileExtension(String name)
+	{
+		return getFileExtension(name, true);
+	}
+	
+	public static String getFileExtension(File file)
+	{
+		return getFileExtension(file.getName(), true);
+	}
+	
+	public static String getFileExtension(File file, boolean includeDot) 
+	{
+	    return getFileExtension(file.getName(), includeDot);   
 	}
 }

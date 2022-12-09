@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import Graphics.Imaging.Enums.ImageFormat;
+import Util.StringUtil;
+import Util.Logging.LoggerWrapper;
 
 
 public class ImageDetector 
@@ -237,6 +239,8 @@ public class ImageDetector
     		return ImageFormat.UNKNOWN;
 		}
     	
-    	return ImageFormat.UNKNOWN;
+    	LoggerWrapper.warning("could not detect image format from bytes, using file extension");
+    	
+    	return ImageFormat.getFromFileExtension(StringUtil.getFileExtension(f));
     }
 }

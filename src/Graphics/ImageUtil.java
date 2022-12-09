@@ -35,12 +35,14 @@ import org.im4java.core.Stream2BufferedImage;
 import Configuration.ImageMagick;
 import Graphics.Imaging.IMAGE;
 import Graphics.Imaging.ImageBase;
+import Graphics.Imaging.ImageDecoders;
 import Graphics.Imaging.ImageDetector;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import Graphics.Imaging.Gif.GIF;
 import Graphics.Imaging.Gif.GIF2;
 import Graphics.Imaging.Gif.GifEncoder;
+import Util.StringUtil;
 import Util.Logging.LogUtil;
 
 public class ImageUtil 
@@ -387,8 +389,13 @@ public class ImageUtil
 
 		logger.log(Level.INFO, String.format("detected image format (%d) (%s)", imageff, ImageFormat.getMimeType(imageff)));
 		
+
 		switch (imageff)
 		{
+			case ImageFormat.UNOFFICIAL_SUPPORT.KRA:
+				
+				return ImageDecoders.loadKritaFile(path);
+			
 			case ImageFormat.GIF:
 	
 				return new GIF(path);
