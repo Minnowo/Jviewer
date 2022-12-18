@@ -1,8 +1,11 @@
 package Configuration;
 
+import java.util.Comparator;
 import java.util.logging.Level;
 
 import javax.swing.UIManager;
+
+import Util.Comparators;
 
 public class GUISettings 
 {
@@ -19,6 +22,10 @@ public class GUISettings
 	public static Level LOG_LEVEL = Level.ALL;
 	
 	public static boolean CENTER_IMAGE_ON_RESIZE = true;
+	
+	public static boolean ALWAYS_WAIT_DIR_LOAD_FINISH = false;
+	
+	public static Comparator<String> FILENAME_COMPARATOR = Comparators.NATURAL_SORT;
 	
 	public static String IMAGE_FILTER_NO_MAGICK = String.format("*.{%s}", String.join(",", 
 			"png", "jpg", "jpeg", "jpe", "jfif", "gif", "bmp", "tif", "tiff"));

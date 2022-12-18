@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 
 import Configuration.GUISettings;
+import Util.Logging.LoggerWrapper;
 
 
 class AVLNode 
@@ -50,20 +51,58 @@ public class AVL_FileTree
 	public AVL_FileTree()
 	{
 		this.count = 0;
-		COMPARATOR = Comparators.NATURAL_SORT;
+		COMPARATOR = GUISettings.FILENAME_COMPARATOR;
 	}
 	
 	public AVL_FileTree(String directory)
 	{
 		this.directory = directory;
 		this.count = 0;
-		COMPARATOR = Comparators.NATURAL_SORT;
+		COMPARATOR = GUISettings.FILENAME_COMPARATOR;
 		loadDirectory(directory);
 	}
 	
 	public String getDirectory()
 	{
 		return this.directory;
+	}
+	
+	private Thread loadDirectoryThread = null;
+	private boolean isLoading = false;
+	
+	public synchronized void loadDirectoryAsync(String path)
+	{
+		waitUntilLoadFinished();
+		
+		loadDirectoryThread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				isLoading = true;
+				loadDirectory(path);
+				isLoading = false;
+				LoggerWrapper.info("load directory thread finished");
+			}
+		});
+		
+		loadDirectoryThread.start();
+	}
+	
+	public synchronized void waitUntilLoadFinished()
+	{
+		if(!isLoading)
+		{
+			return;
+		}
+			
+		
+		if(loadDirectoryThread != null) {
+			try {
+				loadDirectoryThread.join();
+			} catch (InterruptedException e) {
+				LoggerWrapper.warning("load directory thread interrupted on join", e);
+			}
+		}
 	}
 	
 	public boolean loadDirectory(String path)
@@ -87,7 +126,7 @@ public class AVL_FileTree
 		 it is suuuuper slow if you do that, just trust the file filter
 		 
 		*/
-	;
+	
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(newDirectory.getAbsolutePath()), GUISettings.IMAGE_FILTER))// /* BAD DON'T DO THIS , entry -> !Files.isDirectory(entry))) */ 
 		{
 		    for (Path entry : stream) 

@@ -14,11 +14,10 @@ import java.util.logging.Logger;
 
 import Graphics.ImageUtil;
 import Util.Logging.LogUtil;
+import Util.Logging.LoggerWrapper;
 
 public class ClipboardHelper 
 {
-	protected final static Logger logger = LogUtil.getLogger(ClipboardHelper.class.getName());
-
     public static final Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 	
 	
@@ -28,13 +27,13 @@ public class ClipboardHelper
         
         if (content == null) 
         {
-            logger.log(Level.INFO, "cannot read clipboard, content is null");
+        	LoggerWrapper.log(Level.INFO, "cannot read clipboard, content is null");
             return null;
         }
         
         if (!content.isDataFlavorSupported(DataFlavor.imageFlavor)) 
         {
-            logger.log(Level.INFO, "cannot read image from clipboard");
+        	LoggerWrapper.log(Level.INFO, "cannot read image from clipboard");
             return null;
         }
         
@@ -45,7 +44,7 @@ public class ClipboardHelper
 		} 
 		catch (UnsupportedFlavorException | IOException e) 
 		{
-			logger.log(Level.WARNING, String.format("error getting image from clipboard: %s", e.getMessage()), e);
+			LoggerWrapper.log(Level.WARNING, String.format("error getting image from clipboard: %s", e.getMessage()), e);
 			return null;
 		}
     }

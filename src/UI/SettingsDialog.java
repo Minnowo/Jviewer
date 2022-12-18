@@ -23,7 +23,9 @@ import org.im4java.process.ProcessStarter;
 
 import Configuration.GUISettings;
 import Configuration.ImageMagick;
+import Util.Comparators;
 import Util.Logging.LogUtil;
+import Util.Logging.LoggerWrapper;
 
 import javax.swing.JButton;
 import java.awt.BorderLayout;
@@ -34,8 +36,6 @@ import java.awt.FlowLayout;
 
 public class SettingsDialog  extends JDialog 
 {
-	protected static final Logger logger = LogUtil.getLogger(SettingsDialog.class.getName());
-	
 	private JTabbedPane tabbedPane;
 	private JPanel tabPage1, tabPage2 ;
 	private JTextField textField;
@@ -46,6 +46,7 @@ public class SettingsDialog  extends JDialog
 	private JCheckBox chckbxNewCheckBox_1;
 	private JTextArea textArea_1;
 	private JCheckBox chckbxNewCheckBox_1_1 ;
+	private JCheckBox chckbxNewCheckBox_2;
 	
 	public SettingsDialog()
 	{
@@ -63,16 +64,27 @@ public class SettingsDialog  extends JDialog
 		
 		// update the changed settings here
 		ImageMagick.useImageMagick = chckbxNewCheckBox.isSelected();
-		this.logger.log(Level.CONFIG, String.format("updated setting 'UseImageMagick' set value '%s'", ImageMagick.useImageMagick));
+		LoggerWrapper.log(Level.CONFIG, String.format("updated setting 'UseImageMagick' set value '%s'", ImageMagick.useImageMagick));
 		
 		ProcessStarter.setGlobalSearchPath(textArea.getText().replaceAll("\\r?\\n", File.pathSeparator));
-		this.logger.log(Level.CONFIG, String.format("updated setting 'MagickGlobalSearchPath' set value '%s'", ProcessStarter.getGlobalSearchPath()));
+		LoggerWrapper.log(Level.CONFIG, String.format("updated setting 'MagickGlobalSearchPath' set value '%s'", ProcessStarter.getGlobalSearchPath()));
 		
 		GUISettings.WRAP_TABS = chckbxNewCheckBox_1.isSelected();
-		this.logger.log(Level.CONFIG, String.format("updated setting 'WrapTabs' set value '%s'", GUISettings.WRAP_TABS));
+		LoggerWrapper.log(Level.CONFIG, String.format("updated setting 'WrapTabs' set value '%s'", GUISettings.WRAP_TABS));
 		
 		GUISettings.CENTER_IMAGE_ON_RESIZE = chckbxNewCheckBox_1_1.isSelected();
-		this.logger.log(Level.CONFIG, String.format("updated setting 'CenterImageOnResize' set value '%s'", GUISettings.CENTER_IMAGE_ON_RESIZE));
+		LoggerWrapper.log(Level.CONFIG, String.format("updated setting 'CenterImageOnResize' set value '%s'", GUISettings.CENTER_IMAGE_ON_RESIZE));
+		
+		if(chckbxNewCheckBox_2.isSelected())
+		{
+			GUISettings.FILENAME_COMPARATOR = Comparators.NATURAL_SORT_WIN_EXPLORER;
+			LoggerWrapper.log(Level.CONFIG, "updated setting 'FilenameComparator' set value 'WindowsExplorerCompare'");
+		}
+		else 
+		{
+			GUISettings.FILENAME_COMPARATOR = Comparators.NATURAL_SORT;
+			LoggerWrapper.log(Level.CONFIG, "updated setting 'FilenameComparator' set value 'NaturalOrderCompare'");
+		}
 	}
 	
 	
@@ -95,6 +107,10 @@ public class SettingsDialog  extends JDialog
 		chckbxNewCheckBox_1_1 = new JCheckBox("Center Image On Resize");
 		chckbxNewCheckBox_1_1.setSelected(GUISettings.CENTER_IMAGE_ON_RESIZE);
 		tabPage1.add(chckbxNewCheckBox_1_1);
+		
+		chckbxNewCheckBox_2 = new JCheckBox("Use Windows Explorer Compare (Slower)");
+
+		tabPage1.add(chckbxNewCheckBox_2);
 		tabbedPane.addTab("Magick Settings", tabPage2);
 		tabPage2.setLayout(new BoxLayout(tabPage2, BoxLayout.Y_AXIS));
 		

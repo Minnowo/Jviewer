@@ -82,11 +82,11 @@ import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 import Util.ClipboardHelper;
 import Util.Logging.LogUtil;
+import Util.Logging.LoggerWrapper;
 
 public class MainForm extends JFrame implements ImageDisplayListener, ChangeListener, ThreadCompleteListener
 {
-	protected static final Logger logger = LogUtil.getLogger(MainForm.class.getName());
-	
+
 	/**
 	 * used to prevent events from calling other events in infinite loops
 	 */
@@ -136,7 +136,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	        } 
 	        catch (Exception e) 
 	        {
-	            logger.log(Level.WARNING, "error recieving file drop", e);
+	            LoggerWrapper.warning("error recieving file drop", e);
 	        }
 	    }
 	};
@@ -747,7 +747,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		
 		StringBuilder sb = new StringBuilder();
 		
-		logger.info("changing size to " + i.getWidth() + " x " + i.getHeight());
+		LoggerWrapper.info("changing size to " + i.getWidth() + " x " + i.getHeight());
 		sb.append(sep1 + i.getWidth() + " x " + i.getHeight());
 		
 		sb.append(sep2 + ImageFormat.getMimeType(i.GetImageFormat()));
@@ -919,7 +919,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	       		 }
 	       		 catch (ImageUnsupportedException e1) 
 	       		 {
-	       			 logger.log(Level.WARNING, String.format("Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s", f.getAbsolutePath(), e1.getMessage()), e1);
+	       			 LoggerWrapper.warning(String.format("Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s", f.getAbsolutePath(), e1.getMessage()), e1);
 	       		 }
 	       		 
 	       		 resetProgressbar();
@@ -1169,6 +1169,9 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		
 		while(true) 
 		{
+			if(GUISettings.ALWAYS_WAIT_DIR_LOAD_FINISH)
+				getCurrentDisplay().directory.waitUntilLoadFinished();
+			
 			File f = getCurrentDisplay().directory.inOrderSuccessor(path);
 			
 			if(f == null)
@@ -1194,6 +1197,9 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		
 		while(true) 
 		{
+			if(GUISettings.ALWAYS_WAIT_DIR_LOAD_FINISH)
+				getCurrentDisplay().directory.waitUntilLoadFinished();
+			
 			File f = getCurrentDisplay().directory.inOrderPredessor(path);
 			
 			if(f == null)
@@ -1295,7 +1301,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	@Override
 	public void notifyOfThreadComplete(NotifyingThread t) 
 	{
-		this.logger.log(Level.INFO, String.format("thread %s exiting", t.getName()));
+		LoggerWrapper.info(String.format("thread %s exiting", t.getName()));
 		this.threadCount -= 1;
 	}
 }

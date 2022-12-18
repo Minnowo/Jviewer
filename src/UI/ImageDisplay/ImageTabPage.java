@@ -16,6 +16,7 @@ import UI.Events.ImageTabNameChangedEvent;
 import UI.Events.ImageTabPathChangedEvent;
 import UI.Events.Listeners.ImageTabPageListener;
 import Util.AVL_FileTree;
+import Util.Logging.LoggerWrapper;
 
 public class ImageTabPage extends ImageDisplay 
 {
@@ -71,7 +72,7 @@ public class ImageTabPage extends ImageDisplay
 			Path tempDirWithPrefix = Files.createTempDirectory("jview");
 			File filePath = File.createTempFile("tmp", ".jpg", tempDirWithPrefix.toFile());
 			
-			logger.log(Level.INFO, String.format("creating temp file: %s", filePath));
+			LoggerWrapper.log(Level.INFO, String.format("creating temp file: %s", filePath));
 			
 			if(super.getImage().save(filePath))
 			{
@@ -102,6 +103,8 @@ public class ImageTabPage extends ImageDisplay
 		
 		while(true) 
 		{
+			directory.waitUntilLoadFinished();
+			
 			File f = this.directory.inOrderPredessor(path);
 			
 			if(f == null)
@@ -124,6 +127,8 @@ public class ImageTabPage extends ImageDisplay
 		
 		while(true) 
 		{
+			directory.waitUntilLoadFinished();
+			
 			File f = this.directory.inOrderSuccessor(path);
 			
 			if(f == null)
@@ -152,9 +157,10 @@ public class ImageTabPage extends ImageDisplay
 		
 		currentFilePath = f;
 		
+		// TODO: make this async or smth
 		if(!f.getParent().equalsIgnoreCase(directory.getDirectory()))
 		{
-			directory.loadDirectory(path);
+			directory.loadDirectoryAsync(path);
 		}
 		
 		// if your file isn't in the filter it won't be in the tree

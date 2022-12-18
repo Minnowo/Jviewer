@@ -55,14 +55,25 @@ public class ImageMagick
 	
 	public static boolean readRequiresMergeLayers(byte format)
 	{
+		/*
+		 * going to not flatten anything for now
+		 * will make it up to the user later because using magick.flatten can be really slow and resource intensive
+		 * without flatten we just take the first image, which is good for most cases
+		 * stuff like gimp files only returns the first layer and would probably want to be flattened
 		switch (format) 
 		{
 			case ImageFormat.ICO:
 			case ImageFormat.CUR:
+			
+			
+			// psd files have flattened image when doing [0]
+			// so no need to merge layers
+			
 			case ImageFormat.PSD:
 				return true;
+			
 		}
-		
+		*/
 		return false;
 	}
 }

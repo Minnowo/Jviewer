@@ -21,4 +21,14 @@ public class LoggerWrapper
 	{
 		Logger.info(message);
 	}
+	
+	public static void log(Level logleve, String message)
+	{
+		Logger.log(logleve, message);
+	}
+	
+	public static void log(Level logleve, String message, Exception e)
+	{
+		Logger.log(logleve, message, e);
+	}
 }

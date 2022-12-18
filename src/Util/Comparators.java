@@ -1,109 +1,133 @@
 package Util;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Comparators 
 {	
-	public static final WindowsExplorerComparator NATURAL_SORT_WIN_EXPLORER = new WindowsExplorerComparator();
+	public static final WindowsExplorerComparator NATURAL_SORT_WIN_EXPLORER   = new WindowsExplorerComparator();
 
 	public static final NaturalOrderComparator NATURAL_SORT = new NaturalOrderComparator();
 	
-	
-	public static class NaturalOrderComparator implements Comparator<String> 
-	{
-		
-		public int compare(String a, String b, boolean ignoreCase)
-		{
-			if(ignoreCase)
-			{
-				a = a.toLowerCase();
-		        b = b.toLowerCase();
-			}
-			
-		    int aLength = a.length();
-		    int bLength = b.length();
-		    int minSize = Math.min(aLength, bLength);
-		    char aChar, bChar;
-		    boolean aNumber, bNumber;
-		    boolean asNumeric = false;
-		    int lastNumericCompare = 0;
-		    
-		    for (int i = 0; i < minSize; i++) 
-		    {
-		        aChar = a.charAt(i);
-		        bChar = b.charAt(i);
-		        aNumber = aChar >= '0' && aChar <= '9';
-		        bNumber = bChar >= '0' && bChar <= '9';
-		        
-		        if (asNumeric) 
-		        {
-		            if (aNumber && bNumber) 
-		            {
-		                if (lastNumericCompare == 0)
-		                    lastNumericCompare = aChar - bChar;
-		            } 
-		            else if (aNumber)
-		            {
-		            	return 1;
-		            }
-		            else if (bNumber)
-		            {
-		            	return -1;
-		            }
-		            else if (lastNumericCompare == 0) 
-		            {
-		                if (aChar != bChar)
-		                    return aChar - bChar;
-		                
-		                asNumeric = false;
-		            } 
-		            else
-		            {
-		            	return lastNumericCompare;
-		            }
-		        }
-		        else if (aNumber && bNumber) 
-		        {
-		            asNumeric = true;
-		            if (lastNumericCompare == 0)
-		                lastNumericCompare = aChar - bChar;
-		        } 
-		        else if (aChar != bChar)
-		        {
-		        	return aChar - bChar;
-		        }
-		    }
-		    
-		    if (asNumeric)
-		    {
-		    	if (aLength > bLength && a.charAt(bLength) >= '0' && a.charAt(bLength) <= '9') // as number
-		            return 1;  // a has bigger size, thus b is smaller
-		        if (bLength > aLength && b.charAt(aLength) >= '0' && b.charAt(aLength) <= '9') // as number
-		            return -1;  // b has bigger size, thus a is smaller
-		        if (lastNumericCompare == 0)
-		          return aLength - bLength;
-		        
-		        return lastNumericCompare;
-		    }
-		        
-		    return aLength - bLength;
-		}
-		
-		@Override
-	    public int compare(String a, String b)
-	    {
-			return compare(a, b, true);
-	    }
-	    
-	}
-	
-	
-	 public static class WindowsExplorerComparator implements Comparator<String> 
+	public static class NaturalOrderComparator implements Comparator<String>
+    {
+        /*
+            this is a modified copy of https://github.com/paour/natorder
+            changed to work how i wanted it, cleaned up some functions and remove use of substr
+
+            --- original notice ---
+            NaturalOrderComparator.java -- Perform 'natural order' comparisons of strings in Java.
+            Copyright (C) 2003 by Pierre-Luc Paour <natorder@paour.com>
+            Based on the C version by Martin Pool, of which this is more or less a straight conversion.
+            Copyright (C) 2000 by Martin Pool <mbp@humbug.org.au>
+            This software is provided 'as-is', without any express or implied
+            warranty.  In no event will the authors be held liable for any damages
+            arising from the use of this software.
+            Permission is granted to anyone to use this software for any purpose,
+            including commercial applications, and to alter it and redistribute it
+            freely, subject to the following restrictions:
+            1. The origin of this software must not be misrepresented; you must not
+            claim that you wrote the original software. If you use this software
+            in a product, an acknowledgment in the product documentation would be
+            appreciated but is not required.
+            2. Altered source versions must be plainly marked as such, and must not be
+            misrepresented as being the original software.
+            3. This notice may not be removed or altered from any source distribution.
+        */
+
+        private int compareRight(String a, String b, int ia, int ib)
+        {
+            int bias = 0;
+
+            // The longest run of digits wins. That aside, the greatest
+            // value wins, but we can't know that it will until we've scanned
+            // both numbers to know that they have the same magnitude, so we
+            // remember it in BIAS.
+            for (;; ia++, ib++)
+            {
+                char ca = charAt(a, ia);
+                char cb = charAt(b, ib);
+
+                if (!isDigit(ca) && !isDigit(cb)) {
+                    return bias;
+                }
+                if (!isDigit(ca)) {
+                    return -1;
+                }
+                if (!isDigit(cb)) {
+                    return +1;
+                }
+                if (ca == 0 && cb == 0) {
+                    return bias;
+                }
+
+                if (bias == 0) {
+                    if (ca < cb) {
+                        bias = -1;
+                    } else if (ca > cb) {
+                        bias = +1;
+                    }
+                }
+            }
+        }
+
+        public int compare(String a, String b)
+        {
+            int ia = 0, ib = 0;
+            char ca, cb;
+
+            while (true) {
+                ca = charAt(a, ia);
+                cb = charAt(b, ib);
+
+                // Process run of digits
+                if (Character.isDigit(ca) && Character.isDigit(cb)) {
+                    int bias = compareRight(a, b, ia, ib);
+                    if (bias != 0) {
+                        return bias;
+                    }
+                }
+
+                if (ca == 0 && cb == 0) {
+                    // The strings compare the same. Perhaps the caller
+                    // will want to call strcmp to break the tie.
+                    return compareEqual(a, b);
+                }
+                if (ca < cb) {
+                    return -1;
+                }
+                if (ca > cb) {
+                    return +1;
+                }
+
+                ++ia;
+                ++ib;
+            }
+        }
+        
+        public static boolean isDigit(char c) {
+            return Character.isDigit(c) || c == '.' || c == ',';
+        }
+
+        public static char charAt(String s, int i) {
+            return i >= s.length() ? 0 : s.charAt(i);
+        }
+        
+        public static int compareEqual(String a, String b) 
+        {
+            if (a.length() == b.length())
+                return a.compareTo(b);
+
+            return a.length() - b.length();
+        }
+    }
+
+    
+    public static class WindowsExplorerComparator implements Comparator<String> 
 	 {
 	        private static final Pattern splitPattern = Pattern.compile("\\d+|\\.|\\s");
 
@@ -160,7 +184,8 @@ public class Comparators
 	        private List<String> splitStringPreserveDelimiter(String str) 
 	        {
 	            Matcher matcher = splitPattern.matcher(str);
-	            List<String> list = new ArrayList<String>();
+	            // List<String> list = new ArrayList<String>();
+                LinkedList<String> list = new LinkedList<String>();
 	            int pos = 0;
 	            
 	            while (matcher.find()) 
@@ -173,6 +198,5 @@ public class Comparators
 	            list.add(str.substring(pos));
 	            return list;
 	        }
-	 	}
-	 
+    }
  }

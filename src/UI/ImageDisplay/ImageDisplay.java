@@ -39,11 +39,10 @@ import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 import UI.ImageDisplay.Enums.ZoomType;
 import Util.Logging.LogUtil;
+import Util.Logging.LoggerWrapper;
 
 public class ImageDisplay extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener, ComponentListener
 {
-	protected final static Logger logger = LogUtil.getLogger(ImageDisplay.class.getName());
-	
 	/**
 	 * listeners to evens created by this control
 	 */
@@ -1005,7 +1004,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
             // correct them here and reset it 
             default:
             	
-            	logger.log(Level.WARNING, "bad drawMode [" + this.drawMode + "], resetting to DOWNSCALE_IMAGE");
+            	LoggerWrapper.log(Level.WARNING, "bad drawMode [" + this.drawMode + "], resetting to DOWNSCALE_IMAGE");
             	
             	this.drawMode = ImageDrawMode.DOWNSCALE_IMAGE;
             	

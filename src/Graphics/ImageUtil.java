@@ -411,22 +411,18 @@ public class ImageUtil
     public static BufferedImage loadImageWithMagick(String path, Byte imageFormat ) throws IOException, InterruptedException, IM4JavaException
 	{
 		IMOperation op = new IMOperation();
-
-		// input image path
-		op.addImage(path + "[0]");
-		
-		/* it would seem you can just always put [0] and it doesn't break which is awesome 
-		if(true || ImageMagick.readRequiresMergeLayers(imageFormat))
+ 
+		if(ImageMagick.readRequiresMergeLayers(imageFormat))
 		{
-			// input image path
-			op.addImage(path + "[0]");
+			op.flatten();
+			op.addImage(path);
 		}
 		else 
 		{
 			// input image path
-			op.addImage(path);
+			op.addImage(path + "[0]");
 		}
-		*/
+		
 		// set image output type into stdout, (bmp seems fastest but slow to render)
 		op.addImage(ImageMagick.getImageDecodeFormat() + ":-"); 
 
