@@ -1,5 +1,6 @@
 package UI.ImageDisplay;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -20,7 +21,6 @@ import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.JPanel;
 import javax.swing.Timer;
@@ -38,7 +38,7 @@ import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 import UI.ImageDisplay.Enums.ZoomType;
-import Util.Logging.LogUtil;
+import Util.ColorUtil;
 import Util.Logging.LoggerWrapper;
 
 public class ImageDisplay extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener, ComponentListener
@@ -125,6 +125,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     public int mouseDragButton = MouseEvent.BUTTON1;
     
     /**
+     * the MouseEvent.BUTTONx button that determines selection
+     */
+    public int mouseSelectionButton = MouseEvent.BUTTON3;
+    
+    /**
      * how the control should handle mouse zooming
      */
     public byte zoomType = ZoomType.INTO_MOUSE;
@@ -192,6 +197,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      */
     private boolean allowDrag = true;
     
+    /*
+     * allow the user to create a selection area 
+     */
+    private boolean allowSelection = true;
+    
     /**
      * can the image be animated 
      */
@@ -242,6 +252,8 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      */
     private Point lastClickPoint = new Point(0, 0);
     
+    private Selection selectionArea = new Selection();
+    
     /**
      * image draw position x
      */
@@ -258,6 +270,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     private boolean isDragButtonDown = false;
 
     /**
+     * is the user creating a selection on the control 
+     */
+    private boolean isSelectionButtonDown = false;
+    
+    /**
      * the image zoom level as a double 
      */
     private double _zoom = 1;
@@ -272,7 +289,14 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      * this is used to properly center the image on initial loads where the control might be hidden
      */
     private boolean hasLoadedOnce = false;
-	
+    
+    
+    private boolean drawDashedSelection = true;
+    
+    private Color selectionColor = Color.white;
+    
+    private Color selectionColor2 = Color.black;
+    
 
     /**
      * default constructor which sets default ZOOM_PERCENT values 
@@ -324,9 +348,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      * simple rectangle class used to return the image viewport 
      *
      */
-    private class Rect
+    private static class Rect
     {
-    	final public int x, y, width, height;
+    	public int x, y, width, height;
     	
     	public Rect(int x, int y, int width, int height)
     	{
@@ -335,10 +359,362 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		this.width = width;
     		this.height = height;
     	}
+
     	
     	public String toString() 
     	{
     		return x + " " + y + " " + width + " " + height;
+    	}
+    }
+    
+    public static interface DragHandle 
+	{
+		public static final byte INVALID      = -1;
+		public static final byte TOP_LEFT     = 0;
+		public static final byte TOP_RIGHT    = 1;
+		public static final byte TOP          = 3;
+		public static final byte BOTTOM_LEFT  = 4;
+		public static final byte BOTTOM_RIGHT = 5;
+		public static final byte BOTTOM       = 6;
+		public static final byte LEFT         = 7;
+		public static final byte RIGHT        = 8;
+		public static final byte MIDDLE       = 9;
+	}
+    
+  
+    private class Selection 
+    {
+    	private int margins = 15;
+    	
+    	public int x1, x2, y1, y2;
+    	
+    	public boolean isInvalid = true;
+    	
+    	public byte expanding = DragHandle.INVALID;
+    	
+    	public boolean isExpanding()
+    	{
+    		return this.expanding != DragHandle.INVALID;
+    	}
+    	
+    	public boolean adjustSizeOrDie(Point p)
+    	{
+    		final int X = (int)p.getX();
+    		final int Y = (int)p.getY();
+    		
+    		switch (this.expanding) 
+    		{
+	    		default:
+	        		return false;
+	        		
+	    		case DragHandle.MIDDLE:
+	    			int difx = lastClickPoint.x - X;
+	    			int dify = lastClickPoint.y - Y;
+	    		
+	    			this.x1 -= difx;
+	    			this.x2 -= difx;
+	    			this.y1 -= dify;
+	    			this.y2 -= dify;
+	    			
+	    			lastClickPoint.setLocation(p);
+	    			return true;
+	        		
+	    		case DragHandle.TOP_LEFT:
+	    			this.x1 = X;
+    				this.y1 = Y;
+	    			return true;
+	    			
+	    		case DragHandle.TOP_RIGHT:
+	    			this.x2 = X;
+    				this.y1 = Y;
+	    			return true;
+	    			
+	    		case DragHandle.TOP:
+	    			this.y1 = Y;
+	    			return true;
+	    			
+	    		case DragHandle.BOTTOM_LEFT:
+	    			this.x1 = X;
+	    			this.y2 = Y;
+	    			return true;
+	    			
+	    		case DragHandle.LEFT:
+	    			this.x1 = X;
+    				return true;
+    				
+	    		case DragHandle.BOTTOM_RIGHT:
+	    			this.x2 = X;
+	    			this.y2 = Y;
+	    			return true;
+	    			
+	    		case DragHandle.RIGHT:
+	    			this.x2 = X;
+	    			return true;
+	    			
+	    		case DragHandle.BOTTOM:
+	    			this.y2 = Y;
+	    			return true;
+	    			
+				case DragHandle.INVALID:
+	
+					this.correctPoints();
+					
+		    		// top left corner
+		    		if(X < this.x1 && Y < this.y1)
+		    		{
+		    			if(this.x1 - X <= this.margins && this.y1 - Y <= this.margins)
+		    			{
+		    				this.x1 = X;
+		    				this.y1 = Y;
+		    				this.expanding = DragHandle.TOP_LEFT;
+		    				return true;
+		    			}
+		    			
+		    			return false;
+		    		}
+		    		
+		    		// top right corner
+		    		if(X > this.x2 && Y < this.y1)
+		    		{
+		    			if(X - this.x2 <= this.margins && this.y1 - Y <= this.margins)
+		    			{
+		    				this.x2 = X;
+		    				this.y1 = Y;
+		    				this.expanding = DragHandle.TOP_RIGHT;
+		    				return true;
+		    			}
+		    			return false;
+		    		}
+		    		
+		    		// top
+		    		if(X > this.x1 && X < this.x2 && Y < this.y1)
+		    		{
+		    			if(this.y1 - Y <= this.margins)
+		    			{
+		    				this.y1 = Y;
+		    				this.expanding = DragHandle.TOP;
+		    				return true;
+		    			}
+		    			
+		    			return false;
+		    		}
+		    		
+		    		
+		    		// bottom left corner
+		    		if(X < this.x1 && Y > this.y2)
+		    		{
+		    			if(this.x1 - X <= this.margins && Y - this.y2 <= this.margins)
+		    			{
+		    				this.x1 = X;
+		    				this.y2 = Y;
+		    				this.expanding = DragHandle.BOTTOM_LEFT;
+		    				return true;
+		    			}
+		    			
+		    			return false;
+		    		}
+		    		
+		    		// left side
+		    		if(X < this.x1 && Y < this.y2 && Y > this.y1)
+		    		{
+		    			if(this.x1 - X <= this.margins)
+		    			{
+		    				this.x1 = X;
+		    				this.expanding = DragHandle.LEFT;
+		    				return true;
+		    			}
+		    			return false;
+		    		}
+		    		
+		    		// bottom right corner
+		    		if(X > this.x2 && Y > this.y2)
+		    		{
+		    			if(X - this.x2 <= this.margins && Y - this.y2 <= this.margins)
+		    			{
+		    				this.x2 = X;
+		    				this.y2 = Y;
+		    				this.expanding = DragHandle.BOTTOM_RIGHT;
+		    				return true;
+		    			}
+		    			
+		    			return false;
+		    		}
+		    		
+		    		
+		    		// right side 
+		    		if(X > this.x2 && Y < this.y2 && Y > this.y1)
+		    		{
+		    			if(X - this.x2 <= this.margins)
+		    			{
+		    				this.x2 = X;
+		    				this.expanding = DragHandle.RIGHT;
+		    				return true;
+		    			}
+		    			
+		    			return false;
+		    		}
+		    		
+		    		
+		    		if(Y > this.y2 && X < this.x2 && X > this.x1)
+		    		{
+		    			if(Y - this.y2 <= this.margins)
+		    			{
+		    				this.y2 = Y;
+		    				this.expanding = DragHandle.BOTTOM;
+		    				return true;
+		    			}
+		    			
+		    			return false;
+		    		}
+		    		
+		    		
+		    		if(Y > this.y1 && Y < this.y2 && X > this.x1 && X < this.x2)
+		    		{
+		    			difx = lastClickPoint.x - X;
+		    			dify = lastClickPoint.y - Y;
+		    		
+		    			this.x1 -= difx;
+		    			this.x2 -= difx;
+		    			this.y1 -= dify;
+		    			this.y2 -= dify;
+		    			
+		    			lastClickPoint.setLocation(p);
+		    			
+		    			this.expanding = DragHandle.MIDDLE;
+		    			return true;
+		    		}
+		    		
+		    		return false;
+			}
+    	}
+    	
+    	public void updatePoint2(Point p)
+    	{
+    		this.x2 = (int)p.getX();
+    		this.y2 = (int)p.getY();
+    	}
+    	
+    	
+    	public void updatePoint1(Point p)
+    	{
+    		this.x1 = (int)p.getX();
+    		this.y1 = (int)p.getY();
+    	}
+    	
+    	public void resetChanging()
+    	{
+    		this.expanding = DragHandle.INVALID;
+    	}
+    	
+    	public void checkInvalid()
+    	{
+    		this.isInvalid = this.x1 == this.x2 || 
+    						 this.y1 == this.y2 ;
+    	}
+    	
+    	public void correctPoints()
+    	{
+    		if(this.x2 < this.x1)
+    		{
+    			final int X_TMP = this.x1;
+    			
+    			this.x1 = this.x2;
+    			this.x2 = X_TMP;
+    		}
+    		
+    		if(this.y2 < this.y1)
+    		{
+    			final int Y_TMP = this.y1;
+    			
+    			this.y1 = this.y2;
+    			this.y2 = Y_TMP;
+    		}
+    	}
+    	
+    	public void render(Graphics g, Graphics2D g2)
+    	{
+    		if(this.isInvalid)
+    			return;
+    		
+    		int width = this.x2 - this.x1;
+    		int height = this.y2 - this.y1;
+    		int x1 = this.x1;
+    		int y1 = this.y1;
+    		int x2 = this.x2;
+    		int y2 = this.y2;
+    		
+    		if(width < 0)
+    		{
+    			x1 += width;
+    			width *= -1;
+    			x2 = x1 + width;
+    		}
+    		
+    		if(height < 0)
+    		{
+    			y1 += height;
+    			height *= -1;
+    			y2 = y1 + height;
+    		}
+    		
+
+        	g2.setColor(selectionColor);
+
+        	// renders the inner area rectangle
+        	g.drawRect(x1, y1, width, height);
+        	
+        	// renders the outer area rectangle,
+        	// the inner area rect to this rect is where drag handles are
+        	g.drawRect(x1 - this.margins, y1 - this.margins, width + this.margins*2, height + this.margins*2);
+        	
+        	// top left corner
+        	g.drawLine(x1               , y1 - this.margins, x1               , y1);
+        	g.drawLine(x1 - this.margins, y1               , x1               , y1);
+        	
+        	// bottom left corner 
+        	g.drawLine(x1               , y2               , x1               , y2 + this.margins);
+        	g.drawLine(x1 - this.margins, y2               , x1               , y2);
+        	
+        	// top right corner 
+        	g.drawLine(x2               , y1               , x2 + this.margins, y1);
+        	g.drawLine(x2               , y1 - this.margins, x2               , y1);
+        	
+        	// bottom right corner
+        	g.drawLine(x2               , y2               , x2               , y2 + this.margins);
+        	g.drawLine(x2               , y2               , x2 + this.margins, y2);
+        	
+        	
+        	if(!drawDashedSelection)
+        		return;
+        	
+        	float[] dash = new float[] {4.0f, 4.0f };
+        	BasicStroke dashStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0.0f, dash, 0);
+        	g2.setStroke(dashStroke);
+        	g2.setColor(selectionColor2);
+
+        	// renders the inner area rectangle
+        	g.drawRect(x1, y1, width, height);
+        	
+        	// renders the outer area rectangle,
+        	// the inner area rect to this rect is where drag handles are
+        	g.drawRect(x1 - this.margins, y1 - this.margins, width + this.margins*2, height + this.margins*2);
+        	
+        	// top left corner
+        	g.drawLine(x1               , y1 - this.margins, x1               , y1);
+        	g.drawLine(x1 - this.margins, y1               , x1               , y1);
+        	
+        	// bottom left corner 
+        	g.drawLine(x1               , y2               , x1               , y2 + this.margins);
+        	g.drawLine(x1 - this.margins, y2               , x1               , y2);
+        	
+        	// top right corner 
+        	g.drawLine(x2               , y1               , x2 + this.margins, y1);
+        	g.drawLine(x2               , y1 - this.margins, x2               , y1);
+        	
+        	// bottom right corner
+        	g.drawLine(x2               , y2               , x2               , y2 + this.margins);
+        	g.drawLine(x2               , y2               , x2 + this.margins, y2);
+        	
     	}
     }
     
@@ -496,6 +872,59 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	
     	this.repaint();
     	this.onImageSizeChanged(w, h, imageWidth, imageHeight);
+    }
+    
+    
+    public void setImageDraggable(boolean allow)
+    {
+    	this.allowDrag = allow;
+    }
+    
+    public boolean getImageDraggable()
+    {
+    	return this.allowDrag;
+    }
+    
+    public void setAllowSelection(boolean allow)
+    {
+    	this.allowSelection = allow;
+    	
+    	if(!allow)
+    	{
+    		this.selectionArea.isInvalid = true;
+    	}
+    }
+    
+    public boolean getAllowSelection()
+    {
+    	return this.allowSelection;
+    }
+    
+    public void setSelectionColor(Color c)
+    {
+    	this.selectionColor = c;
+    	this.selectionColor2 = ColorUtil.invertColor(c);
+    	
+    	if(!this.selectionArea.isInvalid)
+    		this.repaint();
+    }
+    
+    public Color getSelectionColor()
+    {
+    	return this.selectionColor;
+    }
+    
+    public void setSelectionDashed(boolean isDashed)
+    {
+    	this.drawDashedSelection = isDashed;
+    	
+    	if(!this.selectionArea.isInvalid)
+    		this.repaint();
+    }
+    
+    public boolean isSelectionDashed()
+    {
+    	return this.drawDashedSelection;
     }
     
     public void setGreyscale()
@@ -1193,7 +1622,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     
     
     
-    
+    protected void drawSelectionArea(Graphics g, Graphics2D g2)
+    {
+    	this.selectionArea.render(g, g2);
+    }
     
     
     
@@ -1340,6 +1772,8 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	{	
     		this.drawImage(g, (Graphics2D) g);
     	}
+    	
+    	this.drawSelectionArea(g, (Graphics2D)g);
     }
     
 
@@ -1350,13 +1784,39 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	@Override
 	public void mousePressed(MouseEvent e) 
 	{
-		if (!this.allowDrag)
-            return;
-		
 		if(e.getButton() == this.mouseDragButton)
 		{
-			this.isDragButtonDown = true;
+			// important this comes before adjustSizeOrDie, 
+			// otherwise we cannot use the lastClickPoint to drag the selection box around
 			this.lastClickPoint.setLocation(e.getPoint());
+			
+			// adjustSizeOrDie will set this.selectionArea.changing if it returns true
+			// this will then be used in the mouse dragged function to highjack the image drag and handle the selection instead
+			if(this.allowSelection && !this.selectionArea.isInvalid && this.selectionArea.adjustSizeOrDie(e.getPoint()))
+			{
+				this.isDragButtonDown = true;
+				this.isSelectionButtonDown = false;
+				return;
+			}
+			
+			// this applies to the image, not the selection
+			if(!this.allowDrag)
+				return;
+			
+			this.isDragButtonDown = true;
+			this.isSelectionButtonDown = false;
+			this.selectionArea.resetChanging();
+		}
+		
+		else if(e.getButton() == this.mouseSelectionButton)
+		{
+			if(!this.allowSelection)
+				return;
+			
+			this.isSelectionButtonDown = true;
+			this.isDragButtonDown = false;
+			
+			this.selectionArea.updatePoint1(e.getPoint());
 		}
 	}
 	
@@ -1367,9 +1827,24 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	@Override
 	public void mouseReleased(MouseEvent e) 
 	{
+		// always make sure to reset this, otherwise anytime the drag button is down, its always changing the selection
+		this.selectionArea.resetChanging();
+		
 		if(e.getButton() == this.mouseDragButton)
 		{
 			this.isDragButtonDown = false;
+		}
+		
+		else if(e.getButton() == this.mouseSelectionButton)
+		{
+			this.isSelectionButtonDown = false;
+			
+			if(!this.allowSelection)
+				return;
+			
+			this.selectionArea.updatePoint2(e.getPoint());
+			this.selectionArea.checkInvalid();
+			this.repaint();
 		}
 	}
 	
@@ -1381,24 +1856,43 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	@Override
     public void mouseDragged(MouseEvent e) 
 	{
-		// resizeable mode lets you free drag the image
-		// actual size mode lets you drag the image if it's bigger than the control wdith / height
-		// nothing else lets you drag it so stop here 
-		if(!this.isDragButtonDown || this.drawMode != ImageDrawMode.RESIZEABLE && this.drawMode != ImageDrawMode.ACTUAL_SIZE)
-			return;
+		if(this.isDragButtonDown)
+		{
+			if(!this.selectionArea.isInvalid &&
+				this.selectionArea.isExpanding() &&
+				this.selectionArea.adjustSizeOrDie(e.getPoint()))
+			{
+				this.repaint();
+				return;
+			}
+			
+			// resizeable mode lets you free drag the image
+			// actual size mode lets you drag the image if it's bigger than the control wdith / height
+			// nothing else lets you drag it so stop here 
+			if(this.drawMode != ImageDrawMode.RESIZEABLE && this.drawMode != ImageDrawMode.ACTUAL_SIZE)
+				return;
+			
+			this.drX -= this.lastClickPoint.x - e.getX();
+			this.drY -= this.lastClickPoint.y - e.getY();
+			
+			if(this.drX > this.getWidth())
+				this.drX = this.getWidth();
+			
+			if(this.drY > this.getHeight())
+				this.drY = this.getHeight();
+			
+			this.lastClickPoint.setLocation(e.getPoint());
+			
+			this.repaint();
+		}
+
 		
-		this.drX -= this.lastClickPoint.x - e.getX();
-		this.drY -= this.lastClickPoint.y - e.getY();
-		
-		if(this.drX > this.getWidth())
-			this.drX = this.getWidth();
-		
-		if(this.drY > this.getHeight())
-			this.drY = this.getHeight();
-		
-		this.lastClickPoint.setLocation(e.getPoint());
-		
-		this.repaint();
+		else if(this.isSelectionButtonDown)
+		{
+			this.selectionArea.updatePoint2(e.getPoint());
+			this.selectionArea.checkInvalid();
+			this.repaint();
+		}
     }
 	
 	

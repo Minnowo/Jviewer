@@ -587,6 +587,30 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 				}
 			}
 		});
+		
+		allowImageDragMenuItem = new JCheckBoxMenuItem("Allow Image Drag");
+		allowImageDragMenuItem.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if(getCurrentDisplay() != null)
+				{
+					getCurrentDisplay().setImageDraggable(e.getStateChange() == ItemEvent.SELECTED);
+				}
+			}
+		});
+		allowImageDragMenuItem.setSelected(true);
+		mnNewMenu_2.add(allowImageDragMenuItem);
+		
+		allowSelectionMenuItem = new JCheckBoxMenuItem("Allow Selection");
+		allowSelectionMenuItem.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if(getCurrentDisplay() != null)
+				{
+					getCurrentDisplay().setAllowSelection(e.getStateChange() == ItemEvent.SELECTED);
+				}
+			}
+		});
+		allowSelectionMenuItem.setSelected(true);
+		mnNewMenu_2.add(allowSelectionMenuItem);
 		mnNewMenu_2.add(mntmNewMenuItem_2);
 		
 		mnNewMenu_4 = new JMenu("Debug");
@@ -1070,6 +1094,8 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	private JMenu mnNewMenu_4;
 	private JMenuItem mntmNewMenuItem_14;
 	private JMenuItem mntmNewMenuItem_15;
+	private JCheckBoxMenuItem allowSelectionMenuItem;
+	private JCheckBoxMenuItem allowImageDragMenuItem;
 	public void handleStartArgument(String arg)
 	{
 		if(arg.contains("="))
@@ -1276,6 +1302,9 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
    		 _preventOverflow = true;
    		 
    		 ImageTabPage tp = getCurrentDisplay();
+   		 
+   		 tp.setAllowSelection(allowSelectionMenuItem.isSelected());
+   		 tp.setImageDraggable(allowImageDragMenuItem.isSelected());
    		 
    		 zoomPercentSpinner.setValue(tp.getZoomPercent());
    		 
