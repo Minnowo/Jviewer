@@ -38,7 +38,7 @@ public class IMAGE extends ImageBase
 		this.loadWithoutDetect(new File(path), imageFormat);
 	}
 	
-	private IMAGE(byte imageFormat, BufferedImage b) 
+	public IMAGE(byte imageFormat, BufferedImage b) 
 	{
 		super(imageFormat);
 		

@@ -239,6 +239,8 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		}
 	};
 	
+	ActionListener cropToSelectionAction = new ActionListener() { public void actionPerformed(ActionEvent e) { cropToSelection(); } };
+	
 	ActionListener askSaveImage = new ActionListener() { public void actionPerformed(ActionEvent e) { askSaveImage(); } };
      
     ActionListener alAskOpenFileInPlace = new ActionListener() { public void actionPerformed(ActionEvent e) { askOpenFileInPlace(); } };
@@ -509,6 +511,10 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 				convertGreyscale();
 			}
 		});
+		
+		mntmNewMenuItem_16 = new JMenuItem("Crop To Selection");
+		mntmNewMenuItem_16.addActionListener(cropToSelectionAction);
+		mnNewMenu_1.add(mntmNewMenuItem_16);
 		mnNewMenu_1.add(mntmNewMenuItem_11);
 		
 		mntmNewMenuItem_12 = new JMenuItem("Invert Image");
@@ -920,6 +926,15 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
          t.start();
 	}
 	
+	public void cropToSelection()
+	{
+		if(getCurrentDisplay().getImage() == null)
+			return;
+		
+		getCurrentDisplay().cropToSelection();
+		getCurrentDisplay().clearSelection();
+	}
+	
 	public void askSaveImage()
 	{
 		if(getCurrentDisplay().getImage() == null)
@@ -1016,12 +1031,12 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	
 	public void convertGreyscale()
 	{
-		getCurrentDisplay().setGreyscale();
+		getCurrentDisplay().greyscaleImage();
 	}
 	
 	public void convertInverse()
 	{
-		getCurrentDisplay().setInverse();
+		getCurrentDisplay().invertImage();
 	}
 	
 	Runnable runProgressBar = new Runnable() {
@@ -1096,6 +1111,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	private JMenuItem mntmNewMenuItem_15;
 	private JCheckBoxMenuItem allowSelectionMenuItem;
 	private JCheckBoxMenuItem allowImageDragMenuItem;
+	private JMenuItem mntmNewMenuItem_16;
 	public void handleStartArgument(String arg)
 	{
 		if(arg.contains("="))
@@ -1324,6 +1340,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	public void ImageChanged() 
 	{
 		updateGifAnimationStuff();
+		setStatusLabelText();
 		setTitle();
 	}
 

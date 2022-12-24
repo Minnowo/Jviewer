@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.TexturePaint;
+import java.awt.Transparency;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
@@ -28,7 +29,9 @@ import javax.swing.Timer;
 import Configuration.GUISettings;
 import Graphics.ImageUtil;
 import Graphics.Rotation;
+import Graphics.Imaging.IMAGE;
 import Graphics.Imaging.ImageBase;
+import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Gif.GifBase;
 import UI.Events.ImageDisplayImageSizeChangedEvent;
 import UI.Events.ImageDisplayZoomChangedEvent;
@@ -252,6 +255,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      */
     private Point lastClickPoint = new Point(0, 0);
     
+    /**
+     * handles the selection box
+     */
     private Selection selectionArea = new Selection();
     
     /**
@@ -290,11 +296,19 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      */
     private boolean hasLoadedOnce = false;
     
-    
+    /**
+     * if the selection box should render in a dashed line
+     */
     private boolean drawDashedSelection = true;
     
+    /**
+     * the selection box color 1
+     */
     private Color selectionColor = Color.white;
     
+    /**
+     * the selection box color 2, only applies if drawDashedSelection = true
+     */
     private Color selectionColor2 = Color.black;
     
 
@@ -344,6 +358,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
+    
     /**
      * simple rectangle class used to return the image viewport 
      *
@@ -359,7 +374,6 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		this.width = width;
     		this.height = height;
     	}
-
     	
     	public String toString() 
     	{
@@ -367,6 +381,13 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	}
     }
     
+    
+    
+    /**
+     * C like enum used to identify drag handles on the selection
+     * @author minno
+     *
+     */
     public static interface DragHandle 
 	{
 		public static final byte INVALID      = -1;
@@ -382,21 +403,75 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	}
     
   
+    
+    /**
+     * class which handles drawing, and working with the selection box
+     * @author minno
+     *
+     */
     private class Selection 
     {
-    	private int margins = 15;
+    	/**
+    	 * this number determines the size of all the drag handles
+    	 */
+    	private int margins = 8;
     	
+    	/**
+    	 * the bounds of the selection
+    	 */
     	public int x1, x2, y1, y2;
     	
+    	/**
+    	 * indicates if the selection is invalid or should be treated as such
+    	 */
     	public boolean isInvalid = true;
     	
+    	/**
+    	 * identifies which drag handle is being used to change the selection
+    	 */
     	public byte expanding = DragHandle.INVALID;
     	
+    	/**
+    	 * handles drawing a dash style line if needed
+    	 */
+    	private BasicStroke dashStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0.0f, new float[] { 8.0f, 8.0f }, 0);
+    	
+    	
+    	public Selection()
+    	{
+    		
+    	}
+    	
+    	
+    	public Selection(int margins)
+    	{
+    		this.margins = margins;
+    	}
+    	
+    	
+    	public void setMargins(int margins)
+    	{
+    		this.margins = margins;
+    	}
+    	
+    	
+    	/**
+    	 * 
+    	 * @return a bool indicating if the selection is being changed via a drag handle
+    	 */
     	public boolean isExpanding()
     	{
     		return this.expanding != DragHandle.INVALID;
     	}
     	
+    	
+    	/**
+    	 * this function handles resizing via drag handles<br>
+    	 * 
+    	 * it returns true if the given point is in a drag handle, and sets the expanding to the given drag handle<br>
+    	 * @param p the mouse position of click or drag
+    	 * @return true if valid drag handle / resize, otherwise false
+    	 */
     	public boolean adjustSizeOrDie(Point p)
     	{
     		final int X = (int)p.getX();
@@ -455,8 +530,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 	    			this.y2 = Y;
 	    			return true;
 	    			
+	    			
+	    		// we're not expanding so we will check for collision here
 				case DragHandle.INVALID:
 	
+					// ensure that x1 < x2, y1 < y2 
 					this.correctPoints();
 					
 		    		// top left corner
@@ -588,6 +666,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 			}
     	}
     	
+    	
+    	/**
+    	 * updates x2 and y2 with the given value
+    	 * @param p
+    	 */
     	public void updatePoint2(Point p)
     	{
     		this.x2 = (int)p.getX();
@@ -595,23 +678,41 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	}
     	
     	
+    	/**
+    	 * updates x1 and y1 with the given value
+    	 * @param p
+    	 */
     	public void updatePoint1(Point p)
     	{
     		this.x1 = (int)p.getX();
     		this.y1 = (int)p.getY();
     	}
     	
+    	
+    	/**
+    	 * resets the expanding value to INVALID, used to cancel resizing of selection via drag handles
+    	 */
     	public void resetChanging()
     	{
     		this.expanding = DragHandle.INVALID;
     	}
     	
-    	public void checkInvalid()
+    	
+    	/**
+    	 * updates the isInvalid component of the selection
+    	 */
+    	public boolean checkInvalid()
     	{
-    		this.isInvalid = this.x1 == this.x2 || 
+    		this.isInvalid =  this.x1 == this.x2 || 
     						 this.y1 == this.y2 ;
+    		
+    		return this.isInvalid;
     	}
     	
+    	
+    	/**
+    	 * corrects the points and ensures that x1 < x2 and y1 < y2
+    	 */
     	public void correctPoints()
     	{
     		if(this.x2 < this.x1)
@@ -631,6 +732,32 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		}
     	}
     	
+    	
+    	/**
+    	 * returns the width of the selection
+    	 * @return
+    	 */
+    	public int getWidth()
+    	{
+    		return Math.abs(this.x1 - this.x2);
+    	}
+    	
+    	
+    	/**
+    	 * returns the height of the selection
+    	 * @return
+    	 */
+    	public int getheight()
+    	{
+    		return Math.abs(this.y1 - this.y2);
+    	}
+    	
+    	
+    	/**
+    	 * draws the selction to the given graphic
+    	 * @param g the graphic to draw on
+    	 * @param g2 this CAN be null IF not drawing dashed line 
+    	 */
     	public void render(Graphics g, Graphics2D g2)
     	{
     		if(this.isInvalid)
@@ -646,75 +773,54 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		if(width < 0)
     		{
     			x1 += width;
-    			width *= -1;
-    			x2 = x1 + width;
+    			x2 = x1 - width;
     		}
     		
     		if(height < 0)
     		{
     			y1 += height;
-    			height *= -1;
-    			y2 = y1 + height;
+    			y2 = y1 - height;
     		}
     		
+    		g.setColor(selectionColor);
 
-        	g2.setColor(selectionColor);
+        	// renders the inner area rectangle in a hashtag like pattern
+    		g.drawLine(x1               , y1 - this.margins, x1               , y2 + this.margins);
+    		g.drawLine(x1 - this.margins, y1               , x2 + this.margins, y1);
+    		g.drawLine(x2               , y1 - this.margins, x2               , y2 + this.margins);
+    		g.drawLine(x1 - this.margins, y2               , x2 + this.margins, y2);
 
-        	// renders the inner area rectangle
-        	g.drawRect(x1, y1, width, height);
-        	
-        	// renders the outer area rectangle,
-        	// the inner area rect to this rect is where drag handles are
-        	g.drawRect(x1 - this.margins, y1 - this.margins, width + this.margins*2, height + this.margins*2);
-        	
-        	// top left corner
-        	g.drawLine(x1               , y1 - this.margins, x1               , y1);
-        	g.drawLine(x1 - this.margins, y1               , x1               , y1);
-        	
-        	// bottom left corner 
-        	g.drawLine(x1               , y2               , x1               , y2 + this.margins);
-        	g.drawLine(x1 - this.margins, y2               , x1               , y2);
-        	
-        	// top right corner 
-        	g.drawLine(x2               , y1               , x2 + this.margins, y1);
-        	g.drawLine(x2               , y1 - this.margins, x2               , y1);
-        	
-        	// bottom right corner
-        	g.drawLine(x2               , y2               , x2               , y2 + this.margins);
-        	g.drawLine(x2               , y2               , x2 + this.margins, y2);
-        	
+    		// renders the outer area which makes a nice box with defined corners, this visualizes all the drag handles
+    		g.drawLine(x1 - this.margins, y1 - this.margins, x1 - this.margins, y2 + this.margins);
+    		g.drawLine(x1 - this.margins, y1 - this.margins, x2 + this.margins, y1 - this.margins);
+    		g.drawLine(x2 + this.margins, y1 - this.margins, x2 + this.margins, y2 + this.margins);
+    		g.drawLine(x1 - this.margins, y2 + this.margins, x2 + this.margins, y2 + this.margins);
+
         	
         	if(!drawDashedSelection)
         		return;
         	
-        	float[] dash = new float[] {4.0f, 4.0f };
-        	BasicStroke dashStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0.0f, dash, 0);
-        	g2.setStroke(dashStroke);
-        	g2.setColor(selectionColor2);
+        	g2.setStroke(this.dashStroke);
+        	g.setColor(selectionColor2);
 
-        	// renders the inner area rectangle
-        	g.drawRect(x1, y1, width, height);
+        	// renders the inner area rectangle in a hashtag like pattern
+    		g.drawLine(x1               , y1 - this.margins, x1               , y2 + this.margins);
+    		g.drawLine(x1 - this.margins, y1               , x2 + this.margins, y1);
+    		g.drawLine(x2               , y1 - this.margins, x2               , y2 + this.margins);
+    		g.drawLine(x1 - this.margins, y2               , x2 + this.margins, y2);
+
+    		// renders the outer area which makes a nice box with defined corners, this visualizes all the drag handles
+    		g.drawLine(x1 - this.margins, y1 - this.margins, x1 - this.margins, y2 + this.margins);
+    		g.drawLine(x1 - this.margins, y1 - this.margins, x2 + this.margins, y1 - this.margins);
+    		g.drawLine(x2 + this.margins, y1 - this.margins, x2 + this.margins, y2 + this.margins);
+    		g.drawLine(x1 - this.margins, y2 + this.margins, x2 + this.margins, y2 + this.margins);
         	
-        	// renders the outer area rectangle,
-        	// the inner area rect to this rect is where drag handles are
-        	g.drawRect(x1 - this.margins, y1 - this.margins, width + this.margins*2, height + this.margins*2);
-        	
-        	// top left corner
-        	g.drawLine(x1               , y1 - this.margins, x1               , y1);
-        	g.drawLine(x1 - this.margins, y1               , x1               , y1);
-        	
-        	// bottom left corner 
-        	g.drawLine(x1               , y2               , x1               , y2 + this.margins);
-        	g.drawLine(x1 - this.margins, y2               , x1               , y2);
-        	
-        	// top right corner 
-        	g.drawLine(x2               , y1               , x2 + this.margins, y1);
-        	g.drawLine(x2               , y1 - this.margins, x2               , y1);
-        	
-        	// bottom right corner
-        	g.drawLine(x2               , y2               , x2               , y2 + this.margins);
-        	g.drawLine(x2               , y2               , x2 + this.margins, y2);
-        	
+    	}
+    	
+    	
+    	public String toString()
+    	{
+    		return this.x1 + " " + this.y1 + " " + this.x2 + " " + this.y2;
     	}
     }
     
@@ -752,6 +858,12 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.setImage(i, flushLastImage);
     }
   
+    
+    /**
+     * sets the image to the given image
+     * @param image the image to show
+     * @param flushLastImage should the last image be flushed
+     */
     public void setImage(ImageBase image, boolean flushLastImage)
     {
     	if(this.image != null && flushLastImage)
@@ -786,6 +898,11 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.onImageChanged();
     }
     
+    
+    /**
+     * gets the size of the control
+     * @param includePadding should padding be included
+     */
     protected Rect GetControlSize(boolean includePadding)
     {
         int left = 0;
@@ -808,6 +925,65 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
+    /**
+     * crops the current image into the selection area
+     */
+    public void cropToSelection()
+    {
+    	BufferedImage buff = this.getSelectionImage();
+    	
+    	if(buff == null)
+    		return;
+    	
+    	this.setImage(new IMAGE(this.image.GetImageFormat(), buff), true);
+    }
+    
+    
+    public BufferedImage getSelectionImage()
+    {
+    	if(this.image == null || this.selectionArea.checkInvalid())
+    		return null;
+    	
+    	// TODO: add gif support for cropping 
+    	if(this.image.GetImageFormat() == ImageFormat.GIF)
+    		return null;
+    	
+    	// dividing visible components by the zoom factor gets their 'actual' size, at least with respect to the image
+    	// so find the difference between the top left selection and top left of the image (visibly)
+    	// then divide by zoom to get the actual position on the image
+    	final int ix = (int)((this.drX - this.selectionArea.x1) / _zoom);
+    	final int iy = (int)((this.drY - this.selectionArea.y1) / _zoom);
+    	
+    	BufferedImage newImage = new BufferedImage( 
+    			Math.abs((int)(this.selectionArea.getWidth()  / _zoom)), 
+    			Math.abs((int)(this.selectionArea.getheight() / _zoom)), 
+    			ImageUtil.getOptimalType(Transparency.TRANSLUCENT));
+    	
+    	
+    	Graphics g = newImage.createGraphics();
+    	g.drawImage(this.image.getBuffered(), ix, iy, this);
+    	g.dispose();
+    	
+    	return newImage;
+    }
+    
+    
+    /**
+     * removes the current selection
+     */
+    public void clearSelection()
+    {
+    	this.selectionArea.isInvalid = true;
+    	this.selectionArea.x1 = 0;
+    	this.selectionArea.x2 = 0;
+    	this.selectionArea.y1 = 0;
+    	this.selectionArea.y2 = 0;
+    }
+    
+    
+    /**
+     * Rotates the current image left by 90 degrees
+     */
     public void rotate90Left()
     {
     	if(this.image == null)
@@ -824,6 +1000,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.onImageSizeChanged(w, h, imageWidth, imageHeight);
     }
     
+    
+    /**
+     * Rotates the current image right by 90 degrees
+     */
     public void rotate90Right()
     {
     	if(this.image == null)
@@ -840,6 +1020,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.onImageSizeChanged(w, h, imageWidth, imageHeight);
     }
     
+    
+    /**
+     * flips the current image vertically
+     */
     public void flipVertical()
     {
     	if(this.image == null)
@@ -849,6 +1033,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.repaint();
     }
     
+    
+    /**
+     * flips the current image horizontally 
+     */
     public void flipHorizontal()
     {
     	if(this.image == null)
@@ -858,6 +1046,12 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.repaint();
     }
     
+    
+    /**
+     * rotates the current image by the given degrees<br>
+     * this is a destructive change, it will fill the rest with transparency if needed
+     * @param degree
+     */
     public void rotateImage(double degree)
     {
     	if(this.image == null)
@@ -875,16 +1069,30 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
+    /**
+     * allows the user to drag to move the image, assuming the proper drag mode
+     * @param allow
+     */
     public void setImageDraggable(boolean allow)
     {
     	this.allowDrag = allow;
     }
     
+    
+    /**
+     * gets if the user is allowed to drag the image
+     * @return
+     */
     public boolean getImageDraggable()
     {
     	return this.allowDrag;
     }
     
+    
+    /**
+     * sets if the user is allowed to make and handle a selection area
+     * @param allow
+     */
     public void setAllowSelection(boolean allow)
     {
     	this.allowSelection = allow;
@@ -895,11 +1103,21 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	}
     }
     
+    
+    /**
+     * gets if the user is alloed to make selections
+     * @return
+     */
     public boolean getAllowSelection()
     {
     	return this.allowSelection;
     }
     
+    
+    /**
+     * sets the selection color to the given color
+     * @param c
+     */
     public void setSelectionColor(Color c)
     {
     	this.selectionColor = c;
@@ -909,11 +1127,21 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		this.repaint();
     }
     
+    
+    /**
+     * gets the selection color
+     * @return
+     */
     public Color getSelectionColor()
     {
     	return this.selectionColor;
     }
     
+    
+    /**
+     * sets the selection render a dashed style line 
+     * @param isDashed
+     */
     public void setSelectionDashed(boolean isDashed)
     {
     	this.drawDashedSelection = isDashed;
@@ -922,22 +1150,34 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     		this.repaint();
     }
     
+    
+    /**
+     * gets if the selection is rendered with a dashed style 
+     * @return
+     */
     public boolean isSelectionDashed()
     {
     	return this.drawDashedSelection;
     }
     
-    public void setGreyscale()
+    
+    /**
+     * makes the image greyscale
+     */
+    public void greyscaleImage()
     {
     	if(this.image == null)
     		return; 
     	
-//    	ImageUtil.convertGreyscale(this.image);
     	this.image.convertGreyscale();
     	this.repaint();
     }
     
-    public void setInverse()
+    
+    /**
+     * inverts the current image
+     */
+    public void invertImage()
     {
     	if(this.image == null)
     		return; 
@@ -947,6 +1187,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.repaint();
     }
     
+    
+    /**
+     * shows the image at 100% zoom factor
+     */
     public void showActualImageSize()
     {
     	if(this.drawMode != ImageDrawMode.RESIZEABLE)
@@ -956,6 +1200,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.CenterCurrentImageWithoutResize();
     }
     
+    
+    /**
+     * centers the image without resizing it visually
+     */
     public void CenterCurrentImageWithoutResize()
     {
     	if (this.image == null )
@@ -969,6 +1217,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
        this.repaint();
     }
     
+    
+    /**
+     * centers the image and resizes it to fit the control
+     */
     public void CenterCurrentImage()
     {
         if (this.image == null)
@@ -1029,12 +1281,20 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
         this.repaint();
     }
     
+    
+    /**
+     * zooms the image to fit and repaints the control
+     */
     public void ZoomToFit()
     {
     	_ZoomToFit();
     	repaint();
     }
     
+    
+    /**
+     * zooms to fit but does not repaint the control
+     */
     private void _ZoomToFit()
     {
         if (this.imageWidth <= 0 || this.imageHeight <= 0)
@@ -1071,61 +1331,111 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
+    /**
+     * gets the current image
+     * @return
+     */
     public ImageBase getImage()
     {
     	return this.image;
     }
     
     
+    /**
+     * gets the image width
+     * @return
+     */
     public int getImageWidth()
     {
     	return this.imageWidth;
     }
     
+    
+    /**
+     * gets the image height
+     * @return
+     */
     public int getImageHeight()
     {
     	return this.imageHeight;
     }
     
     
+    /**
+     * gets the background color 1
+     * @return
+     */
     public Color getCellColor1()
     {
     	return this.cellColor1;
     }
     
+    
+    /**
+     * sets the background color 1
+     * @param c
+     */
     public void setCellColor1(Color c)
     {
     	this.cellColor1 = c;
     }
     
     
-    
+    /**
+     * gets the background color 2 
+     * @return
+     */
     public Color getCellColor2()
     {
     	return this.cellColor2;
     }
     
+    
+    /**
+     * sets the background color 2
+     * @param c
+     */
     public void setCellColor2(Color c)
     {
     	this.cellColor2 = c;
     }
     
+    
+    /**
+     * gets the color of the image border
+     * @return
+     */
     public Color getImageBorderColor()
     {
     	return this.imageBorderColor;
     }
     
+    
+    /**
+     * sets the image border color 
+     * @param c
+     */
     public void setImageBorderColor(Color c)
     {
     	this.imageBorderColor = c;
     	this.repaint();
     }
     
+    
+    /**
+     * gets the current zoom as a percentage
+     * @return
+     */
     public int getZoomPercent()
     {
     	return (int)(this._zoom * 100);
     }
     
+    
+    /**
+     * sets the current zoom, assumes a percentage < MAX_ZOOM_PERCENT and > MIN_ZOOM_PERCENT 
+     * @param value the percentage of zoom
+     */
     public void setZoomPercent(int value)
     {
     	if(value > MAX_ZOOM_PERCENT || 
@@ -1138,6 +1448,10 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
+    /**
+     * sets the zoom level and centers the image
+     * @param value
+     */
     public void setZoomPercentAndZoomCenter(int value)
     {
     	if(value > MAX_ZOOM_PERCENT || 
@@ -1154,11 +1468,20 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     }
     
     
+    /**
+     * gets the current zoom level
+     * @return
+     */
     public double getZoom() 
     {
 		return this._zoom;
 	}
     
+    
+    /**
+     * sets the current zoom level
+     * @param value
+     */
     public void setZoom(double value) 
     {
     	if (value > MAX_ZOOM ||
@@ -1170,18 +1493,32 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
         this.onImageZoomChanged();
 	}
     
+    
+    /**
+     * sets if the control should draw the image border
+     * @param border
+     */
     public void setDrawBorder(boolean border)
     {
     	this.drawImageBorder = border;
     	this.repaint();
     }
     
+    
+    /**
+     * gets if the image border is being shown
+     * @return
+     */
     public boolean getImageBorder()
     {
     	return this.drawImageBorder;
     }
     
     
+    /**
+     * sets if animation should be paused
+     * @param isPaused
+     */
     public void setAnimationPaused(boolean isPaused)
     {
     	this.animationPaused = isPaused;
@@ -1198,11 +1535,21 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	this.repaint();
     }
     
+    
+    /**
+     * gets if animation is paused
+     * @return
+     */
     public boolean getAnimationPaused()
     {
     	return this.animationPaused;
     }
     
+    
+    /**
+     * sets the current frame of an animation
+     * @param index
+     */
     public void setAnimationFrame(int index)
     {
     	if(!this.isAnimating)
@@ -1215,6 +1562,7 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
     	if(this.isAnimating)
     		setAnimationPaused(true);
     }
+    
 
     /**
      * sets the {@link AntiAliasing} and repaints the control
@@ -1482,9 +1830,28 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 		
 		double mouseOffsetX = mousePosition.getX() - this.drX;
 		double mouseOffsetY = mousePosition.getY() - this.drY;
-		
+
 		this.drX = (int)(drX - ((mouseOffsetX / scaleRatio) - mouseOffsetX));
 		this.drY = (int)(drY - ((mouseOffsetY / scaleRatio) - mouseOffsetY));
+
+		
+		// this isn't perfect but it's the best i got rn
+		// it for the most part keeps the selection in the same spot, but moves it slightly
+		// would be nice to get it perfect but i'm not sure what i'd need to change for that to happen
+		if(this.selectionArea.checkInvalid())
+			return;
+
+		scaleRatio = Math.abs((this.selectionArea.getWidth() * beforeZoom) / (this.selectionArea.getWidth() * nowZoom));
+		
+		mouseOffsetX = mousePosition.getX() - this.selectionArea.x1;
+		mouseOffsetY = mousePosition.getY() - this.selectionArea.y1;
+		this.selectionArea.x1 = (int)(this.selectionArea.x1 - ((mouseOffsetX / scaleRatio) - mouseOffsetX));
+		this.selectionArea.y1 = (int)(this.selectionArea.y1 - ((mouseOffsetY / scaleRatio) - mouseOffsetY));
+
+		mouseOffsetX = mousePosition.getX() - this.selectionArea.x2;
+		mouseOffsetY = mousePosition.getY() - this.selectionArea.y2;
+		this.selectionArea.x2 = (int)(this.selectionArea.x2 - ((mouseOffsetX / scaleRatio) - mouseOffsetX));
+		this.selectionArea.y2 = (int)(this.selectionArea.y2 - ((mouseOffsetY / scaleRatio) - mouseOffsetY));
 	}
     
     
@@ -1872,8 +2239,16 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
 			if(this.drawMode != ImageDrawMode.RESIZEABLE && this.drawMode != ImageDrawMode.ACTUAL_SIZE)
 				return;
 			
-			this.drX -= this.lastClickPoint.x - e.getX();
-			this.drY -= this.lastClickPoint.y - e.getY();
+			final int xoff = this.lastClickPoint.x - e.getX();
+			final int yoff = this.lastClickPoint.y - e.getY();
+			
+			this.drX -= xoff;
+			this.drY -= yoff;
+			
+			this.selectionArea.x1 -= xoff; 
+			this.selectionArea.x2 -= xoff;
+			this.selectionArea.y1 -= yoff; 
+			this.selectionArea.y2 -= yoff;
 			
 			if(this.drX > this.getWidth())
 				this.drX = this.getWidth();
@@ -1912,6 +2287,9 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
         // // int spins = Math.Abs(e.Delta / SystemInformation.MouseWheelScrollDelta);
         
         double beforeZoom = this._zoom;
+        
+        int dx = this.drX;
+        int dy = this.drY;
         
         if(e.getWheelRotation() < 0)
         {
