@@ -2044,6 +2044,8 @@ public class ImageDisplay extends JPanel implements MouseListener, MouseMotionLi
      */
     public int FindNearest(int zoomLevel)
     {
+    	// TODO: use a binary search here 
+    	
         int nearestValue = 0;
         int nearestDifference = Math.abs(ZOOM_PERCENT[0] - zoomLevel);
         

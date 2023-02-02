@@ -1,4 +1,5 @@
 import java.awt.EventQueue;
+import java.util.Arrays;
 import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -8,9 +9,11 @@ import javax.swing.JFrame;
 import org.im4java.process.ProcessStarter;
 
 import UI.MainForm;
+import Util.IOHelper;
 import Util.ParamRunnable;
 import Util.SingleInstanceChecker;
 import Util.Logging.LogUtil;
+import Util.Logging.LoggerWrapper;
 
 
 public class Program extends JFrame 
@@ -55,7 +58,7 @@ public class Program extends JFrame
 	        System.exit(0);
 	    }
 	
-	    
+	    LoggerWrapper.info("OS: " + IOHelper.OsCheck.getOperatingSystemType());
 	    
 		EventQueue.invokeLater(new Runnable() 
 		{

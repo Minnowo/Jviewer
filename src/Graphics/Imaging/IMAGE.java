@@ -1,6 +1,8 @@
 package Graphics.Imaging;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -20,6 +22,7 @@ import Util.StringUtil;
 public class IMAGE extends ImageBase 
 {
 	private BufferedImage image;
+	private BufferedImage image2;
 	
 	public IMAGE()
 	{
@@ -109,7 +112,7 @@ public class IMAGE extends ImageBase
 				return false;
 			}
 			
-			try 
+			try
 			{
 				BufferedImage i = ImageIO.read(path);
 				

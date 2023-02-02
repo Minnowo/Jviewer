@@ -1,9 +1,9 @@
 package UI;
 
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.Frame;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
@@ -13,15 +13,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,7 +24,6 @@ import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
@@ -81,7 +75,7 @@ import UI.ImageDisplay.Enums.ImageDrawMode;
 import UI.ImageDisplay.Enums.InterpolationMode;
 import UI.ImageDisplay.Enums.RenderQuality;
 import Util.ClipboardHelper;
-import Util.Logging.LogUtil;
+import Util.IOHelper;
 import Util.Logging.LoggerWrapper;
 
 public class MainForm extends JFrame implements ImageDisplayListener, ChangeListener, ThreadCompleteListener
@@ -240,6 +234,8 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	};
 	
 	ActionListener cropToSelectionAction = new ActionListener() { public void actionPerformed(ActionEvent e) { cropToSelection(); } };
+	
+	ActionListener askOverrideImage = new ActionListener() { public void actionPerformed(ActionEvent e) { askOverwriteImage(); } };
 	
 	ActionListener askSaveImage = new ActionListener() { public void actionPerformed(ActionEvent e) { askSaveImage(); } };
      
@@ -460,7 +456,24 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		mnNewMenu.add(mntmNewMenuItem_13);
 		
 		JMenuItem mntmNewMenuItem_1 = new JMenuItem("Save");
+		mntmNewMenuItem_1.addActionListener(askOverrideImage);
 		mnNewMenu.add(mntmNewMenuItem_1);
+		
+		mntmNewMenuItem_17 = new JMenuItem("Reveal In Explorer");
+		mntmNewMenuItem_17.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				if(getCurrentDisplay() == null)
+					return;
+		
+				IOHelper.openFileExplorerToPath(getCurrentDisplay().getCurrentPath());
+			}
+		});
+		
+		mntmNewMenuItem_18 = new JMenuItem("Save As");
+		mntmNewMenuItem_18.addActionListener(askSaveImage);
+		mnNewMenu.add(mntmNewMenuItem_18);
+		mnNewMenu.add(mntmNewMenuItem_17);
 		
 		JMenu mnNewMenu_1 = new JMenu("Edit");
 		menuBar.add(mnNewMenu_1);
@@ -971,6 +984,46 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 		
 	}
 	
+
+	public void askOverwriteImage()
+	{
+		if(getCurrentDisplay().getImage() == null)
+			return;
+		
+		int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to write changes to the current image?");
+		
+		switch (result) 
+		{
+			default:
+			case JOptionPane.NO_OPTION:
+			case JOptionPane.CANCEL_OPTION:
+				return;
+			case JOptionPane.YES_OPTION:
+				break;
+		}
+		
+		NotifyingThread t = new NotifyingThread() 
+      {	 
+	       	 @Override
+	       	 public void doRun()
+	       	 {
+	       		 showProgressBar();
+	       		 
+       			 if(!ImageUtil.SaveImageOntoSelf(getCurrentDisplay().getImage(), getCurrentDisplay().getCurrentPathOrTempPath()))
+       			 {
+       				 LoggerWrapper.warning("Failed to save image onto itself");
+       			 }
+	       		 
+	       		 resetProgressbar();
+	       	 }
+      };
+      
+      this.threadCount += 1;
+      t.addListener(this);
+      t.start();
+		
+	}
+	
 	public void askRotateImage()
 	{
 		if(getCurrentDisplay().getImage() == null)
@@ -1112,6 +1165,8 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 	private JCheckBoxMenuItem allowSelectionMenuItem;
 	private JCheckBoxMenuItem allowImageDragMenuItem;
 	private JMenuItem mntmNewMenuItem_16;
+	private JMenuItem mntmNewMenuItem_17;
+	private JMenuItem mntmNewMenuItem_18;
 	public void handleStartArgument(String arg)
 	{
 		if(arg.contains("="))
@@ -1133,8 +1188,7 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 			
 			return;
 		}
-		
-		
+
 		File f = new File(arg);
 		
 		// limit to 5 for now to prevent computer dying here from accidentally opening way more 
@@ -1144,6 +1198,12 @@ public class MainForm extends JFrame implements ImageDisplayListener, ChangeList
 			openedImaegs++;
 			
 			openInNewTab(f);
+		}
+		else 
+		{
+			// there's a good chance if the file has text like chinese or japanese characters
+			// it will not get the correct string for the file path, 
+			LoggerWrapper.warning(String.format("File %s does not exist", f));
 		}
 	}
 	

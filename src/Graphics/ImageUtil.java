@@ -1,6 +1,5 @@
 package Graphics;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -11,17 +10,15 @@ import java.awt.Toolkit;
 import java.awt.Transparency;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferInt;
-import java.awt.image.DirectColorModel;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.ImageFilter;
 import java.awt.image.ImageProducer;
 import java.awt.image.ImagingOpException;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,10 +37,11 @@ import Graphics.Imaging.ImageDetector;
 import Graphics.Imaging.Enums.ImageFormat;
 import Graphics.Imaging.Exceptions.ImageUnsupportedException;
 import Graphics.Imaging.Gif.GIF;
-import Graphics.Imaging.Gif.GIF2;
 import Graphics.Imaging.Gif.GifEncoder;
+import Util.IOHelper;
 import Util.StringUtil;
 import Util.Logging.LogUtil;
+import Util.Logging.LoggerWrapper;
 
 public class ImageUtil 
 {	
@@ -419,7 +417,7 @@ public class ImageUtil
 		}
 		else 
 		{
-			// input image path
+			// input image path, take only first image in the file
 			op.addImage(path + "[0]");
 		}
 		
@@ -600,6 +598,53 @@ public class ImageUtil
 			db.setElem(i, (a << 24) + (grey << 16) + (grey << 8) + grey);
 			
 		}
+	}
+	
+	
+	
+	public static boolean SaveImageOntoSelf(ImageBase image, File path)
+	{
+		File tempDir = path.getParentFile();
+
+		
+		if(!tempDir.isDirectory())
+			throw new IllegalArgumentException("Given file's parent is not a directory");
+		
+		File filePath = IOHelper.getTempFilePath(path.getName(), StringUtil.getFileExtension(path, false), tempDir);
+		
+		LoggerWrapper.log(Level.INFO, String.format("creating temp file: %s", filePath));
+		
+		boolean success = path.renameTo(filePath);
+		
+		if(!success)
+		{
+			LoggerWrapper.warning(String.format("Could not rename %s", path));
+			return false;
+		}
+		
+		try 
+		{
+			success = saveImage(image, path);
+		} 
+		catch (ImageUnsupportedException e) 
+		{
+			LoggerWrapper.warning(String.format("Image type unsupported for %s", path), e);
+			return false;
+		}
+		
+		if(!success)
+		{
+			success = filePath.renameTo(path);
+			
+			if(!success)
+			{
+				LoggerWrapper.warning(String.format("Could not unrename original file path from %s to %s", filePath, path));
+			}
+			
+			return false;
+		}
+		
+		return true;
 	}
 }
 

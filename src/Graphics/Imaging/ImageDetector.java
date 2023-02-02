@@ -162,9 +162,12 @@ public class ImageDetector
     {
     	File f = new File(path);
     	
-    	try 
+    	try (
+    			FileInputStream fis = new FileInputStream(f);
+    			BufferedInputStream bis = new BufferedInputStream(fis);
+    			DataInputStream is = new DataInputStream(bis))
     	{
-			DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
+			
 			
 			byte[] magicBytes = new byte[MAX_HEADER_LENGTH];
 			
