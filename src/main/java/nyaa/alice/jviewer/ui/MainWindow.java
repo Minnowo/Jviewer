@@ -53,6 +53,7 @@ import org.im4java.process.ProcessStarter;
 
 import nyaa.alice.jviewer.data.ClipboardUtil;
 import nyaa.alice.jviewer.data.logging.WrappedLogger;
+import nyaa.alice.jviewer.drawing.imaging.DitherUtil;
 import nyaa.alice.jviewer.drawing.imaging.ImageAnimation;
 import nyaa.alice.jviewer.drawing.imaging.ImageBase;
 import nyaa.alice.jviewer.drawing.imaging.ImageOne;
@@ -95,7 +96,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
     JToolBar toolBar;
     JButton barSave, barEdit, barClear;
     JSplitPane mainSplitPane;
-//    ImageDisplay mainDisplay;
+    // ImageDisplay mainDisplay;
     JSpinner zoomPercentSpinner;
     JLabel statusLabel;
     JComboBox<ComboBoxItemInt> comboboxInterpolationMode;
@@ -120,10 +121,10 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
                         .getTransferData(DataFlavor.javaFileListFlavor);
 
                 openFilesAsync(droppedFiles);
-//              for (File file : droppedFiles) 
-//              {
-//                  openInNewTab(file);
-//              }
+                // for (File file : droppedFiles)
+                // {
+                // openInNewTab(file);
+                // }
             }
             catch (Exception e)
             {
@@ -598,6 +599,16 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         });
         mnNewMenu_1.add(mntmNewMenuItem_12);
 
+        mntmNewMenuItem_19 = new JMenuItem("Dither");
+        mntmNewMenuItem_19.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                ditherImage();
+            }
+        });
+        mnNewMenu_1.add(mntmNewMenuItem_19);
+
         mnNewMenu_3 = new JMenu("View");
         menuBar.add(mnNewMenu_3);
 
@@ -639,8 +650,8 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         chckbxmntmNewCheckItem_3.addItemListener(ilToggleAnimation);
         mnNewMenu_3.add(chckbxmntmNewCheckItem_3);
 
-//      mnNewMenu_3.add(comboBoxRenderQuality);
-//      mnNewMenu_3.add(comboBoxAntiAliasingMode);
+        // mnNewMenu_3.add(comboBoxRenderQuality);
+        // mnNewMenu_3.add(comboBoxAntiAliasingMode);
 
         JMenu mnNewMenu_2 = new JMenu("Window");
         menuBar.add(mnNewMenu_2);
@@ -722,19 +733,19 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         {
             public void actionPerformed(ActionEvent e)
             {
-//              if(avlft != null)
-//              {
-//                  if(currentFile == null)
-//                  {
-//                      
-//                      currentFile = avlft.getFirstPath();
-//                      System.out.println(currentFile);
-//                      return;
-//                  }
-//                  
-//                  currentFile = avlft.inOrderSuccessor(currentFile);
-//                  System.out.println(currentFile);
-//              }
+                // if(avlft != null)
+                // {
+                // if(currentFile == null)
+                // {
+                //
+                // currentFile = avlft.getFirstPath();
+                // System.out.println(currentFile);
+                // return;
+                // }
+                //
+                // currentFile = avlft.inOrderSuccessor(currentFile);
+                // System.out.println(currentFile);
+                // }
             }
         });
         mnNewMenu_4.add(mntmNewMenuItem_15);
@@ -781,9 +792,9 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
 
         // create the status bar panel and shove it down the bottom of the frame
         statusPanel = new JPanel();
-//      statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
+        // statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
 
-//      statusPanel.setPreferredSize(new Dimension(getWidth(), 16));
+        // statusPanel.setPreferredSize(new Dimension(getWidth(), 16));
         statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
         statusLabel = new JLabel("");
         statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
@@ -1153,6 +1164,18 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         getCurrentDisplay().invertImage();
     }
 
+    public void ditherImage()
+    {
+        if (getCurrentDisplay() == null)
+            return;
+
+//        if (getCurrentDisplay().getImage() == null)
+//            return;
+
+        
+        getCurrentDisplay().ditherImage();
+    }
+
     Runnable runProgressBar = new Runnable()
     {
         public void run()
@@ -1231,6 +1254,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
     private JMenuItem mntmNewMenuItem_16;
     private JMenuItem mntmNewMenuItem_17;
     private JMenuItem mntmNewMenuItem_18;
+    private JMenuItem mntmNewMenuItem_19;
 
     public void handleStartArgument(String arg)
     {

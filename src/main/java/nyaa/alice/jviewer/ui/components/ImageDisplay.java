@@ -32,6 +32,10 @@ import nyaa.alice.jviewer.drawing.imaging.ImageAnimation;
 import nyaa.alice.jviewer.drawing.imaging.ImageBase;
 import nyaa.alice.jviewer.drawing.imaging.ImageOne;
 import nyaa.alice.jviewer.drawing.imaging.ImageUtil;
+import nyaa.alice.jviewer.drawing.imaging.dithering.Ditherer;
+import nyaa.alice.jviewer.drawing.imaging.dithering.Ditherer.WorkerData;
+import nyaa.alice.jviewer.drawing.imaging.dithering.Dithers;
+import nyaa.alice.jviewer.drawing.imaging.dithering.Transforms.MonochromePixelTransform;
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
 import nyaa.alice.jviewer.drawing.imaging.enums.Rotation;
 import nyaa.alice.jviewer.system.GeneralSettings;
@@ -1167,6 +1171,25 @@ public class ImageDisplay extends JPanel
         this.repaint();
     }
 
+    public void ditherImage()
+    {
+        if(this.image == null)
+            return;
+        
+        WorkerData data = new WorkerData();
+        
+        data.width = this.imageWidth;
+        data.height = this.imageHeight;
+        data.dither = new Dithers.AtkinsonDithering();
+        data.transform = new MonochromePixelTransform((byte)1);
+        data.image = this.image.getBuffered();
+        
+        Ditherer.GetTransformedImage(data);
+        
+//        this.image.setBuffered(buff);
+        this.repaint();
+    }
+    
     /**
      * shows the image at 100% zoom factor
      */

@@ -68,6 +68,8 @@ public abstract class ImageBase
 
     public abstract boolean save(File path) throws ImageUnsupportedException;
 
+    public abstract void setBuffered(BufferedImage buff);
+    
     public abstract void flush();
 
     public abstract void rotate(Byte r);

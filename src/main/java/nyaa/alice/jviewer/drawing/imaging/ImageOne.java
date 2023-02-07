@@ -20,8 +20,7 @@ import nyaa.alice.jviewer.system.ImageMagickSettings;
 public class ImageOne extends ImageBase
 {
 	private BufferedImage image;
-	private BufferedImage image2;
-	
+
 	public ImageOne()
 	{
 		super(ImageFormat.BMP);
@@ -331,4 +330,12 @@ public class ImageOne extends ImageBase
 		// TODO Auto-generated method stub
 		return super.error;
 	}
+
+    @Override
+    public void setBuffered(BufferedImage buff)
+    {
+        this.image = buff;
+        this.width = buff.getWidth();
+        this.height = buff.getHeight();
+    }
 }

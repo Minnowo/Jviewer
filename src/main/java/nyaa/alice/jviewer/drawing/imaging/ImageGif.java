@@ -370,4 +370,11 @@ public class ImageGif extends ImageAnimation
 		// TODO Auto-generated method stub
 		return super.error;
 	}
+
+    @Override
+    public void setBuffered(BufferedImage buff)
+    {
+        // TODO Auto-generated method stub
+        
+    }
 }
