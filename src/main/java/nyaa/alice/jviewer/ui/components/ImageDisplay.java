@@ -35,7 +35,9 @@ import nyaa.alice.jviewer.drawing.imaging.ImageUtil;
 import nyaa.alice.jviewer.drawing.imaging.dithering.Ditherer;
 import nyaa.alice.jviewer.drawing.imaging.dithering.Ditherer.WorkerData;
 import nyaa.alice.jviewer.drawing.imaging.dithering.Dithers;
-import nyaa.alice.jviewer.drawing.imaging.dithering.Transforms.MonochromePixelTransform;
+import nyaa.alice.jviewer.drawing.imaging.dithering.IErrorDiffusion;
+import nyaa.alice.jviewer.drawing.imaging.dithering.IPixelTransform;
+import nyaa.alice.jviewer.drawing.imaging.dithering.Transforms.SimpleIndexedPalettePixelTransform256;
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
 import nyaa.alice.jviewer.drawing.imaging.enums.Rotation;
 import nyaa.alice.jviewer.system.GeneralSettings;
@@ -240,6 +242,7 @@ public class ImageDisplay extends JPanel
      * the current image
      */
     private ImageBase image;
+    private BufferedImage ditherBuffer;
 
     /**
      * the current image width
@@ -902,16 +905,16 @@ public class ImageDisplay extends JPanel
         int width = this.getWidth();
         int height = this.getHeight();
 
-//        if (includePadding && this.getBorder() != null)
-//        {
-//        	Border b = this.getBorder();
-//        	
-//        	
-//            left += this.Padding.Left;
-//            top += this.Padding.Top;
-//            width -= this.Padding.Horizontal;
-//            height -= this.Padding.Vertical;
-//        }
+        // if (includePadding && this.getBorder() != null)
+        // {
+        // Border b = this.getBorder();
+        //
+        //
+        // left += this.Padding.Left;
+        // top += this.Padding.Top;
+        // width -= this.Padding.Horizontal;
+        // height -= this.Padding.Vertical;
+        // }
 
         return new Rect(left, top, width, height);
     }
@@ -1166,30 +1169,83 @@ public class ImageDisplay extends JPanel
         if (this.image == null)
             return;
 
-//    	ImageUtil.convertInverse(this.image);
+        // ImageUtil.convertInverse(this.image);
         this.image.convertInverse();
         this.repaint();
     }
 
-    public void ditherImage()
+    private WorkerData currentDitherData;
+    private boolean isDithering = false;
+
+    public void cancelDitherBufferCreation()
     {
-        if(this.image == null)
-            return;
-        
-        WorkerData data = new WorkerData();
-        
-        data.width = this.imageWidth;
-        data.height = this.imageHeight;
-        data.dither = new Dithers.AtkinsonDithering();
-        data.transform = new MonochromePixelTransform((byte)1);
-        data.image = this.image.getBuffered();
-        
-        Ditherer.GetTransformedImage(data);
-        
-//        this.image.setBuffered(buff);
-        this.repaint();
+        if(currentDitherData != null)
+            currentDitherData.cancel = true;
     }
     
+    public void createDitherBufferImage(IPixelTransform transform, IErrorDiffusion dither)
+    {
+        if (this.image == null || isDithering || (transform == null && dither == null))
+            return;
+
+        try
+        {
+            isDithering = true;
+            currentDitherData = new WorkerData();
+
+            currentDitherData.width = this.imageWidth;
+            currentDitherData.height = this.imageHeight;
+            currentDitherData.dither = dither;
+            currentDitherData.transform = transform;
+            currentDitherData.image = this.image.getBuffered();
+
+            if(ditherBuffer != null)
+                ditherBuffer.flush();
+            
+            ditherBuffer = Ditherer.getTransformImage(currentDitherData);
+        }
+        finally
+        {
+            isDithering = false;
+        }
+
+        this.repaint();
+    }
+
+    public void applyDitherFromBuffer()
+    {
+        if (this.ditherBuffer == null)
+            return;
+
+        this.image.setBuffered(ditherBuffer);
+        this.ditherBuffer = null;
+        this.currentDitherData = null;
+        System.gc(); 
+        
+        this.repaint();
+    }
+
+    public void clearDitherBuffer()
+    {
+        this.cancelDitherBufferCreation();
+        
+        if(ditherBuffer != null)
+        {
+            ditherBuffer.flush();
+            this.ditherBuffer = null;
+            this.currentDitherData = null;
+            System.gc();
+        }
+        else 
+        {
+            this.ditherBuffer = null;
+            this.currentDitherData = null;    
+        }
+        
+        
+        this.repaint();
+    }
+
     /**
      * shows the image at 100% zoom factor
      */
@@ -1251,15 +1307,15 @@ public class ImageDisplay extends JPanel
 
         case ImageDrawMode.ACTUAL_SIZE:
 
-//                if (iWidth < cWidth)
-//                {
+            // if (iWidth < cWidth)
+            // {
             this.drX = (cWidth >> 1) - (iWidth >> 1);
-//                }
+            // }
 
-//                if (iHeight < cheight)
-//                {
+            // if (iHeight < cheight)
+            // {
             this.drY = (cheight >> 1) - (iHeight >> 1);
-//                }
+            // }
             break;
 
         case ImageDrawMode.DOWNSCALE_IMAGE:
@@ -1958,8 +2014,16 @@ public class ImageDisplay extends JPanel
 
         // uses x1 x2 etc
         // so we need to add the x to the width
-        g.drawImage(image.getBuffered(), r.x, r.y, r.x + r.width, r.y + r.height, 0, 0, this.imageWidth,
-                this.imageHeight, this);
+        if (this.ditherBuffer != null)
+        {
+            g.drawImage(this.ditherBuffer, r.x, r.y, r.x + r.width, r.y + r.height, 0, 0, this.imageWidth,
+                    this.imageHeight, this);
+        }
+        else
+        {
+            g.drawImage(image.getBuffered(), r.x, r.y, r.x + r.width, r.y + r.height, 0, 0, this.imageWidth,
+                    this.imageHeight, this);
+        }
 
         // draw border around image bounds
         // this uses actual width / height for some reason?

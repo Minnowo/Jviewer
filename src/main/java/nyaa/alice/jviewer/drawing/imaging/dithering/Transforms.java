@@ -12,18 +12,18 @@ public class Transforms
 
         private final Color _white;
 
-        private final byte _threshold;
+        private final int _threshold;
 
-        public MonochromePixelTransform(byte threshold)
+        public MonochromePixelTransform(Integer threshold)
         {
-            _threshold = threshold;
+            _threshold = DitherHelper.clamp(threshold);
             _black = new Color(0, 0, 0);
             _white = new Color(255, 255, 255);
         }
 
         public Color Transform(Color pixel)
         {
-            byte gray = (byte) (0.299 * pixel.getRed() + 0.587 * pixel.getGreen() + 0.114 * pixel.getBlue());
+            int gray = DitherHelper.clamp((int)(0.299 * pixel.getRed() + 0.587 * pixel.getGreen() + 0.114 * pixel.getBlue()));
 
             /*
              * I'm leaving the alpha channel untouched instead of making it fully opaque
@@ -97,6 +97,23 @@ public class Transforms
 
     }
 
+    public static class SimpleIndexedPalettePixelTransform8 extends SimpleIndexedPalettePixelTransform
+    {
+      public SimpleIndexedPalettePixelTransform8()
+      { 
+          super(new Color[] {
+                  new Color(0, 0, 0),
+                  new Color(255, 0, 0),
+                  new Color(0, 255, 0),
+                  new Color(0, 0, 255),
+                  new Color(255, 255, 0),
+                  new Color(255, 0, 255),
+                  new Color(0, 255, 255),
+                  new Color(255, 255, 255)
+          });
+      }
+
+    }
     
     public static class SimpleIndexedPalettePixelTransform16 extends SimpleIndexedPalettePixelTransform
     {

@@ -58,6 +58,8 @@ import nyaa.alice.jviewer.drawing.imaging.ImageAnimation;
 import nyaa.alice.jviewer.drawing.imaging.ImageBase;
 import nyaa.alice.jviewer.drawing.imaging.ImageOne;
 import nyaa.alice.jviewer.drawing.imaging.ImageUtil;
+import nyaa.alice.jviewer.drawing.imaging.dithering.IErrorDiffusion;
+import nyaa.alice.jviewer.drawing.imaging.dithering.IPixelTransform;
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
 import nyaa.alice.jviewer.drawing.imaging.exceptions.ImageUnsupportedException;
 import nyaa.alice.jviewer.system.GeneralSettings;
@@ -73,11 +75,12 @@ import nyaa.alice.jviewer.ui.enums.AntiAliasing;
 import nyaa.alice.jviewer.ui.enums.ImageDrawMode;
 import nyaa.alice.jviewer.ui.enums.InterpolationMode;
 import nyaa.alice.jviewer.ui.enums.RenderQuality;
+import nyaa.alice.jviewer.ui.events.DitherPanelListener;
 import nyaa.alice.jviewer.ui.events.ImageDisplayImageSizeChangedEvent;
 import nyaa.alice.jviewer.ui.events.ImageDisplayListener;
 import nyaa.alice.jviewer.ui.events.ImageDisplayZoomChangedEvent;
 
-public class MainWindow extends JFrame implements ImageDisplayListener, ChangeListener, ThreadCompleteListener
+public class MainWindow extends JFrame implements ImageDisplayListener, ChangeListener, ThreadCompleteListener, DitherPanelListener
 {
 
     /**
@@ -170,6 +173,8 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
     final KeyAction NEXT_IMAGE = new KeyAction("NextImage", KeyboardSettings.NEXT_IMAGE_KEY, this::nextImage);
     final KeyAction PREV_IMAGE = new KeyAction("PrevImage", KeyboardSettings.PREV_IMAGE_KEY, this::prevImage);
 
+    private int splitPaneDividorLocation = 0;
+    
     ItemListener ilToggleAlwaysOnTop = new ItemListener()
     {
         public void itemStateChanged(ItemEvent e)
@@ -179,20 +184,20 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
     };
     ItemListener ilToggleLeftPane = new ItemListener()
     {
-        private int loc = 0;
+
 
         public void itemStateChanged(ItemEvent e)
         {
             if (e.getStateChange() != ItemEvent.SELECTED)
             {
-                loc = mainSplitPane.getDividerLocation();
+                splitPaneDividorLocation = mainSplitPane.getDividerLocation();
                 mainSplitPane.setDividerSize(0);
                 mainSplitPane.getLeftComponent().setVisible(false);
             }
             else
             {
                 mainSplitPane.getLeftComponent().setVisible(true);
-                mainSplitPane.setDividerLocation(loc);
+                mainSplitPane.setDividerLocation(splitPaneDividorLocation);
                 mainSplitPane.setDividerSize(GeneralSettings.MAIN_SPLIT_PANE_DIVISOR_SIZE);
             }
         }
@@ -1164,16 +1169,30 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         getCurrentDisplay().invertImage();
     }
 
+    
+    DitherPanel ditherPanel = null;
+    
     public void ditherImage()
     {
         if (getCurrentDisplay() == null)
             return;
-
-//        if (getCurrentDisplay().getImage() == null)
-//            return;
-
         
-        getCurrentDisplay().ditherImage();
+        checkSetupDitherPanel();
+            
+
+        mainSplitPane.getLeftComponent().setVisible(true);
+        mainSplitPane.setDividerLocation(splitPaneDividorLocation);
+        mainSplitPane.setDividerSize(GeneralSettings.MAIN_SPLIT_PANE_DIVISOR_SIZE);
+        mainSplitPane.setLeftComponent(this.ditherPanel);
+    }
+    
+    public void checkSetupDitherPanel()
+    {
+        if(this.ditherPanel != null)
+            return;
+        
+        this.ditherPanel = new DitherPanel();
+        this.ditherPanel.addDitherListener(this);
     }
 
     Runnable runProgressBar = new Runnable()
@@ -1497,5 +1516,53 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
     {
         WrappedLogger.info(String.format("thread %s exiting", t.getName()));
         this.threadCount -= 1;
+    }
+
+    
+    private ImageTabPage currentlyDithering;
+    
+    @Override
+    public void previewDither(IPixelTransform transform, IErrorDiffusion dither)
+    {
+        if(currentlyDithering != null)
+        {
+            currentlyDithering.cancelDitherBufferCreation();
+            currentlyDithering.createDitherBufferImage(transform, dither);
+        }
+        else 
+        {
+            currentlyDithering = getCurrentDisplay();
+            currentlyDithering.cancelDitherBufferCreation();
+            currentlyDithering.createDitherBufferImage(transform, dither);
+        }
+    }
+
+    @Override
+    public void cancelDither()
+    {
+        if(currentlyDithering == null) 
+        {
+            getCurrentDisplay().cancelDitherBufferCreation();
+            return;
+        }
+            
+        currentlyDithering.cancelDitherBufferCreation();
+        currentlyDithering = null;
+    }
+
+    @Override
+    public void applyDither()
+    {
+        if(currentlyDithering == null)
+            return;
+        currentlyDithering.applyDitherFromBuffer();
+    }
+
+    @Override
+    public void discardDither()
+    {
+        if(currentlyDithering == null)
+            return;
+        currentlyDithering.clearDitherBuffer();
     }
 }
