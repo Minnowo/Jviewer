@@ -6,5 +6,7 @@ public interface IErrorDiffusion
 {
     public void diffuse(Color[] data, Color original, Color transformed, int x, int y, int width, int height);
     
+    public void diffuse(int[] data, int original, int transformed, int x, int y, int width, int height);
+    
     public boolean prescan();
 }

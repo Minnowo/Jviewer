@@ -109,6 +109,66 @@ public class Dithers
             }
 
         }
+        
+        @Override
+        public void diffuse(int[] data, int original, int transformed, int x, int y, int width, int height)
+        {
+            int redError = ((original >> 16) & 0xff) - ((transformed >> 16) & 0xff);
+            int blueError = (original & 0xff) - (transformed & 0xff);
+            int greenError = ((original >> 8) & 0xff) - ((transformed >> 8) & 0xff);
+
+            for (int row = 0; row < _matrixHeight; row++)
+            {
+                int offsetY = y + row;
+
+                for (int col = 0; col < _matrixWidth; col++)
+                {
+                    int coefficient = _matrix[row][col];
+
+                    int offsetX = x + (col - _startingOffset);
+
+                    if (coefficient != 0 && offsetX > 0 && offsetX < width && offsetY > 0 && offsetY < height)
+                    {
+                        int offsetPixel;
+                        int offsetIndex;
+                        int newR;
+                        int newG;
+                        int newB;
+                        int r;
+                        int g;
+                        int b;
+
+                        offsetIndex = offsetY * width + offsetX;
+                        offsetPixel = data[offsetIndex];
+
+                        // if the UseShifting property is set, then bit shift the values by the
+                        // specified
+                        // divisor as this is faster than integer division. Otherwise, use integer
+                        // division
+
+                        if (_useShifting)
+                        {
+                            newR = (redError * coefficient) >> _divisor;
+                            newG = (greenError * coefficient) >> _divisor;
+                            newB = (blueError * coefficient) >> _divisor;
+                        }
+                        else
+                        {
+                            newR = redError * coefficient / _divisor;
+                            newG = greenError * coefficient / _divisor;
+                            newB = blueError * coefficient / _divisor;
+                        }
+
+                        r = DitherHelper.clamp(((offsetPixel >> 16) & 0xff)+ newR);
+                        g = DitherHelper.clamp(((offsetPixel >> 8) & 0xff) + newG);
+                        b = DitherHelper.clamp(((offsetPixel ) & 0xff) + newB);
+
+                        data[offsetIndex] = (((offsetPixel >> 24) &0xff) << 24) + + (r << 16) + (g << 8) + b;
+                    }
+                }
+            }
+
+        }
 
         @Override
         public boolean prescan()
@@ -174,6 +234,22 @@ public class Dithers
                 data[y * width + x] = new Color(r, g, b, original.getAlpha());
             }
         }
+        
+        public void diffuse(int[] data, int original, int transformed, int x, int y, int width, int height)
+        {
+            int row = y % _matrixHeight;
+            int col = x % _matrixWidth;
+            byte threshold = _matrix[col][row];
+
+            if (threshold > 0)
+            {
+                int r = DitherHelper.clamp(((transformed >> 16) &0xff) + threshold);
+                int g = DitherHelper.clamp(((transformed >> 8) &0xff) + threshold);
+                int b = DitherHelper.clamp(((transformed ) &0xff) + threshold);
+
+                data[y * width + x] = (((transformed >> 24) &0xff) << 24) + (r << 16) + (g << 8) + b;
+            }
+        }
 
         public boolean prescan()
         {
@@ -184,12 +260,13 @@ public class Dithers
     public static class RandomDithering implements IErrorDiffusion
     {
         private final Color _black;
-
+        private final int __black;
         private static final Color _blackDefault = new Color(0, 0, 0, 255);
 
         private final Random _random;
 
         private final Color _white;
+        private final int __white;
 
         private static final Color _whiteDefault = new Color(255, 255, 255, 255);
 
@@ -207,7 +284,9 @@ public class Dithers
         {
             _random = new Random(seed);
             _white = white;
+            __white = 0xFFFFFFFF;
             _black = black;
+            __black = 0;
         }
 
         public RandomDithering(int seed)
@@ -232,6 +311,20 @@ public class Dithers
             else
             {
                 data[y * width + x] = _black;
+            }
+        }
+        
+        public void diffuse(int[] data, int original, int transformed, int x, int y, int width, int height)
+        {
+            int gray = (int) (0.299 * ((original >> 16) & 0xff) + 0.587 * ((original >> 8) & 0xff) + 0.114 * (original & 0xff));
+
+            if (gray > _random.nextInt(0, 255))
+            {
+                data[y * width + x] = __white;
+            }
+            else
+            {
+                data[y * width + x] = __black;
             }
         }
 

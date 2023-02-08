@@ -866,7 +866,9 @@ public class ImageDisplay extends JPanel
             this.image.flush();
             this.image = null;
         }
-
+        
+        this.clearDitherBuffer();
+        
         if (image != null)
         {
             this.image = image;
@@ -1193,16 +1195,18 @@ public class ImageDisplay extends JPanel
             isDithering = true;
             currentDitherData = new WorkerData();
 
-            currentDitherData.width = this.imageWidth;
-            currentDitherData.height = this.imageHeight;
             currentDitherData.dither = dither;
             currentDitherData.transform = transform;
-            currentDitherData.image = this.image.getBuffered();
+            currentDitherData.imageToDither = this.image.getBuffered();
+            currentDitherData.includeAlpha =true;// this.image.getBuffered().getTransparency() == BufferedImage.TRANSLUCENT;
 
             if(ditherBuffer != null)
                 ditherBuffer.flush();
             
-            ditherBuffer = Ditherer.getTransformImage(currentDitherData);
+            long start = System.nanoTime();
+            ditherBuffer = Ditherer.getTransformImageInt(currentDitherData);
+            long stopms = (long) ((System.nanoTime() - start) / 1e6); 
+            WrappedLogger.info("Finished dither after " + stopms + "ms");
         }
         finally
         {

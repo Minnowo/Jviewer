@@ -3,6 +3,8 @@ package nyaa.alice.jviewer.drawing.imaging.dithering;
 import java.awt.Color;
 import java.util.HashMap;
 
+import nyaa.alice.jviewer.drawing.ColorUtil;
+
 public class Transforms
 {
 
@@ -11,7 +13,11 @@ public class Transforms
         private final Color _black;
 
         private final Color _white;
+        
+        private final int __black;
 
+        private final int __white;
+        
         private final int _threshold;
 
         public MonochromePixelTransform(Integer threshold)
@@ -19,6 +25,8 @@ public class Transforms
             _threshold = DitherHelper.clamp(threshold);
             _black = new Color(0, 0, 0);
             _white = new Color(255, 255, 255);
+            __black = 0;
+            __white = 0xffffffff;
         }
 
         public Color Transform(Color pixel)
@@ -33,49 +41,46 @@ public class Transforms
 
             return gray < _threshold ? _black : _white;
         }
+        
+        public int Transform(int pixel)
+        {
+            int gray = DitherHelper.clamp((int)(0.299 * ((pixel >> 16) & 0xff) + 0.587 * ((pixel >> 8) & 0xff) + 0.114 * (pixel & 0xff)));
 
+            /*
+             * I'm leaving the alpha channel untouched instead of making it fully opaque
+             * otherwise the transparent areas become fully black, and I was getting annoyed
+             * by this when testing images with large swathes of transparency!
+             */
+
+            return gray < _threshold ? __black : __white;
+        }
     }
 
     public static class SimpleIndexedPalettePixelTransform implements IPixelTransform
     {
         private final Color[] _map;
+        
+        private final int[] __map;
 
         private final HashMap<Color, Integer> _mapLookup;
+        
+        private final HashMap<Integer, Integer> __mapLookup;
 
         public SimpleIndexedPalettePixelTransform(Color[] map)
         {
             _map = map;
-            _mapLookup = new HashMap<Color, Integer>();
-        }
-
-        private int FindNearestColor(Color current)
-        {
-            int shortestDistance = Integer.MAX_VALUE;
-            int index = 0;
-
-            for (int i = 0; i < _map.length; i++)
+            __map = new int[_map.length];
+            
+            for(int i = 0; i < _map.length; ++i)
             {
-                Color match = _map[i];
-                int distance = this.GetDistance(current, match);
-
-                if (distance < shortestDistance)
-                {
-                    index = i;
-                    shortestDistance = distance;
-                }
+                __map[i] = ColorUtil.toARGB(_map[i]);
             }
-
-            return index;
+            
+            _mapLookup = new HashMap<Color, Integer>();
+            __mapLookup = new HashMap<>();
         }
 
-        private int GetDistance(Color current, Color match)
-        {
-            int redDifference = current.getRed() - match.getRed();
-            int greenDifference = current.getGreen() - match.getGreen();
-            int blueDifference = current.getBlue() - match.getBlue();
-
-            return redDifference * redDifference + greenDifference * greenDifference + blueDifference * blueDifference;
-        }
+        
 
         public Color Transform(Color pixel)
         {
@@ -83,7 +88,7 @@ public class Transforms
 
             if (!_mapLookup.containsKey(pixel))
             {
-                index = this.FindNearestColor(pixel);
+                index = ColorUtil.FindNearestColor(pixel, this._map);
 
                 _mapLookup.put(pixel, index);
             }
@@ -94,7 +99,24 @@ public class Transforms
 
             return _map[index];
         }
+        
+        public int Transform(int pixel)
+        {
+            int index;
 
+            if (!__mapLookup.containsKey(pixel))
+            {
+                index = ColorUtil.FindNearestColor(pixel, this.__map);
+
+                __mapLookup.put(pixel, index);
+            }
+            else
+            {
+                index = __mapLookup.get(pixel);
+            }
+
+            return __map[index];
+        }
     }
 
     public static class SimpleIndexedPalettePixelTransform8 extends SimpleIndexedPalettePixelTransform

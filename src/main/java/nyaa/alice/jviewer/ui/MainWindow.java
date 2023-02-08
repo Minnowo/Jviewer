@@ -1518,51 +1518,46 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         this.threadCount -= 1;
     }
 
-    
-    private ImageTabPage currentlyDithering;
-    
+
     @Override
     public void previewDither(IPixelTransform transform, IErrorDiffusion dither)
     {
-        if(currentlyDithering != null)
+        getCurrentDisplay().cancelDitherBufferCreation();
+        
+        NotifyingThread t = new NotifyingThread()
         {
-            currentlyDithering.cancelDitherBufferCreation();
-            currentlyDithering.createDitherBufferImage(transform, dither);
-        }
-        else 
-        {
-            currentlyDithering = getCurrentDisplay();
-            currentlyDithering.cancelDitherBufferCreation();
-            currentlyDithering.createDitherBufferImage(transform, dither);
-        }
+            @Override
+            public void doRun()
+            {
+                showProgressBar();
+
+                getCurrentDisplay().createDitherBufferImage(transform, dither);
+
+                resetProgressbar();
+            }
+        };
+
+        this.threadCount += 1;
+        t.addListener(this);
+        t.start();
+
     }
 
     @Override
     public void cancelDither()
-    {
-        if(currentlyDithering == null) 
-        {
-            getCurrentDisplay().cancelDitherBufferCreation();
-            return;
-        }
-            
-        currentlyDithering.cancelDitherBufferCreation();
-        currentlyDithering = null;
+    { 
+        getCurrentDisplay().cancelDitherBufferCreation();
     }
 
     @Override
     public void applyDither()
     {
-        if(currentlyDithering == null)
-            return;
-        currentlyDithering.applyDitherFromBuffer();
+        getCurrentDisplay().applyDitherFromBuffer();
     }
 
     @Override
     public void discardDither()
     {
-        if(currentlyDithering == null)
-            return;
-        currentlyDithering.clearDitherBuffer();
+        getCurrentDisplay().clearDitherBuffer();
     }
 }
