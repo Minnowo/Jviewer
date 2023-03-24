@@ -1341,6 +1341,8 @@ public class MainWindow extends JFrame
         }
 
         File f = new File(arg);
+        
+        Logger.debug("Opening file from start argument {}", f);
 
         // limit to 5 for now to prevent computer dying here from accidentally opening
         // way more

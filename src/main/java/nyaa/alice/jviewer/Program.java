@@ -1,14 +1,13 @@
 package nyaa.alice.jviewer;
 
 import java.awt.EventQueue;
-import java.util.Properties;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.StringJoiner;
 
 import javax.swing.JFrame;
 
 import org.im4java.process.ProcessStarter;
 import org.tinylog.Logger;
-import org.tinylog.configuration.Configuration;
 
 import nyaa.alice.jviewer.data.ParamRunnable;
 import nyaa.alice.jviewer.data.SingleInstanceChecker;
@@ -21,11 +20,20 @@ public class Program extends JFrame
 {
     public static MainWindow frame;
     
+    private static class TinylogHandler implements UncaughtExceptionHandler 
+    {
+        @Override
+        public void uncaughtException(Thread thread, Throwable ex) 
+        {
+            Logger.error("! === Unhandled Exception === !");
+            Logger.error(ex);
+        }
+    }
   
     public static void main(String[] args)
     {   
         ResourceLoader.loadTinyLogConfig();
-       
+        Thread.setDefaultUncaughtExceptionHandler(new TinylogHandler());
         
         ParamRunnable ru = new ParamRunnable()
         {
@@ -56,6 +64,7 @@ public class Program extends JFrame
         // ENSURE SINGLE INSTANCE
         if (!SingleInstanceChecker.INSTANCE.isOnlyInstance(ru, true, args))
         {
+            Logger.error("Failed single instance check, start arguments have been passed to running instance");
             System.exit(0);
         }
 
@@ -81,6 +90,7 @@ public class Program extends JFrame
 
                     frame.setVisible(true);
 
+                    Logger.info("Start arguments: [{}]", args);
                     frame.handleStartArguments(args);
 
                 }

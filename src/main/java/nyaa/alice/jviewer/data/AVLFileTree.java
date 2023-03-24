@@ -115,7 +115,7 @@ public class AVLFileTree
         if (!newDirectory.isDirectory())
             newDirectory = newDirectory.getParentFile();
 
-        if (!newDirectory.exists())
+        if (newDirectory == null || !newDirectory.exists())
             return false;
 
         this.clear();

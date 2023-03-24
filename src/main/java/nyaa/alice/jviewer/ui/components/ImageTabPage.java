@@ -147,12 +147,12 @@ public class ImageTabPage extends ImageDisplay
 
         String current = f.getAbsolutePath();
 
-        currentFilePath = f;
+        currentFilePath = new File(current);
 
-        // TODO: make this async or smth
-        if (!f.getParent().equalsIgnoreCase(directory.getDirectory()))
+        if (!currentFilePath.getParent().equalsIgnoreCase(directory.getDirectory()))
         {
-            directory.loadDirectoryAsync(path);
+            Logger.debug("Loading {} into AVL", currentFilePath.getParent());
+            directory.loadDirectoryAsync(currentFilePath.getParent());
         }
 
         // if your file isn't in the filter it won't be in the tree
