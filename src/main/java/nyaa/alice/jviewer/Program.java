@@ -1,25 +1,32 @@
 package nyaa.alice.jviewer;
 
 import java.awt.EventQueue;
+import java.util.Properties;
 import java.util.StringJoiner;
 
 import javax.swing.JFrame;
 
 import org.im4java.process.ProcessStarter;
 import org.tinylog.Logger;
+import org.tinylog.configuration.Configuration;
 
 import nyaa.alice.jviewer.data.ParamRunnable;
 import nyaa.alice.jviewer.data.SingleInstanceChecker;
 import nyaa.alice.jviewer.system.OS;
+import nyaa.alice.jviewer.system.ResourceLoader;
 import nyaa.alice.jviewer.system.ResourcePaths;
 import nyaa.alice.jviewer.ui.MainWindow;
 
 public class Program extends JFrame
 {
     public static MainWindow frame;
-
+    
+  
     public static void main(String[] args)
-    {
+    {   
+        ResourceLoader.loadTinyLogConfig();
+       
+        
         ParamRunnable ru = new ParamRunnable()
         {
             @Override

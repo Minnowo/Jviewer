@@ -1,0 +1,12 @@
+[2023-03-24 02:00:20.164] [WARN] Could not load tinylog.properties from resource, setting default values
+[2023-03-24 02:00:20.180] [INFO] OS: 2
+[2023-03-24 02:00:20.180] [INFO] Config: /home/minno/.config
+[2023-03-24 02:00:20.222] [WARN] IM4JAVA_TOOLPATH environment variable not set. Using PATH instead
+[2023-03-24 02:00:20.222] [INFO] Global Magick search path: /usr/local/sbin:/usr/local/bin:/usr/bin:/home/minno/.dotnet/tools:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl
+[2023-03-24 02:00:20.292] [WARN] Resource mainIcon.png is null, trying /resources/mainIcon.png
+[2023-03-24 02:00:20.292] [WARN] Resource mainIcon.png is null, trying ./resources/mainIcon.png
+[2023-03-24 02:00:20.292] [WARN] Resource mainIcon.png is null, trying resources/mainIcon.png
+[2023-03-24 02:00:20.292] [WARN] Resource mainIcon.png is null, trying /resources/mainIcon.png
+[2023-03-24 02:00:20.293] [WARN] Resource mainIcon.png is null, trying ./resources/mainIcon.png
+[2023-03-24 02:00:20.293] [WARN] Could not load resource mainIcon.png
+[2023-03-24 02:00:20.465] [DEBUG] Thread Thread-3 exiting

@@ -4,8 +4,9 @@ import java.nio.file.Path;
 
 public class ResourcePaths 
 {
-	public static final String MAIN_FORM_ICON_PATH = "/mainIcon.png";
+	public static final String MAIN_FORM_ICON_PATH = "mainIcon.png";
 
+	public static final String TINY_LOG_CONFIG_PATH = "tinylog.properties";
 	
 	public static final String HOME_PATH = System.getProperty("user.home");
 	
