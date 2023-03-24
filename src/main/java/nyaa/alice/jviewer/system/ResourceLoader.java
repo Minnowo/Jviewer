@@ -7,7 +7,8 @@ import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
+import org.tinylog.Logger;
+
 import nyaa.alice.jviewer.drawing.imaging.ImageUtil;
 
 public class ResourceLoader
@@ -20,7 +21,7 @@ public class ResourceLoader
         {
             if (in == null)
             {
-                WrappedLogger.warning("could not load resource: " + RESOURCE_PATH);
+                Logger.warn("Could not load resource {}", RESOURCE_PATH);
                 return null;
             }
 
@@ -28,7 +29,7 @@ public class ResourceLoader
 
             if (buff == null)
             {
-                WrappedLogger.warning("could not load image from resource: " + RESOURCE_PATH);
+                Logger.warn("Could not load image from resource {}", RESOURCE_PATH);
                 return null;
             }
 
@@ -36,7 +37,7 @@ public class ResourceLoader
         }
         catch (IOException e)
         {
-            WrappedLogger.warning(String.format("Error loading resource %s", RESOURCE_PATH), e);
+            Logger.warn("Error while loading resource {}", RESOURCE_PATH);
         }
 
         return null;

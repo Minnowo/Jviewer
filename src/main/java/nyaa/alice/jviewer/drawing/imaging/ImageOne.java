@@ -3,14 +3,13 @@ package nyaa.alice.jviewer.drawing.imaging;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
 
 import org.im4java.core.IM4JavaException;
+import org.tinylog.Logger;
 
 import nyaa.alice.jviewer.data.StringUtil;
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
 import nyaa.alice.jviewer.drawing.imaging.enums.Rotation;
 import nyaa.alice.jviewer.drawing.imaging.exceptions.ImageUnsupportedException;
@@ -79,7 +78,7 @@ public class ImageOne extends ImageBase
 		
 			final String absp = path.toString();
 			
-			WrappedLogger.log(Level.INFO, String.format("loading %s", absp));
+			Logger.info("Loading {}", path);
 			
 			super.imageFormat = imageFormat;
 	
@@ -96,13 +95,13 @@ public class ImageOne extends ImageBase
 				catch (IOException | InterruptedException | IM4JavaException e) 
 				{
 					super.error = true;
-					WrappedLogger.log(Level.WARNING, String.format("Failed to read image %s using ImageMagick:\nMessage: %s", path, e.getMessage()), e);
+					Logger.warn("Failed to read {} using ImageMagick: {}", path, e);
 				}
 			}
 		
 			if(!ImageFormat.hasNativeSupport(imageFormat))
 			{
-				WrappedLogger.log(Level.WARNING, String.format("unsupported image format %s, no native support", ImageFormat.getMimeType(imageFormat)));
+			    Logger.warn("Image type {} has no native support, ImageMagick is required", ImageFormat.getMimeType(imageFormat));
 				super.error = true;
 				super.width = 0;
 				super.height = 0;
@@ -115,7 +114,7 @@ public class ImageOne extends ImageBase
 				
 				if(i == null)
 				{
-					throw new IOException("unable to read image, ImageIO.read returned null");
+					throw new IOException("Unable to read image, ImageIO.read returned null");
 				}
 				
 			    this.image = ImageUtil.createOptimalImageFrom(i);
@@ -126,7 +125,7 @@ public class ImageOne extends ImageBase
 			} 
 			catch (IOException e) 
 			{
-				WrappedLogger.log(Level.WARNING, String.format("Failed to read image %s using ImageIO.read:\nMessage: %s", path, e.getMessage()), e);
+			    Logger.warn("Failed to read {} using ImageIO.read: {}", path, e);
 				super.error = true;
 				super.width = 0;
 				super.height = 0;
@@ -177,7 +176,7 @@ public class ImageOne extends ImageBase
 				} 
 	    		catch (IOException | InterruptedException | IM4JavaException e) 
 	    		{
-	    			WrappedLogger.log(Level.WARNING, String.format("Failed to save image %s using ImageMagick:\nMessage: %s", path, e.getMessage()), e);
+	    		    Logger.warn("Failed to save {} using ImageMagick: {}", path, e);
 				}
 	    	}
 	    	
@@ -196,7 +195,7 @@ public class ImageOne extends ImageBase
 	    	}
 	    	catch (IOException e) 
 	    	{
-	    		WrappedLogger.log(Level.WARNING, String.format("Failed to save image %s with ImageIO.write:\nMessage: %s", path, e.getMessage()), e);
+	    	    Logger.warn("Failed to save {} using ImageIO.write: {}", path, e);
 	    	}
 		}
 		finally 

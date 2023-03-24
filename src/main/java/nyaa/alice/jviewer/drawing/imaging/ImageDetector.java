@@ -8,8 +8,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 
-import nyaa.alice.jviewer.data.StringUtil;
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
+import org.tinylog.Logger;
+
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
 
 public class ImageDetector
@@ -241,8 +241,8 @@ public class ImageDetector
             return ImageFormat.UNKNOWN;
         }
 
-        WrappedLogger.warning("could not detect image format from bytes, using file extension");
+        Logger.warn("Unknown file format for: {}", path);
 
-        return ImageFormat.getFromFileExtension(StringUtil.getFileExtension(f));
+        return ImageFormat.UNKNOWN;
     }
 }

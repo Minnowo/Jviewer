@@ -8,9 +8,9 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.logging.Level;
 
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
+import org.tinylog.Logger;
+
 import nyaa.alice.jviewer.drawing.imaging.ImageUtil;
 
 public class ClipboardUtil
@@ -23,13 +23,13 @@ public class ClipboardUtil
 
         if (content == null)
         {
-            WrappedLogger.log(Level.INFO, "cannot read clipboard, content is null");
+            Logger.warn("Could not read clipboard, content is null");
             return null;
         }
 
         if (!content.isDataFlavorSupported(DataFlavor.imageFlavor))
         {
-            WrappedLogger.log(Level.INFO, "cannot read image from clipboard");
+            Logger.warn("Could not read image from clipboard: imageFlavor not supported");
             return null;
         }
 
@@ -40,8 +40,7 @@ public class ClipboardUtil
         }
         catch (UnsupportedFlavorException | IOException e)
         {
-            WrappedLogger.log(Level.WARNING, String.format("error getting image from clipboard: %s", e.getMessage()),
-                    e);
+            Logger.warn("Could not read image from clipboard: {}", e);
             return null;
         }
     }

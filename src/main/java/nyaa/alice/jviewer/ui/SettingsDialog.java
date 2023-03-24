@@ -8,7 +8,6 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.io.File;
-import java.util.logging.Level;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -19,9 +18,9 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import org.im4java.process.ProcessStarter;
+import org.tinylog.Logger;
 
 import nyaa.alice.jviewer.data.StringComparator;
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
 import nyaa.alice.jviewer.system.GeneralSettings;
 import nyaa.alice.jviewer.system.ImageMagickSettings;
 
@@ -54,30 +53,28 @@ public class SettingsDialog extends JDialog
 
         // update the changed settings here
         ImageMagickSettings.useImageMagick = chckbxNewCheckBox.isSelected();
-        WrappedLogger.log(Level.CONFIG,
-                String.format("updated setting 'UseImageMagick' set value '%s'", ImageMagickSettings.useImageMagick));
+        Logger.info("Updated setting 'UseImageMagick' set value '{}'", ImageMagickSettings.useImageMagick);
 
         ProcessStarter.setGlobalSearchPath(textArea.getText().replaceAll("\\r?\\n", File.pathSeparator));
-        WrappedLogger.log(Level.CONFIG, String.format("updated setting 'MagickGlobalSearchPath' set value '%s'",
-                ProcessStarter.getGlobalSearchPath()));
+        Logger.info("updated setting 'MagickGlobalSearchPath' set value '{}'",
+                ProcessStarter.getGlobalSearchPath());
 
         GeneralSettings.WRAP_TABS = chckbxNewCheckBox_1.isSelected();
-        WrappedLogger.log(Level.CONFIG,
-                String.format("updated setting 'WrapTabs' set value '%s'", GeneralSettings.WRAP_TABS));
+        Logger.info("updated setting 'WrapTabs' set value '{}'", GeneralSettings.WRAP_TABS);
 
         GeneralSettings.CENTER_IMAGE_ON_RESIZE = chckbxNewCheckBox_1_1.isSelected();
-        WrappedLogger.log(Level.CONFIG, String.format("updated setting 'CenterImageOnResize' set value '%s'",
-                GeneralSettings.CENTER_IMAGE_ON_RESIZE));
+        Logger.info("updated setting 'CenterImageOnResize' set value '{}'",
+                GeneralSettings.CENTER_IMAGE_ON_RESIZE);
 
         if (chckbxNewCheckBox_2.isSelected())
         {
             GeneralSettings.FILENAME_COMPARATOR = StringComparator.NATURAL_SORT_WIN_EXPLORER;
-            WrappedLogger.log(Level.CONFIG, "updated setting 'FilenameComparator' set value 'WindowsExplorerCompare'");
+            Logger.info("updated setting 'FilenameComparator' set value 'WindowsExplorerCompare'");
         }
         else
         {
             GeneralSettings.FILENAME_COMPARATOR = StringComparator.NATURAL_SORT;
-            WrappedLogger.log(Level.CONFIG, "updated setting 'FilenameComparator' set value 'NaturalOrderCompare'");
+            Logger.info("updated setting 'FilenameComparator' set value 'NaturalOrderCompare'");
         }
     }
 

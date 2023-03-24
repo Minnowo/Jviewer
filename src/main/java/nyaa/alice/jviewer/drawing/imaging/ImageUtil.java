@@ -17,7 +17,6 @@ import java.awt.image.ImageProducer;
 import java.awt.image.ImagingOpException;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
 
 import javax.swing.GrayFilter;
 
@@ -25,10 +24,10 @@ import org.im4java.core.ConvertCmd;
 import org.im4java.core.IM4JavaException;
 import org.im4java.core.IMOperation;
 import org.im4java.core.Stream2BufferedImage;
+import org.tinylog.Logger;
 
 import nyaa.alice.jviewer.data.PathUtil;
 import nyaa.alice.jviewer.data.StringUtil;
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
 import nyaa.alice.jviewer.drawing.imaging.enums.Rotation;
 import nyaa.alice.jviewer.drawing.imaging.exceptions.ImageUnsupportedException;
@@ -319,7 +318,7 @@ public class ImageUtil
         final String ext = StringUtil.getFileExtension(path, false);
         final byte imgFormat = ImageFormat.getFromFileExtension(ext);
 
-        WrappedLogger.info(String.format("saving image %s, detected file to save as (%d) (%s)", path, imgFormat, ext));
+        Logger.info("Saving {} as {}", path, ImageFormat.getMimeType(imgFormat));
 
         // TODO: fix this
         switch (imgFormat)
@@ -378,8 +377,7 @@ public class ImageUtil
     {
         final byte imageff = ImageDetector.getImageFormat(path);
 
-        WrappedLogger.log(Level.INFO,
-                String.format("detected image format (%d) (%s)", imageff, ImageFormat.getMimeType(imageff)));
+        Logger.debug("{} detected as {}", path, ImageFormat.getMimeType(imageff));
 
         switch (imageff)
         {
@@ -509,7 +507,7 @@ public class ImageUtil
         // handles the color convertion
         if (img.getTransparency() == Transparency.TRANSLUCENT && img.getType() != BufferedImage.TYPE_INT_ARGB)
         {
-            WrappedLogger.log(Level.INFO, "trying to invert none argb/rgb image, fallingback to convertIverse");
+            Logger.warn("Trying to invert non-argb/rgb image, falling back to alternative method");
             convertInverse1(img);
             return;
         }
@@ -605,13 +603,13 @@ public class ImageUtil
 
         File filePath = PathUtil.getTempFilePath(path.getName(), StringUtil.getFileExtension(path, false), tempDir);
 
-        WrappedLogger.log(Level.INFO, String.format("creating temp file: %s", filePath));
+        Logger.debug("Creating temp file {}", filePath);
 
         boolean success = path.renameTo(filePath);
 
         if (!success)
         {
-            WrappedLogger.warning(String.format("Could not rename %s", path));
+            Logger.warn("Could not rename {}", path);
             return false;
         }
 
@@ -621,21 +619,19 @@ public class ImageUtil
         }
         catch (ImageUnsupportedException e)
         {
-            WrappedLogger.warning(String.format("Image type unsupported for %s", path), e);
-            return false;
+            Logger.warn("Unable to save image onto itself");
         }
-
-        if (!success)
+        finally
         {
-            success = filePath.renameTo(path);
-
             if (!success)
             {
-                WrappedLogger
-                        .warning(String.format("Could not unrename original file path from %s to %s", filePath, path));
-            }
+                success = filePath.renameTo(path);
 
-            return false;
+                if (!success)
+                {
+                    Logger.warn("Could not restore backup to its original path from {} to {}", filePath, path);
+                }
+            }
         }
 
         return true;

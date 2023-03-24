@@ -10,7 +10,8 @@ import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
+import org.tinylog.Logger;
+
 import nyaa.alice.jviewer.drawing.imaging.ImageOne;
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
 
@@ -48,7 +49,7 @@ public class KraDecoder
         }
         catch (IOException e)
         {
-            WrappedLogger.warning("exception reading zip file", e);
+            Logger.warn("Exception while reading zip file: {}", e);
         }
         return false;
     }
@@ -61,11 +62,11 @@ public class KraDecoder
         {
             Path tempDirWithPrefix = Files.createTempDirectory("jview");
             filePath = File.createTempFile("tmp", ".png", tempDirWithPrefix.toFile());
-            WrappedLogger.info(String.format("creating temp file: %s", filePath));
+            Logger.info("Creating temp file {}", filePath);
         }
         catch (IOException e)
         {
-            WrappedLogger.warning(String.format("could not create temp file to load: %s", path), e);
+            Logger.warn("Could not create temp file");
             return null;
         }
 
@@ -74,9 +75,9 @@ public class KraDecoder
         // mergedimage.png is the full merged visible image
         // preview.png is the preview image shown in file explorer
         // find and extract them to a temp file
-        if (!zipSearch(new File(path), "mergedimage.png", filePath)
-                && !zipSearch(new File(path), "preview.png", filePath))
+        if (!zipSearch(new File(path), "mergedimage.png", filePath) && !zipSearch(new File(path), "preview.png", filePath))
         {
+            Logger.warn("Unable to find 'mergedimage.png' or 'preview.png' in .kra file");
             return null;
         }
 

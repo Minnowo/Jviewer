@@ -50,10 +50,9 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.im4java.process.ProcessStarter;
+import org.tinylog.Logger;
 
 import nyaa.alice.jviewer.data.ClipboardUtil;
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
-import nyaa.alice.jviewer.drawing.imaging.DitherUtil;
 import nyaa.alice.jviewer.drawing.imaging.ImageAnimation;
 import nyaa.alice.jviewer.drawing.imaging.ImageBase;
 import nyaa.alice.jviewer.drawing.imaging.ImageOne;
@@ -131,7 +130,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
             }
             catch (Exception e)
             {
-                WrappedLogger.warning("error recieving file drop", e);
+                Logger.warn("Error recieving file drop");
             }
         }
     };
@@ -865,7 +864,8 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
 
         StringBuilder sb = new StringBuilder();
 
-        WrappedLogger.info("changing size to " + i.getWidth() + " x " + i.getHeight());
+        Logger.debug("Status label changing size to {} x {}", i.getWidth(), i.getHeight());
+        
         sb.append(sep1 + i.getWidth() + " x " + i.getHeight());
 
         sb.append(sep2 + ImageFormat.getMimeType(i.GetImageFormat()));
@@ -1043,9 +1043,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
                 }
                 catch (ImageUnsupportedException e1)
                 {
-                    WrappedLogger.warning(String.format(
-                            "Could not save image %s imageMagick is required or the format is not supportd:\nMessage: %s",
-                            f.getAbsolutePath(), e1.getMessage()), e1);
+                    Logger.warn("Failed to save {}", f, e1);
                 }
 
                 resetProgressbar();
@@ -1086,7 +1084,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
                 if (!ImageUtil.SaveImageOntoSelf(getCurrentDisplay().getImage(),
                         getCurrentDisplay().getCurrentPathOrTempPath()))
                 {
-                    WrappedLogger.warning("Failed to save image onto itself");
+                    Logger.debug("Failed to save image onto itself");
                 }
 
                 resetProgressbar();
@@ -1312,7 +1310,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
             // there's a good chance if the file has text like chinese or japanese
             // characters
             // it will not get the correct string for the file path,
-            WrappedLogger.warning(String.format("File %s does not exist", f));
+            Logger.warn("File {} does not exist", f);
         }
     }
 
@@ -1514,7 +1512,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
     @Override
     public void notifyOfThreadComplete(NotifyingThread t)
     {
-        WrappedLogger.info(String.format("thread %s exiting", t.getName()));
+        Logger.debug("Thread {} exiting", t.getName());
         this.threadCount -= 1;
     }
 

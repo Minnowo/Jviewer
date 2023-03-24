@@ -21,12 +21,12 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
+import org.tinylog.Logger;
+
 import nyaa.alice.jviewer.drawing.ColorUtil;
 import nyaa.alice.jviewer.drawing.imaging.ImageAnimation;
 import nyaa.alice.jviewer.drawing.imaging.ImageBase;
@@ -34,10 +34,8 @@ import nyaa.alice.jviewer.drawing.imaging.ImageOne;
 import nyaa.alice.jviewer.drawing.imaging.ImageUtil;
 import nyaa.alice.jviewer.drawing.imaging.dithering.Ditherer;
 import nyaa.alice.jviewer.drawing.imaging.dithering.Ditherer.WorkerData;
-import nyaa.alice.jviewer.drawing.imaging.dithering.Dithers;
 import nyaa.alice.jviewer.drawing.imaging.dithering.IErrorDiffusion;
 import nyaa.alice.jviewer.drawing.imaging.dithering.IPixelTransform;
-import nyaa.alice.jviewer.drawing.imaging.dithering.Transforms.SimpleIndexedPalettePixelTransform256;
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
 import nyaa.alice.jviewer.drawing.imaging.enums.Rotation;
 import nyaa.alice.jviewer.system.GeneralSettings;
@@ -1206,7 +1204,8 @@ public class ImageDisplay extends JPanel
             long start = System.nanoTime();
             ditherBuffer = Ditherer.getTransformImageInt(currentDitherData);
             long stopms = (long) ((System.nanoTime() - start) / 1e6); 
-            WrappedLogger.info("Finished dither after " + stopms + "ms");
+            
+            Logger.debug("Finished dither after {}ms", stopms);
         }
         finally
         {
@@ -1832,7 +1831,7 @@ public class ImageDisplay extends JPanel
         // correct them here and reset it
         default:
 
-            WrappedLogger.log(Level.WARNING, "bad drawMode [" + this.drawMode + "], resetting to DOWNSCALE_IMAGE");
+            Logger.debug("Bad drawMode {}, resetting to DOWNSCALE_IMAGE", this.drawMode);
 
             this.drawMode = ImageDrawMode.DOWNSCALE_IMAGE;
 

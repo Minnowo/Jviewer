@@ -8,7 +8,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
+import org.tinylog.Logger;
+
 import nyaa.alice.jviewer.system.GeneralSettings;
 
 class AVLNode
@@ -80,7 +81,7 @@ public class AVLFileTree
                 isLoading = true;
                 loadDirectory(path);
                 isLoading = false;
-                WrappedLogger.info("load directory thread finished");
+                Logger.debug("Async directory load finished");
             }
         });
 
@@ -102,7 +103,7 @@ public class AVLFileTree
             }
             catch (InterruptedException e)
             {
-                WrappedLogger.warning("load directory thread interrupted on join", e);
+                Logger.warn("Load directory thread interrupted on join: {}", e);
             }
         }
     }

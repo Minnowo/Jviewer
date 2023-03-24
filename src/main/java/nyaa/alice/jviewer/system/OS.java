@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
+import org.tinylog.Logger;
 
 public class OS
 {
@@ -110,7 +110,7 @@ public class OS
         }
         catch (IOException e)
         {
-            WrappedLogger.warning(String.format("Failed to open %s in a file explorer", path), e);
+            Logger.warn("Failed to open {} in a file explorer", path);
         }
     }
 }

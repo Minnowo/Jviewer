@@ -2,17 +2,16 @@ package nyaa.alice.jviewer;
 
 import java.awt.EventQueue;
 import java.util.StringJoiner;
-import java.util.logging.Level;
 
 import javax.swing.JFrame;
 
 import org.im4java.process.ProcessStarter;
+import org.tinylog.Logger;
 
 import nyaa.alice.jviewer.data.ParamRunnable;
 import nyaa.alice.jviewer.data.SingleInstanceChecker;
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
-import nyaa.alice.jviewer.system.GeneralSettings;
 import nyaa.alice.jviewer.system.OS;
+import nyaa.alice.jviewer.system.ResourcePaths;
 import nyaa.alice.jviewer.ui.MainWindow;
 
 public class Program extends JFrame
@@ -41,7 +40,7 @@ public class Program extends JFrame
                     }
                 }
 
-                WrappedLogger.info(String.format("recieved %d arguments [%s]", args.length, sb.toString()));
+                Logger.info("Recieved start arguments: [{}]", sb.toString());
 
                 frame.bringToFront();
             }
@@ -53,7 +52,8 @@ public class Program extends JFrame
             System.exit(0);
         }
 
-        WrappedLogger.info("OS: " + OS.getOperatingSystemType());
+        Logger.info("OS: {}", OS.getOperatingSystemType());
+        Logger.info("Config: {}", ResourcePaths.CONFIG_PATH);
 
         EventQueue.invokeLater(new Runnable()
         {
@@ -63,26 +63,12 @@ public class Program extends JFrame
                 {
                     if (ProcessStarter.getGlobalSearchPath() == null)
                     {
-                        WrappedLogger.log(Level.INFO,
-                                "could not find environmental variable IM4JAVA_TOOLPATH, using PATH instead");
+                        Logger.warn("IM4JAVA_TOOLPATH environment variable not set. Using PATH instead");
 
                         ProcessStarter.setGlobalSearchPath(System.getenv("PATH"));
-
-                        if (GeneralSettings.DEBUG_MODE)
-                        {
-                            String s = "D:\\tmp\\JViewer\\magick";
-
-                            ProcessStarter.setGlobalSearchPath(s);
-
-                            WrappedLogger.log(Level.ALL, String
-                                    .format("debug mode enabled, setting ProcessStarter global search path to %s", s));
-                        }
                     }
-                    else
-                    {
-                        WrappedLogger.log(Level.INFO,
-                                "global magick search path set [" + ProcessStarter.getGlobalSearchPath() + "]");
-                    }
+                    
+                    Logger.info("Global Magick search path: {}", ProcessStarter.getGlobalSearchPath());
 
                     frame = new MainWindow();
 
@@ -94,6 +80,7 @@ public class Program extends JFrame
                 catch (Exception e)
                 {
                     e.printStackTrace();
+                    Logger.error(e);
                 }
             }
         });

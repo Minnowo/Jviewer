@@ -6,12 +6,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 
 import javax.swing.JTabbedPane;
 
+import org.tinylog.Logger;
+
 import nyaa.alice.jviewer.data.AVLFileTree;
-import nyaa.alice.jviewer.data.logging.WrappedLogger;
 import nyaa.alice.jviewer.drawing.imaging.ImageBase;
 import nyaa.alice.jviewer.drawing.imaging.exceptions.ImageUnsupportedException;
 import nyaa.alice.jviewer.ui.events.ImageTabNameChangedEvent;
@@ -71,7 +71,7 @@ public class ImageTabPage extends ImageDisplay
             Path tempDirWithPrefix = Files.createTempDirectory("jview");
             File filePath = File.createTempFile("tmp", ".jpg", tempDirWithPrefix.toFile());
 
-            WrappedLogger.log(Level.INFO, String.format("creating temp file: %s", filePath));
+            Logger.info("Creating temp file {}", filePath);
 
             if (super.getImage().save(filePath))
             {
@@ -81,15 +81,9 @@ public class ImageTabPage extends ImageDisplay
 
             return null;
         }
-        catch (IOException e)
+        catch (IOException | ImageUnsupportedException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (ImageUnsupportedException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Logger.warn("Exception creating temp file for image: {}", e);
         }
 
         return null;
