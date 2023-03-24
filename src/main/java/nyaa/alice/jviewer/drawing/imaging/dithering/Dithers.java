@@ -3,6 +3,8 @@ package nyaa.alice.jviewer.drawing.imaging.dithering;
 import java.awt.Color;
 import java.util.Random;
 
+import nyaa.alice.jviewer.data.ByteHelper;
+
 public class Dithers
 {
     public static class ErrorDiffusionDithering implements IErrorDiffusion
@@ -34,7 +36,7 @@ public class Dithers
             _matrix = matrix;
             _matrixWidth = matrix[0].length;
             _matrixHeight = matrix.length;
-            _divisor = DitherHelper.clamp(divisor);
+            _divisor = ByteHelper.clampByte(divisor);
             _useShifting = useShifting;
 
             int startingoffset = 0;
@@ -99,9 +101,9 @@ public class Dithers
                             newB = blueError * coefficient / _divisor;
                         }
 
-                        r = DitherHelper.clamp(offsetPixel.getRed() + newR);
-                        g = DitherHelper.clamp(offsetPixel.getGreen() + newG);
-                        b = DitherHelper.clamp(offsetPixel.getBlue() + newB);
+                        r = ByteHelper.clampByte(offsetPixel.getRed() + newR);
+                        g = ByteHelper.clampByte(offsetPixel.getGreen() + newG);
+                        b = ByteHelper.clampByte(offsetPixel.getBlue() + newB);
 
                         data[offsetIndex] = new Color(r, g, b, offsetPixel.getAlpha());
                     }
@@ -159,9 +161,9 @@ public class Dithers
                             newB = blueError * coefficient / _divisor;
                         }
 
-                        r = DitherHelper.clamp(((offsetPixel >> 16) & 0xff)+ newR);
-                        g = DitherHelper.clamp(((offsetPixel >> 8) & 0xff) + newG);
-                        b = DitherHelper.clamp(((offsetPixel ) & 0xff) + newB);
+                        r = ByteHelper.clampByte(((offsetPixel >> 16) & 0xff)+ newR);
+                        g = ByteHelper.clampByte(((offsetPixel >> 8) & 0xff) + newG);
+                        b = ByteHelper.clampByte(((offsetPixel ) & 0xff) + newB);
 
                         data[offsetIndex] = (((offsetPixel >> 24) &0xff) << 24) + + (r << 16) + (g << 8) + b;
                     }
@@ -214,7 +216,7 @@ public class Dithers
             {
                 for (int y = 0; y < _matrixHeight; y++)
                 {
-                    _matrix[x][y] = (byte) DitherHelper.clamp(matrix[x][y] * scale);
+                    _matrix[x][y] = (byte) ByteHelper.clampByte(matrix[x][y] * scale);
                 }
             }
         }
@@ -227,9 +229,9 @@ public class Dithers
 
             if (threshold > 0)
             {
-                int r = DitherHelper.clamp(transformed.getRed() + threshold);
-                int g = DitherHelper.clamp(transformed.getGreen() + threshold);
-                int b = DitherHelper.clamp(transformed.getBlue() + threshold);
+                int r = ByteHelper.clampByte(transformed.getRed() + threshold);
+                int g = ByteHelper.clampByte(transformed.getGreen() + threshold);
+                int b = ByteHelper.clampByte(transformed.getBlue() + threshold);
 
                 data[y * width + x] = new Color(r, g, b, original.getAlpha());
             }
@@ -243,9 +245,9 @@ public class Dithers
 
             if (threshold > 0)
             {
-                int r = DitherHelper.clamp(((transformed >> 16) &0xff) + threshold);
-                int g = DitherHelper.clamp(((transformed >> 8) &0xff) + threshold);
-                int b = DitherHelper.clamp(((transformed ) &0xff) + threshold);
+                int r = ByteHelper.clampByte(((transformed >> 16) &0xff) + threshold);
+                int g = ByteHelper.clampByte(((transformed >> 8) &0xff) + threshold);
+                int b = ByteHelper.clampByte(((transformed ) &0xff) + threshold);
 
                 data[y * width + x] = (((transformed >> 24) &0xff) << 24) + (r << 16) + (g << 8) + b;
             }

@@ -40,7 +40,7 @@ public class ClipboardUtil
         }
         catch (UnsupportedFlavorException | IOException e)
         {
-            Logger.warn("Could not read image from clipboard: {}", e);
+            Logger.warn(e, "Could not read image from clipboard");
             return null;
         }
     }

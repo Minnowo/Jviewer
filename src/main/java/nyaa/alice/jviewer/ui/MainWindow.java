@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
@@ -53,10 +54,10 @@ import org.im4java.process.ProcessStarter;
 import org.tinylog.Logger;
 
 import nyaa.alice.jviewer.data.ClipboardUtil;
-import nyaa.alice.jviewer.drawing.imaging.ImageAnimation;
 import nyaa.alice.jviewer.drawing.imaging.ImageBase;
-import nyaa.alice.jviewer.drawing.imaging.ImageOne;
 import nyaa.alice.jviewer.drawing.imaging.ImageUtil;
+import nyaa.alice.jviewer.drawing.imaging.MultiFrameImage;
+import nyaa.alice.jviewer.drawing.imaging.SingleFrameImage;
 import nyaa.alice.jviewer.drawing.imaging.dithering.IErrorDiffusion;
 import nyaa.alice.jviewer.drawing.imaging.dithering.IPixelTransform;
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
@@ -79,7 +80,8 @@ import nyaa.alice.jviewer.ui.events.ImageDisplayImageSizeChangedEvent;
 import nyaa.alice.jviewer.ui.events.ImageDisplayListener;
 import nyaa.alice.jviewer.ui.events.ImageDisplayZoomChangedEvent;
 
-public class MainWindow extends JFrame implements ImageDisplayListener, ChangeListener, ThreadCompleteListener, DitherPanelListener
+public class MainWindow extends JFrame
+        implements ImageDisplayListener, ChangeListener, ThreadCompleteListener, DitherPanelListener
 {
 
     /**
@@ -130,7 +132,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
             }
             catch (Exception e)
             {
-                Logger.warn("Error recieving file drop");
+                Logger.warn(e, "Error recieving file drop");
             }
         }
     };
@@ -167,13 +169,22 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         }
     }
 
-    final KeyAction PASTE_IMAGE = new KeyAction("PasteImage", KeyboardSettings.PASTE_IMAGE_KEY, this::pasteImage);
-    final KeyAction COPY_IMAGE = new KeyAction("CopyImage", KeyboardSettings.COPY_IMAGE_KEY, this::copyImage);
-    final KeyAction NEXT_IMAGE = new KeyAction("NextImage", KeyboardSettings.NEXT_IMAGE_KEY, this::nextImage);
-    final KeyAction PREV_IMAGE = new KeyAction("PrevImage", KeyboardSettings.PREV_IMAGE_KEY, this::prevImage);
+    public final KeyAction[] KEY_BINDS = new KeyAction[] {
+            
+            new KeyAction("Fullscreen", KeyboardSettings.FULLSCREEN, this::toggleFullScreen),
+            new KeyAction("OpenInNewTab", KeyboardSettings.OPEN_IN_NEW_TAB, this::askOpenFileInNewTab),
+            new KeyAction("OpenInCurrentTab", KeyboardSettings.OPEN_IN_CURRENT_TAB, this::askOpenFileInPlace),
+            new KeyAction("CloseCurrentTab", KeyboardSettings.CLOSE_CURRENT_TAB, this::closeCurrentTab),
+            new KeyAction("NewTab", KeyboardSettings.NEW_TAB, this::openInNewTab),
+            new KeyAction("AlwaysOnTop", KeyboardSettings.ALWAYS_ON_TOP, this::toggleAlwaysOnTop),
+            new KeyAction("CloseProgram", KeyboardSettings.CLOSE_PROGRAM_KEY, this::exitProgram),
+            new KeyAction("PasteImage", KeyboardSettings.PASTE_IMAGE_KEY, this::pasteImage),
+            new KeyAction("CopyImage", KeyboardSettings.COPY_IMAGE_KEY, this::copyImage),
+            new KeyAction("NextImage", KeyboardSettings.NEXT_IMAGE_KEY, this::nextImage),
+            new KeyAction("PrevImage", KeyboardSettings.PREV_IMAGE_KEY, this::prevImage), };
 
     private int splitPaneDividorLocation = 0;
-    
+
     ItemListener ilToggleAlwaysOnTop = new ItemListener()
     {
         public void itemStateChanged(ItemEvent e)
@@ -183,7 +194,6 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
     };
     ItemListener ilToggleLeftPane = new ItemListener()
     {
-
 
         public void itemStateChanged(ItemEvent e)
         {
@@ -225,7 +235,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
                 {
                     _preventOverflow = true;
 
-                    gifFrameSpinner.setValue(((ImageAnimation) getCurrentDisplay().getImage()).getFrameIndex());
+                    gifFrameSpinner.setValue(((MultiFrameImage) getCurrentDisplay().getImage()).getFrameIndex());
 
                     _preventOverflow = false;
                 }
@@ -281,7 +291,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
     {
         public void actionPerformed(ActionEvent e)
         {
-            closeCurrentImage();
+            closeCurrentTab();
         }
     };
 
@@ -399,7 +409,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         // this is used when switching tabs to easily set the combobox to the correct
         // value via the index
         // see this.stateChanged
-        comboboxInterpolationMode.addItem(new ComboBoxItemInt("Interpolation Default", InterpolationMode.DEFAULT));
+
         comboboxInterpolationMode
                 .addItem(new ComboBoxItemInt("Interpolation Nearest Neighbor", InterpolationMode.NEAREST_NEIGHBOR));
         comboboxInterpolationMode.addItem(new ComboBoxItemInt("Interpolation Bilinear", InterpolationMode.BILINEAR));
@@ -826,17 +836,22 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
 
         final int IFW = JComponent.WHEN_IN_FOCUSED_WINDOW;
 
-        tabbedPane.getInputMap(IFW).put(PASTE_IMAGE.keystroke, PASTE_IMAGE.actionName);
-        tabbedPane.getActionMap().put(PASTE_IMAGE.actionName, PASTE_IMAGE);
-
-        tabbedPane.getInputMap(IFW).put(COPY_IMAGE.keystroke, COPY_IMAGE.actionName);
-        tabbedPane.getActionMap().put(COPY_IMAGE.actionName, COPY_IMAGE);
-
-        tabbedPane.getInputMap(IFW).put(NEXT_IMAGE.keystroke, NEXT_IMAGE.actionName);
-        tabbedPane.getActionMap().put(NEXT_IMAGE.actionName, NEXT_IMAGE);
-
-        tabbedPane.getInputMap(IFW).put(PREV_IMAGE.keystroke, PREV_IMAGE.actionName);
-        tabbedPane.getActionMap().put(PREV_IMAGE.actionName, PREV_IMAGE);
+        for (KeyAction k : this.KEY_BINDS)
+        {
+            tabbedPane.getInputMap(IFW).put(k.keystroke, k.actionName);
+            tabbedPane.getActionMap().put(k.actionName, k);
+        }
+//        tabbedPane.getInputMap(IFW).put(PASTE_IMAGE.keystroke, PASTE_IMAGE.actionName);
+//        tabbedPane.getActionMap().put(PASTE_IMAGE.actionName, PASTE_IMAGE);
+//
+//        tabbedPane.getInputMap(IFW).put(COPY_IMAGE.keystroke, COPY_IMAGE.actionName);
+//        tabbedPane.getActionMap().put(COPY_IMAGE.actionName, COPY_IMAGE);
+//
+//        tabbedPane.getInputMap(IFW).put(NEXT_IMAGE.keystroke, NEXT_IMAGE.actionName);
+//        tabbedPane.getActionMap().put(NEXT_IMAGE.actionName, NEXT_IMAGE);
+//
+//        tabbedPane.getInputMap(IFW).put(PREV_IMAGE.keystroke, PREV_IMAGE.actionName);
+//        tabbedPane.getActionMap().put(PREV_IMAGE.actionName, PREV_IMAGE);
     }
 
     public void setTitle()
@@ -865,14 +880,14 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         StringBuilder sb = new StringBuilder();
 
         Logger.debug("Status label changing size to {} x {}", i.getWidth(), i.getHeight());
-        
+
         sb.append(sep1 + i.getWidth() + " x " + i.getHeight());
 
         sb.append(sep2 + ImageFormat.getMimeType(i.GetImageFormat()));
 
         if (i.GetImageFormat() == ImageFormat.GIF)
         {
-            ImageAnimation g = (ImageAnimation) i;
+            MultiFrameImage g = (MultiFrameImage) i;
             sb.append(sep2 + String.format("%d frames", g.getFrameCount()));
         }
 
@@ -1043,7 +1058,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
                 }
                 catch (ImageUnsupportedException e1)
                 {
-                    Logger.warn("Failed to save {}", f, e1);
+                    Logger.warn(e1, "Failed to save {}", f);
                 }
 
                 resetProgressbar();
@@ -1167,28 +1182,26 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         getCurrentDisplay().invertImage();
     }
 
-    
     DitherPanel ditherPanel = null;
-    
+
     public void ditherImage()
     {
         if (getCurrentDisplay() == null)
             return;
-        
+
         checkSetupDitherPanel();
-            
 
         mainSplitPane.getLeftComponent().setVisible(true);
         mainSplitPane.setDividerLocation(splitPaneDividorLocation);
         mainSplitPane.setDividerSize(GeneralSettings.MAIN_SPLIT_PANE_DIVISOR_SIZE);
         mainSplitPane.setLeftComponent(this.ditherPanel);
     }
-    
+
     public void checkSetupDitherPanel()
     {
-        if(this.ditherPanel != null)
+        if (this.ditherPanel != null)
             return;
-        
+
         this.ditherPanel = new DitherPanel();
         this.ditherPanel.addDitherListener(this);
     }
@@ -1218,6 +1231,39 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
     private JMenuItem mntmNewMenuItem_13;
     private JButton btnNewButton;
 
+    public void openInNewTab()
+    {
+        ImageTabPage img = new ImageTabPage(tabbedPane);
+        tabbedPane.addTab("---", img);
+        tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
+
+        img.addImageDisplayListener(this);
+
+    }
+
+    public void toggleAlwaysOnTop()
+    {
+        chckbxmntmNewCheckItem.setSelected(!chckbxmntmNewCheckItem.isSelected());
+        setAlwaysOnTop(chckbxmntmNewCheckItem.isSelected());
+    }
+
+    public void toggleFullScreen()
+    {
+        if(this.getExtendedState() == JFrame.MAXIMIZED_BOTH)
+        {
+            this.setExtendedState(JFrame.NORMAL); 
+        }
+        else 
+        {
+            this.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+        }        
+    }
+    
+    public void exitProgram()
+    {
+        this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+    }
+
     public synchronized void showProgressBar()
     {
         progressBarUsage++;
@@ -1241,7 +1287,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         setStatusLabelText();
     }
 
-    public void closeCurrentImage()
+    public void closeCurrentTab()
     {
         if (tabbedPane.getTabCount() == 1)
             return;
@@ -1357,7 +1403,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         if (img == null)
             return;
 
-        openInNewTab(ImageOne.fromBuffered(img));
+        openInNewTab(SingleFrameImage.fromBuffered(img));
     }
 
     public void copyImage()
@@ -1436,7 +1482,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
 
         if (i != null && i.GetImageFormat() == ImageFormat.GIF)
         {
-            ImageAnimation g = (ImageAnimation) i;
+            MultiFrameImage g = (MultiFrameImage) i;
 
             gifFrameNumberModel.setMaximum(Integer.valueOf(g.getFrameCount() - 1));
             gifFrameNumberModel.setValue(g.getFrameIndex());
@@ -1516,12 +1562,11 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
         this.threadCount -= 1;
     }
 
-
     @Override
     public void previewDither(IPixelTransform transform, IErrorDiffusion dither)
     {
         getCurrentDisplay().cancelDitherBufferCreation();
-        
+
         NotifyingThread t = new NotifyingThread()
         {
             @Override
@@ -1543,7 +1588,7 @@ public class MainWindow extends JFrame implements ImageDisplayListener, ChangeLi
 
     @Override
     public void cancelDither()
-    { 
+    {
         getCurrentDisplay().cancelDitherBufferCreation();
     }
 

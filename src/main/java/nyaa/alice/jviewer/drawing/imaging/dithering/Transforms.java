@@ -3,6 +3,7 @@ package nyaa.alice.jviewer.drawing.imaging.dithering;
 import java.awt.Color;
 import java.util.HashMap;
 
+import nyaa.alice.jviewer.data.ByteHelper;
 import nyaa.alice.jviewer.drawing.ColorUtil;
 
 public class Transforms
@@ -22,7 +23,7 @@ public class Transforms
 
         public MonochromePixelTransform(Integer threshold)
         {
-            _threshold = DitherHelper.clamp(threshold);
+            _threshold = ByteHelper.clampByte(threshold);
             _black = new Color(0, 0, 0);
             _white = new Color(255, 255, 255);
             __black = 0;
@@ -31,7 +32,7 @@ public class Transforms
 
         public Color Transform(Color pixel)
         {
-            int gray = DitherHelper.clamp((int)(0.299 * pixel.getRed() + 0.587 * pixel.getGreen() + 0.114 * pixel.getBlue()));
+            int gray = ByteHelper.clampByte((int)(0.299 * pixel.getRed() + 0.587 * pixel.getGreen() + 0.114 * pixel.getBlue()));
 
             /*
              * I'm leaving the alpha channel untouched instead of making it fully opaque
@@ -44,7 +45,7 @@ public class Transforms
         
         public int Transform(int pixel)
         {
-            int gray = DitherHelper.clamp((int)(0.299 * ((pixel >> 16) & 0xff) + 0.587 * ((pixel >> 8) & 0xff) + 0.114 * (pixel & 0xff)));
+            int gray = ByteHelper.clampByte((int)(0.299 * ((pixel >> 16) & 0xff) + 0.587 * ((pixel >> 8) & 0xff) + 0.114 * (pixel & 0xff)));
 
             /*
              * I'm leaving the alpha channel untouched instead of making it fully opaque

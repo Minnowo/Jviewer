@@ -8,7 +8,7 @@ import nyaa.alice.jviewer.drawing.imaging.support.GifDecoder;
 import nyaa.alice.jviewer.drawing.imaging.support.GifEncoder;
 import nyaa.alice.jviewer.drawing.imaging.support.GifDecoder.GifFrame;
 
-public class ImageGif extends ImageAnimation
+public class ImageGif extends MultiFrameImage
 {
 	private int currentFrameIndex;
 	private GifDecoder decoder;

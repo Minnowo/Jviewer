@@ -1,4 +1,4 @@
-package nyaa.alice.jviewer.drawing.imaging;
+package nyaa.alice.jviewer.drawing;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;

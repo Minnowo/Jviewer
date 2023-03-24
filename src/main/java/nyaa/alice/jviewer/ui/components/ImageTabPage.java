@@ -83,7 +83,7 @@ public class ImageTabPage extends ImageDisplay
         }
         catch (IOException | ImageUnsupportedException e)
         {
-            Logger.warn("Exception creating temp file for image: {}", e);
+            Logger.warn(e, "Exception creating temp file for image");
         }
 
         return null;

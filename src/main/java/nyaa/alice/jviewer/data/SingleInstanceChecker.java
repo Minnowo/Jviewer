@@ -14,10 +14,13 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.SwingUtilities;
+
+import org.tinylog.Level;
+import org.tinylog.Logger;
+
+import nyaa.alice.jviewer.system.ResourcePaths;
 
 /**
  * SingleInstanceChecker v[(2), 2016-04-22 08:00 UTC] by
@@ -31,11 +34,9 @@ public enum SingleInstanceChecker
 
     INSTANCE; // HAHA! The CONFUSION!
 
-    protected static final Logger logger = Logger.getLogger(SingleInstanceChecker.class.getName());
-
     final public static int POLLINTERVAL = 1000;
-    final public static File LOCKFILE = new File("SINGLE_INSTANCE_LOCKFILE");
-    final public static File DETECTFILE = new File("EXTRA_INSTANCE_DETECTFILE");
+    final public static File LOCKFILE = new File(ResourcePaths.LOCAL_PATH.toString(), "SINGLE_INSTANCE_LOCKFILE");
+    final public static File DETECTFILE = new File(ResourcePaths.LOCAL_PATH.toString(), "EXTRA_INSTANCE_DETECTFILE");
 
     private boolean hasBeenUsedAlready = false;
 
@@ -64,7 +65,7 @@ public enum SingleInstanceChecker
                         }
                         catch (Exception e)
                         {
-                            logger.log(Level.SEVERE, "Unable to remove lock file: " + lockFile, e);
+                            Logger.error(e, "Failed to remove lock file");
                         }
                     }
                 });
@@ -73,7 +74,7 @@ public enum SingleInstanceChecker
         }
         catch (Exception e)
         {
-            logger.log(Level.SEVERE, "Unable to create and/or lock file: " + lockFile, e);
+            Logger.error(e, "Failed to create and/or lock file {}", lockFile);
         }
         return false;
     }
@@ -145,6 +146,8 @@ public enum SingleInstanceChecker
                     "This class/method can only be used once, which kinda makes sense if you think about it.");
         }
         hasBeenUsedAlready = true;
+        
+        Logger.info("Registering single instance service");
 
         final boolean ret = canLockFileBeCreatedAndLocked();
 
@@ -195,9 +198,9 @@ public enum SingleInstanceChecker
             randomAccessFileForDetection.close();
 
         }
-        catch (Exception e)
+        catch (IOException e)
         {
-            logger.log(Level.WARNING, "Error creating or deleting trigger file: " + DETECTFILE, e);
+            Logger.error(e, "Error creating or deleting trigger file");
         }
     }
 
@@ -227,7 +230,7 @@ public enum SingleInstanceChecker
         }
         catch (IOException e)
         {
-            logger.log(Level.WARNING, "Error creating watch service", e);
+            Logger.error(e, "Failed to create watch service");
             return;
         }
 
@@ -241,7 +244,7 @@ public enum SingleInstanceChecker
         }
         catch (IOException e)
         {
-            logger.log(Level.WARNING, "Error registering the current folder with watch service", e);
+            Logger.error(e, "Failed to register the current folder with watch service");
             return;
         }
 
@@ -288,7 +291,7 @@ public enum SingleInstanceChecker
                 }
                 catch (IOException e)
                 {
-                    logger.log(Level.WARNING, "error closing watch service in shutdown thread", e);
+                    Logger.warn(e, "Error closing watch service in shutdown thread");
                 }
             }
         });
@@ -308,7 +311,7 @@ public enum SingleInstanceChecker
             }
             catch (InterruptedException e)
             {
-                logger.log(Level.WARNING, "interrupted during Thread.sleep(POLLINTERVAL)", e);
+                Logger.warn(e, "Interrupted during Thread.sleep(POLLINTERVAL);");
             }
 
             final WatchKey wk;
@@ -322,7 +325,7 @@ public enum SingleInstanceChecker
                 // This situation would be normal if the watcher has been closed, but our
                 // application never does that.
 
-                logger.log(Level.INFO, "watch service closed, exiting watch thread loop", e);
+                Logger.info(e, "Watch service closed, exiting watch thread mainloop");
 
                 return;
             }
@@ -339,8 +342,7 @@ public enum SingleInstanceChecker
 
                 if (kind == StandardWatchEventKinds.OVERFLOW)
                 {
-                    logger.log(Level.SEVERE, String.format(
-                            "OVERFLOW of directory change events while watching for %s to be created", DETECTFILE));
+                    Logger.error("OVERFLOW of directory change events while watching for {} to be created", DETECTFILE);
                     continue;
                 }
 
@@ -356,7 +358,7 @@ public enum SingleInstanceChecker
                     }
                     catch (IOException e)
                     {
-                        logger.log(Level.WARNING, String.format("error reading lines from %s", DETECTFILE), e);
+                        Logger.error("Error while reading lines from {}: {}", DETECTFILE, e);
                         break;
                     }
 
@@ -375,14 +377,14 @@ public enum SingleInstanceChecker
                     }
                     catch (IOException e)
                     {
-                        logger.log(Level.WARNING, String.format("error removing %s", DETECTFILE), e);
+                        Logger.warn(e, "Error removing {}", DETECTFILE);
                     }
 
                     break;
                 }
                 else
                 {
-                    logger.log(Level.INFO, String.format("%s was created in the watch folder", file));
+                    Logger.debug("{} was created in the watch folder", file);
                 }
 
             }

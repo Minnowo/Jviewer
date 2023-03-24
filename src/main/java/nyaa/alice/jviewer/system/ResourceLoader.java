@@ -122,7 +122,7 @@ public class ResourceLoader
         }
         catch (IOException e)
         {
-            Logger.warn("Error while loading resource {}", RESOURCE_PATH);
+            Logger.warn(e, "Error while loading resource {}", RESOURCE_PATH);
         }
 
         return null;
@@ -147,7 +147,7 @@ public class ResourceLoader
         }
         catch (IOException e)
         {
-            Logger.warn("Error while loading resource {}", resource);
+            Logger.warn(e, "Error while loading resource {}", resource);
         }
 
         return null;
@@ -165,7 +165,7 @@ public class ResourceLoader
 
         Configuration.set("writer2", "console");
         Configuration.set("writer2.format", "[{date: yyyy-MM-dd HH:mm:ss.SSS}] [{level}] {message}");
-        Logger.warn("Could not load tinylog.properties from resource, setting default values");
+//        Logger.warn("Could not load tinylog.properties from resource, setting default values");
 
 //        
 //        String path = findResourcePathSilent(ResourcePaths.TINY_LOG_CONFIG_PATH);

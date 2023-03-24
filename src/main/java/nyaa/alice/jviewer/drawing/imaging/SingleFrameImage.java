@@ -16,28 +16,28 @@ import nyaa.alice.jviewer.drawing.imaging.exceptions.ImageUnsupportedException;
 import nyaa.alice.jviewer.drawing.imaging.exceptions.RequiresMagickException;
 import nyaa.alice.jviewer.system.ImageMagickSettings;
 
-public class ImageOne extends ImageBase
+public class SingleFrameImage extends ImageBase
 {
 	private BufferedImage image;
 
-	public ImageOne()
+	public SingleFrameImage()
 	{
 		super(ImageFormat.BMP);
 	}
 	
-	public ImageOne(String path) 
+	public SingleFrameImage(String path) 
 	{
 		super(ImageFormat.BMP);
 		this.load(path);
 	}
 	
-	public ImageOne(String path, byte imageFormat) 
+	public SingleFrameImage(String path, byte imageFormat) 
 	{
 		super(ImageFormat.BMP);
 		this.loadWithoutDetect(new File(path), imageFormat);
 	}
 	
-	public ImageOne(byte imageFormat, BufferedImage b) 
+	public SingleFrameImage(byte imageFormat, BufferedImage b) 
 	{
 		super(imageFormat);
 		
@@ -48,10 +48,10 @@ public class ImageOne extends ImageBase
 	
 	
 	
-	public static ImageOne fromBuffered(BufferedImage i)
+	public static SingleFrameImage fromBuffered(BufferedImage i)
 	{
 		// TODO: fix this constructor 
-		return new ImageOne(ImageFormat.BMP, i);
+		return new SingleFrameImage(ImageFormat.BMP, i);
 	}
 
 	@Override
@@ -78,7 +78,7 @@ public class ImageOne extends ImageBase
 		
 			final String absp = path.toString();
 			
-			Logger.info("Loading {}", path);
+			Logger.debug("Loading {}", path);
 			
 			super.imageFormat = imageFormat;
 	
@@ -95,7 +95,7 @@ public class ImageOne extends ImageBase
 				catch (IOException | InterruptedException | IM4JavaException e) 
 				{
 					super.error = true;
-					Logger.warn("Failed to read {} using ImageMagick: {}", path, e);
+					Logger.warn(e, "Failed to read {} using ImageMagick", path);
 				}
 			}
 		
@@ -125,7 +125,7 @@ public class ImageOne extends ImageBase
 			} 
 			catch (IOException e) 
 			{
-			    Logger.warn("Failed to read {} using ImageIO.read: {}", path, e);
+			    Logger.warn(e, "Failed to read {} using ImageIO.read: {}", path);
 				super.error = true;
 				super.width = 0;
 				super.height = 0;
@@ -176,7 +176,7 @@ public class ImageOne extends ImageBase
 				} 
 	    		catch (IOException | InterruptedException | IM4JavaException e) 
 	    		{
-	    		    Logger.warn("Failed to save {} using ImageMagick: {}", path, e);
+	    		    Logger.warn(e, "Failed to save {} using ImageMagick: {}", path);
 				}
 	    	}
 	    	
@@ -195,7 +195,7 @@ public class ImageOne extends ImageBase
 	    	}
 	    	catch (IOException e) 
 	    	{
-	    	    Logger.warn("Failed to save {} using ImageIO.write: {}", path, e);
+	    	    Logger.warn(e, "Failed to save {} using ImageIO.write: {}", path);
 	    	}
 		}
 		finally 

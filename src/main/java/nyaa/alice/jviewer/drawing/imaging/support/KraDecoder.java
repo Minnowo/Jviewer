@@ -12,7 +12,7 @@ import java.util.zip.ZipInputStream;
 
 import org.tinylog.Logger;
 
-import nyaa.alice.jviewer.drawing.imaging.ImageOne;
+import nyaa.alice.jviewer.drawing.imaging.SingleFrameImage;
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
 
 public class KraDecoder
@@ -49,12 +49,12 @@ public class KraDecoder
         }
         catch (IOException e)
         {
-            Logger.warn("Exception while reading zip file: {}", e);
+            Logger.warn(e, "Exception while reading zip file: {}");
         }
         return false;
     }
 
-    public static ImageOne loadKritaFile(String path)
+    public static SingleFrameImage loadKritaFile(String path)
     {
         File filePath;
 
@@ -66,7 +66,7 @@ public class KraDecoder
         }
         catch (IOException e)
         {
-            Logger.warn("Could not create temp file");
+            Logger.warn(e, "Could not create temp file");
             return null;
         }
 
@@ -81,7 +81,7 @@ public class KraDecoder
             return null;
         }
 
-        ImageOne preview = new ImageOne();
+        SingleFrameImage preview = new SingleFrameImage();
 
         if (preview.loadWithoutDetect(filePath, ImageFormat.UNOFFICIAL_SUPPORT.KRA))
         {

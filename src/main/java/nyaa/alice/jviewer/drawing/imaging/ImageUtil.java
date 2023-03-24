@@ -392,7 +392,7 @@ public class ImageUtil
 
         default:
 
-            return new ImageOne(path, imageff);
+            return new SingleFrameImage(path, imageff);
         }
     }
 
@@ -619,7 +619,7 @@ public class ImageUtil
         }
         catch (ImageUnsupportedException e)
         {
-            Logger.warn("Unable to save image onto itself");
+            Logger.warn(e, "Unable to save image onto itself");
         }
         finally
         {

@@ -4,14 +4,14 @@ import java.awt.image.BufferedImage;
 
 import nyaa.alice.jviewer.drawing.imaging.enums.ImageFormat;
 
-public abstract class ImageAnimation extends ImageBase
+public abstract class MultiFrameImage extends ImageBase
 {
-    public ImageAnimation()
+    public MultiFrameImage()
     {
         super(ImageFormat.GIF);
     }
 
-    public ImageAnimation(String path)
+    public MultiFrameImage(String path)
     {
         super(ImageFormat.GIF);
         this.load(path);

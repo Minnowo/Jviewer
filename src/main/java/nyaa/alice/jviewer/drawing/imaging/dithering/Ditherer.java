@@ -3,6 +3,8 @@ package nyaa.alice.jviewer.drawing.imaging.dithering;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
+import org.tinylog.Logger;
+
 import nyaa.alice.jviewer.drawing.ColorUtil;
 
 public class Ditherer
@@ -244,6 +246,7 @@ public class Ditherer
             {
                 if (bw != null && bw.cancel)
                 {
+                    Logger.debug("Dither canceled");
                     return;
                 }
 

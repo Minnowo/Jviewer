@@ -103,7 +103,7 @@ public class AVLFileTree
             }
             catch (InterruptedException e)
             {
-                Logger.warn("Load directory thread interrupted on join: {}", e);
+                Logger.warn(e, "Load directory thread interrupted on join");
             }
         }
     }
@@ -139,6 +139,7 @@ public class AVLFileTree
         }
         catch (IOException ex)
         {
+            Logger.error(ex, "Error while loading directory into AVL tree");
             // An I/O problem has occurred
             return false;
         }

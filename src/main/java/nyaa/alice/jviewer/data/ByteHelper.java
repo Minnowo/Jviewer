@@ -1,8 +1,8 @@
-package nyaa.alice.jviewer.drawing.imaging.dithering;
+package nyaa.alice.jviewer.data;
 
-public class DitherHelper
+public class ByteHelper
 {
-    public static int clamp(int value)
+    public static int clampByte(int value)
     {
         if (value < 0)
         {

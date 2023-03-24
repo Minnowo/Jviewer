@@ -28,9 +28,9 @@ import javax.swing.Timer;
 import org.tinylog.Logger;
 
 import nyaa.alice.jviewer.drawing.ColorUtil;
-import nyaa.alice.jviewer.drawing.imaging.ImageAnimation;
+import nyaa.alice.jviewer.drawing.imaging.MultiFrameImage;
 import nyaa.alice.jviewer.drawing.imaging.ImageBase;
-import nyaa.alice.jviewer.drawing.imaging.ImageOne;
+import nyaa.alice.jviewer.drawing.imaging.SingleFrameImage;
 import nyaa.alice.jviewer.drawing.imaging.ImageUtil;
 import nyaa.alice.jviewer.drawing.imaging.dithering.Ditherer;
 import nyaa.alice.jviewer.drawing.imaging.dithering.Ditherer.WorkerData;
@@ -870,7 +870,7 @@ public class ImageDisplay extends JPanel
         if (image != null)
         {
             this.image = image;
-            this.isAnimating = image instanceof ImageAnimation;
+            this.isAnimating = image instanceof MultiFrameImage;
             this.imageWidth = image.getWidth();
             this.imageHeight = image.getHeight();
             this.CenterCurrentImage();
@@ -929,7 +929,7 @@ public class ImageDisplay extends JPanel
         if (buff == null)
             return;
 
-        this.setImage(new ImageOne(this.image.GetImageFormat(), buff), true);
+        this.setImage(new SingleFrameImage(this.image.GetImageFormat(), buff), true);
     }
 
     public BufferedImage getSelectionImage()
@@ -1609,7 +1609,7 @@ public class ImageDisplay extends JPanel
         if (!this.isAnimating)
             return;
 
-        ImageAnimation g = (ImageAnimation) this.image;
+        MultiFrameImage g = (MultiFrameImage) this.image;
 
         g.setFrameIndex(index);
 
@@ -2342,7 +2342,7 @@ public class ImageDisplay extends JPanel
     {
         if (this.isAnimating)
         {
-            ImageAnimation _image = (ImageAnimation) this.image;
+            MultiFrameImage _image = (MultiFrameImage) this.image;
 
             _image.updateCurrentFrame();
 
