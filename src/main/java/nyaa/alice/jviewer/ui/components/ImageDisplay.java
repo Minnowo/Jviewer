@@ -2401,39 +2401,35 @@ public class ImageDisplay extends JPanel
     @Override
     public void componentResized(ComponentEvent e)
     {
-        if (!GeneralSettings.CENTER_IMAGE_ON_RESIZE || this.image == null)
+        if(this.image == null)
             return;
-
-        // this.CenterCurrentImageWithoutResize();
-        // pasted the above functions code here to not have the repaint called cause yes
-        // :)
-
-        final int iWidth = (int) (this.imageWidth * this._zoom);
-        final int iHeight = (int) (this.imageHeight * this._zoom);
-
-        this.drX = (this.getWidth() >> 1) - (iWidth >> 1);
-        this.drY = (this.getHeight() >> 1) - (iHeight >> 1);
+        
+        if (GeneralSettings.CENTER_IMAGE_ON_RESIZE)
+        {
+             this.CenterCurrentImageWithoutResize();
+        }
+        else 
+        {
+            this.repaint();            
+        }
     }
 
     @Override
     public void componentMoved(ComponentEvent e)
     {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void componentShown(ComponentEvent e)
     {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void componentHidden(ComponentEvent e)
     {
         // TODO Auto-generated method stub
-
     }
 
 }
