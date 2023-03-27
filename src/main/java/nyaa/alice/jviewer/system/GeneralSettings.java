@@ -17,6 +17,33 @@ public class GeneralSettings
 	
 	public static boolean WRAP_TABS = false;
 	
+	/**
+	 * The % to zoom in / out when hitting the hotkey
+	 */
+	public static int IMAGE_ZOOM_KEY_AMOUNT = 30;
+	
+	/**
+	 * the direction to move the image when using the move left/right hotkey
+	 * basically inverts them
+	 */
+	public static int IMAGE_X_MOVE_DIRECTION = -1;
+	
+	/**
+	 * the number of pixels to move left/right using the hotkey
+	 */
+	public static int IMAGE_X_MOVE_AMOUNT = 30;
+	
+	/**
+     * the direction to move the image when using the move up/down hotkey
+     * basically inverts them
+     */
+	public static int IMAGE_Y_MOVE_DIRECTION = -1;
+	
+	/**
+     * the number of pixels to move up/down using the hotkey
+     */
+	public static int IMAGE_Y_MOVE_AMOUNT = 30;
+	
 	public static String MAIN_WINDOW_TITLE = "Jviewer";
 	
 	public static Level LOG_LEVEL = Level.ALL;

@@ -9,8 +9,10 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -181,7 +183,16 @@ public class MainWindow extends JFrame
             new KeyAction("PasteImage", KeyboardSettings.PASTE_IMAGE_KEY, this::pasteImage),
             new KeyAction("CopyImage", KeyboardSettings.COPY_IMAGE_KEY, this::copyImage),
             new KeyAction("NextImage", KeyboardSettings.NEXT_IMAGE_KEY, this::nextImage),
-            new KeyAction("PrevImage", KeyboardSettings.PREV_IMAGE_KEY, this::prevImage), };
+            new KeyAction("PrevImage", KeyboardSettings.PREV_IMAGE_KEY, this::prevImage), 
+            
+            new KeyAction("MoveImageLeft", KeyboardSettings.MOVE_IMAGE_LEFT, () -> moveImageX(GeneralSettings.IMAGE_X_MOVE_AMOUNT*GeneralSettings.IMAGE_X_MOVE_DIRECTION)),
+            new KeyAction("MoveImageRight", KeyboardSettings.MOVE_IMAGE_RIGHT, () -> moveImageX(-GeneralSettings.IMAGE_X_MOVE_AMOUNT*GeneralSettings.IMAGE_X_MOVE_DIRECTION)),
+            new KeyAction("MoveImageUp", KeyboardSettings.MOVE_IMAGE_UP, () -> moveImageY( GeneralSettings.IMAGE_Y_MOVE_AMOUNT*GeneralSettings.IMAGE_Y_MOVE_DIRECTION)),
+            new KeyAction("MoveImageDown", KeyboardSettings.MOVE_IMAGE_DOWN, () -> moveImageY(-GeneralSettings.IMAGE_Y_MOVE_AMOUNT*GeneralSettings.IMAGE_Y_MOVE_DIRECTION)),
+            new KeyAction("ZoomImageIn", KeyboardSettings.ZOOM_IMAGE_IN, () -> zoomImage(15)),
+            new KeyAction("ZoomImageOut", KeyboardSettings.ZOOM_IMAGE_OUT, () -> zoomImage(-15)), 
+            
+    };
 
     private int splitPaneDividorLocation = 0;
 
@@ -1398,6 +1409,31 @@ public class MainWindow extends JFrame
         repaint();
     }
 
+    public void moveImageX(int pixels)
+    {
+        if(this.getCurrentDisplay() == null || this.getCurrentDisplay().getImage() == null)
+            return;
+        
+        this.getCurrentDisplay().setImageX(this.getCurrentDisplay().getImageX() + pixels);
+    }
+    
+    public void moveImageY(int pixels)
+    {
+        if(this.getCurrentDisplay() == null || this.getCurrentDisplay().getImage() == null)
+            return;
+        
+        this.getCurrentDisplay().setImageY(this.getCurrentDisplay().getImageY() + pixels);
+    }
+    
+    public void zoomImage(int percent)
+    {
+        if(this.getCurrentDisplay() == null || this.getCurrentDisplay().getImage() == null)
+            return;
+        
+        this.getCurrentDisplay().setZoomPercentAndZoomCenter(this.getCurrentDisplay().getZoomPercent() + percent);
+//        this.getCurrentDisplay().setZoomPercent();
+    }
+    
     public void pasteImage()
     {
         BufferedImage img = ClipboardUtil.getClipboardImage();

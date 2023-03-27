@@ -243,12 +243,12 @@ public class ImageDisplay extends JPanel
     private BufferedImage ditherBuffer;
 
     /**
-     * the current image width
+     * the current image width (the original image size not scaled)
      */
     private int imageWidth;
 
     /**
-     * the current image height
+     * the current image height (the original image size not scaled)
      */
     private int imageHeight;
 
@@ -1702,6 +1702,72 @@ public class ImageDisplay extends JPanel
     {
         this.drawMode = (byte) mode;
         CenterCurrentImage();
+    }
+    
+    /**
+     * gets the image current y position relative to the control
+     * @return
+     */
+    public int getImageY()
+    {
+        return this.drY;
+    }
+    
+    /**
+     * sets the image current y position relative to the control
+     * @return
+     */
+    public void setImageY(int y)
+    {
+        int height = (int)(this.imageHeight * this._zoom);
+
+        if(y < -height)
+        {
+            this.drY = -height;
+        }
+        else if(y > this.getHeight() + height)
+        {
+            this.drY = this.getHeight() + height;
+        }
+        else 
+        {
+            this.drY = y;
+        }
+        
+        this.repaint();
+    }
+    
+    /**
+     * gets the image current x position relative to the control
+     * @return
+     */
+    public int getImageX()
+    {
+        return this.drX;
+    }
+    
+    /**
+     * sets the image current x position relative to the control
+     * @return
+     */
+    public void setImageX(int x)
+    {
+        int width = (int)(this.imageWidth * this._zoom);
+
+        if(x < -width)
+        {
+            this.drX = -width;
+        }
+        else if(x > this.getWidth() + width)
+        {
+            this.drX = this.getWidth() + width;
+        }
+        else 
+        {
+            this.drX = x;
+        }
+        
+        this.repaint();
     }
 
     /**
