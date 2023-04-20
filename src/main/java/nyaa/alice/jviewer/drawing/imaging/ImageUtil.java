@@ -386,6 +386,8 @@ public class ImageUtil
             return KraDecoder.loadKritaFile(path);
 
         case ImageFormat.GIF:
+            
+            Logger.debug("Creating ImageGif object");
 
             return new ImageGif(path);
 //				return new GIF2(path);

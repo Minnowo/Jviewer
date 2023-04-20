@@ -189,8 +189,8 @@ public class MainWindow extends JFrame
             new KeyAction("MoveImageRight", KeyboardSettings.MOVE_IMAGE_RIGHT, () -> moveImageX(-GeneralSettings.IMAGE_X_MOVE_AMOUNT*GeneralSettings.IMAGE_X_MOVE_DIRECTION)),
             new KeyAction("MoveImageUp", KeyboardSettings.MOVE_IMAGE_UP, () -> moveImageY( GeneralSettings.IMAGE_Y_MOVE_AMOUNT*GeneralSettings.IMAGE_Y_MOVE_DIRECTION)),
             new KeyAction("MoveImageDown", KeyboardSettings.MOVE_IMAGE_DOWN, () -> moveImageY(-GeneralSettings.IMAGE_Y_MOVE_AMOUNT*GeneralSettings.IMAGE_Y_MOVE_DIRECTION)),
-            new KeyAction("ZoomImageIn", KeyboardSettings.ZOOM_IMAGE_IN, () -> zoomImage(15)),
-            new KeyAction("ZoomImageOut", KeyboardSettings.ZOOM_IMAGE_OUT, () -> zoomImage(-15)), 
+            new KeyAction("ZoomImageIn", KeyboardSettings.ZOOM_IMAGE_IN, () -> zoomImage(15*GeneralSettings.IMAGE_ZOOM_DIRECTION)),
+            new KeyAction("ZoomImageOut", KeyboardSettings.ZOOM_IMAGE_OUT, () -> zoomImage(-15*GeneralSettings.IMAGE_ZOOM_DIRECTION)), 
             
     };
 

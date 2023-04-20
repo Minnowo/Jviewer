@@ -14,6 +14,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 
+import org.tinylog.Logger;
+
 /**
  * Class GifDecoder - Decodes a GIF file into one or more frames. <br>
  * 
@@ -430,7 +432,7 @@ public class GifDecoder
         status = STATUS_OK;
         try
         {
-            name = name.trim().toLowerCase();
+            name = name.trim();//.toLowerCase();
             if ((name.indexOf("file:") >= 0) || (name.indexOf(":/") > 0))
             {
                 URL url = new URL(name);
@@ -444,6 +446,7 @@ public class GifDecoder
         }
         catch (IOException e)
         {
+            Logger.warn(e);
             status = STATUS_OPEN_ERROR;
         }
 
@@ -614,6 +617,7 @@ public class GifDecoder
         }
         catch (IOException e)
         {
+            Logger.debug(e, "GifDecoder.read exception");
             status = STATUS_FORMAT_ERROR;
         }
         return curByte;

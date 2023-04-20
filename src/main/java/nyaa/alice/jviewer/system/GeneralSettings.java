@@ -18,6 +18,11 @@ public class GeneralSettings
 	public static boolean WRAP_TABS = false;
 	
 	/**
+	 * the direction to zoom in/out with the hotkeys
+	 */
+	public static int IMAGE_ZOOM_DIRECTION = -1;
+	
+	/**
 	 * The % to zoom in / out when hitting the hotkey
 	 */
 	public static int IMAGE_ZOOM_KEY_AMOUNT = 30;
@@ -26,7 +31,7 @@ public class GeneralSettings
 	 * the direction to move the image when using the move left/right hotkey
 	 * basically inverts them
 	 */
-	public static int IMAGE_X_MOVE_DIRECTION = -1;
+	public static int IMAGE_X_MOVE_DIRECTION = 1;
 	
 	/**
 	 * the number of pixels to move left/right using the hotkey
@@ -37,7 +42,7 @@ public class GeneralSettings
      * the direction to move the image when using the move up/down hotkey
      * basically inverts them
      */
-	public static int IMAGE_Y_MOVE_DIRECTION = -1;
+	public static int IMAGE_Y_MOVE_DIRECTION = 1;
 	
 	/**
      * the number of pixels to move up/down using the hotkey

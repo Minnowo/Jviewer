@@ -27,7 +27,7 @@ import nyaa.alice.jviewer.system.ImageMagickSettings;
 public class SettingsDialog extends JDialog
 {
     private JTabbedPane tabbedPane;
-    private JPanel tabPage1, tabPage2;
+    private JPanel tabPage1, tabPage2, tabPage3;
     private JTextField textField;
     private JPanel panel;
     private JTextArea textArea;
@@ -86,6 +86,7 @@ public class SettingsDialog extends JDialog
 
         tabPage1 = new JPanel();
         tabPage2 = new JPanel();
+        tabPage3 = new JPanel();
 
         tabbedPane.addTab("General Settings", tabPage1);
         tabPage1.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
@@ -104,6 +105,8 @@ public class SettingsDialog extends JDialog
         tabbedPane.addTab("Magick Settings", tabPage2);
         tabPage2.setLayout(new BoxLayout(tabPage2, BoxLayout.Y_AXIS));
 
+        tabbedPane.addTab("Keybindings", tabPage3);
+        
         panel_1 = new JPanel();
         tabPage2.add(panel_1);
         panel_1.setLayout(new BorderLayout(0, 0));

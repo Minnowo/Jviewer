@@ -3,6 +3,8 @@ package nyaa.alice.jviewer.drawing.imaging;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+import org.tinylog.Logger;
+
 import nyaa.alice.jviewer.drawing.imaging.enums.Rotation;
 import nyaa.alice.jviewer.drawing.imaging.support.GifDecoder;
 import nyaa.alice.jviewer.drawing.imaging.support.GifEncoder;
@@ -23,7 +25,10 @@ public class ImageGif extends MultiFrameImage
 	{
 		this.currentFrameIndex = -1;
 		
-		this.load(path);
+		if(!this.load(path))
+		{
+		    Logger.warn("ImageGif.load had an error");
+		}
 	}
 	
 	@Override
