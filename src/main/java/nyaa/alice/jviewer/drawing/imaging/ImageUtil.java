@@ -375,9 +375,23 @@ public class ImageUtil
 
     public static ImageBase loadImage(String path)
     {
-        final byte imageff = ImageDetector.getImageFormat(path);
+        byte imageff = ImageDetector.getImageFormat(path);
 
         Logger.debug("{} detected as {}", path, ImageFormat.getMimeType(imageff));
+        
+        
+        // Issue #2: Fixes file formats that we don't know how to detect
+        //           If we can't detect it but it has a good file extension, try and use it
+        if(imageff == ImageFormat.UNKNOWN)
+        {
+            imageff = ImageFormat.getFromFileExtension(StringUtil.getFileExtension(path)); 
+            
+            if(!ImageFormat.hasUnofficalSupport(imageff))
+            {
+                imageff = ImageFormat.UNKNOWN;
+            }
+        }
+        
 
         switch (imageff)
         {

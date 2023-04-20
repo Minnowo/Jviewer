@@ -13,6 +13,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.SwingUtilities;
@@ -148,6 +149,8 @@ public enum SingleInstanceChecker
         hasBeenUsedAlready = true;
         
         Logger.info("Registering single instance service");
+        Logger.info("Using lockfile {}", LOCKFILE);
+        Logger.info("Using detectfile {}", DETECTFILE);
 
         final boolean ret = canLockFileBeCreatedAndLocked();
 
@@ -187,6 +190,7 @@ public enum SingleInstanceChecker
             // delete existing DETECTFILE
             Files.deleteIfExists(DETECTFILE.toPath());
 
+            Logger.debug("Creating detectfile with args: {}", Arrays.toString(args));
             final RandomAccessFile randomAccessFileForDetection = new RandomAccessFile(DETECTFILE, "rw");
 
             // write cmd args to the file by line
@@ -215,6 +219,7 @@ public enum SingleInstanceChecker
         }
         catch (Exception e)
         {
+            Logger.warn(e);
             return false;
         }
     }
@@ -234,7 +239,12 @@ public enum SingleInstanceChecker
             return;
         }
 
-        final File appFolder = new File("").getAbsoluteFile(); // points to current folder
+        // Fix: make the watcher watch the folder with the detect file
+        File appFolder = DETECTFILE.getAbsoluteFile().getParentFile(); // points to current folder
+        
+        if(appFolder == null)
+            appFolder = new File("").getAbsoluteFile();
+        
         final Path appFolderWatchable = appFolder.toPath();
 
         // REGISTER CURRENT FOLDER FOR WATCHING FOR FILE DELETIONS
@@ -277,7 +287,14 @@ public enum SingleInstanceChecker
                 {
                     randomAccessFileForLock.close();
                 }
-                Files.deleteIfExists(LOCKFILE.toPath());
+                
+                // Fix for Linux:
+                // only delete the file if we have created the lock
+                // you can delete the file even if it's 'locked' by another app
+                if(fileLock != null && randomAccessFileForLock != null)
+                {
+                    Files.deleteIfExists(LOCKFILE.toPath());    
+                }
             }
             catch (Exception ignore)
             {
@@ -349,19 +366,23 @@ public enum SingleInstanceChecker
                 final WatchEvent<Path> watchEvent = (WatchEvent<Path>) we;
                 final File file = watchEvent.context().toFile();
 
-                if (file.equals(DETECTFILE))
+                if (file.getName().equals(DETECTFILE.getName()))
                 {
                     try
                     {
                         List<String> lines = Files.readAllLines(DETECTFILE.toPath(), StandardCharsets.UTF_8);
                         codeToRunIfOtherInstanceTriesToStart.setParams(lines.toArray());
+                        
+                        Logger.debug("DetectFile found! Contains: {}", lines);
+
                     }
                     catch (IOException e)
                     {
                         Logger.error("Error while reading lines from {}: {}", DETECTFILE, e);
                         break;
                     }
-
+                    
+                 
                     if (!executeOnAWTEventDispatchThread || SwingUtilities.isEventDispatchThread())
                     {
                         codeToRunIfOtherInstanceTriesToStart.run();
