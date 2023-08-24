@@ -150,7 +150,7 @@ JViewer has native support both [Error-Diffusion](https://en.wikipedia.org/wiki/
 
 JViewer is Java 8 compatible and makes use of [Maven](https://maven.apache.org/) for all dependencies and builds.
 
-#### ImageMagick
+### ImageMagick
 
 For loading and saving images using ImageMagick JViewer uses [Im4Java](https://github.com/penpot/im4java).
 
@@ -158,11 +158,7 @@ This wrapper allows JViewer to use any existing ImageMagick installation already
 
 If you don't have or don't want to use ImageMagick, JViewer will read most common image formats.
 
-
-<br>
-
-
-## Dependencies
+### Dependencies
 
 - [im4java](https://mvnrepository.com/artifact/org.im4java/im4java)
 
